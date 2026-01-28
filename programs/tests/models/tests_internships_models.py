@@ -1,8 +1,9 @@
 import datetime
 from django.test import TestCase
-from rest_framework.test import APITestCase
-from accounts.models import User
 
+from rest_framework.test import APITestCase
+
+from accounts.models import User
 from programs.models import (
     InternshipApplication,
     Department,
@@ -44,7 +45,7 @@ class InternshipApplicationModelTest(APITestCase):
     def test_application_str(self):
         self.assertEqual(
             str(self.application),
-            "applicant name - Pending"
+            "applicant name - PENDING"
         )
 
     def test_full_name_property(self):
@@ -203,7 +204,7 @@ class InternshipFeedbackModelTest(APITestCase):
     def test_feedback_str(self):
         self.assertEqual(
             str(self.feedback),
-            f"{self.program} - Intern"
+            f"{self.program} - INTERN"
         )
 
     def test_feedback_relationships(self):

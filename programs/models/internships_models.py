@@ -1,14 +1,16 @@
-from django.db import models
-from accounts.models import User
 import uuid
+
+from django.db import models
+
+from accounts.models import User
 from accounts.models import TimeStampedModel, SoftDeleteModel
 
 
 class InternshipApplication(TimeStampedModel):
-    PENDING = "Pending"
-    ACCEPTED = "Accepted"
-    REJECTED = "Rejected"
-    COMPLETED = "Completed"
+    PENDING = "PENDING"
+    ACCEPTED = "ACCEPTED"
+    REJECTED = "REJECTED"
+    COMPLETED = "COMPLETED"
 
     STATUS_CHOICES = [
         (PENDING, "Pending"),
@@ -43,6 +45,7 @@ class InternshipApplication(TimeStampedModel):
 
     class Meta:
         db_table = "internship_applications"
+        ordering = ["applied_on"]
         verbose_name = "Internship Application"
         verbose_name_plural = "Internship Applications"
 
@@ -61,6 +64,7 @@ class Department(TimeStampedModel):
 
     class Meta:
         db_table = "departments"
+        ordering = ["name"]
         verbose_name = "Department"
         verbose_name_plural = "Departments"
 
@@ -81,6 +85,7 @@ class Supervisor(TimeStampedModel, SoftDeleteModel):
 
     class Meta:
         db_table = "supervisors"
+        ordering = ["fist_name"]
         verbose_name = "Supervisor"
         verbose_name_plural = "Supervisors"
 
@@ -93,9 +98,9 @@ class Supervisor(TimeStampedModel, SoftDeleteModel):
 
 
 class InternshipProgram(TimeStampedModel):
-    ACTIVE = "Active"
-    COMPLETED = "Completed"
-    TERMINATED = "Terminated"
+    ACTIVE = "ACTIVE"
+    COMPLETED = "COMPLETED"
+    TERMINATED = "TERMINATED"
 
     STATUS_CHOICES = [
         (ACTIVE, "Active"),
@@ -126,9 +131,9 @@ class InternshipProgram(TimeStampedModel):
 
 
 class InternshipFeedback(models.Model):
-    INTERN = "Intern"
-    SUPERVISOR = "Supervisor"
-    FINAL = "Final"
+    INTERN = "INTERN"
+    SUPERVISOR = "SUPERVISOR"
+    FINAL = "FINAL"
 
     FEEDBACK_TYPE_CHOICES = [
         (INTERN, "Intern"),
@@ -154,6 +159,7 @@ class InternshipFeedback(models.Model):
 
     class Meta:
         db_table = "internship_feedback"
+        ordering = ["submitted_on"]
         verbose_name = "Internship Feedback"
         verbose_name_plural = "Internship Feedbacks"
 

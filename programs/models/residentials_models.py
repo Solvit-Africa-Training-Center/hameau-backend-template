@@ -1,22 +1,24 @@
+import uuid
+
 from django.db import models
 from django.utils import timezone
+
 from dateutil.relativedelta import relativedelta
-import uuid
+
 from accounts.models import TimeStampedModel, SoftDeleteModel
 
-
 class Child(TimeStampedModel, SoftDeleteModel):
-    MALE = "Male"
-    FEMALE = "Female"
+    MALE = "MALE"
+    FEMALE = "FEMALE"
 
     GENDER_CHOICES = [
         (MALE, "Male"),
         (FEMALE, "Female"),
     ]
 
-    ACTIVE = "Active"
-    COMPLETED = "Completed"
-    LEFT = "Left"
+    ACTIVE = "ACTIVE"
+    COMPLETED = "COMPLETED"
+    LEFT = "LEFT"
     STATUS_CHOICES = [
         (ACTIVE, "Active"),
         (COMPLETED, "Completed"),
@@ -29,8 +31,7 @@ class Child(TimeStampedModel, SoftDeleteModel):
     date_of_birth = models.DateField()
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
     profile_image = models.ImageField(upload_to="profile_images_children/", blank=True)
-    start_date = models.DateField()
-    end_date = models.DateField()
+    start_date = models.DateField()    
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Active")
     special_needs = models.TextField(blank=True)
     vigilant_contact_name = models.CharField(max_length=100, blank=True)
@@ -44,14 +45,15 @@ class Child(TimeStampedModel, SoftDeleteModel):
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
-    def save(self, *args, **kwargs):
-        if self.start_date and not self.end_date:
-            self.end_date = self.start_date + relativedelta(years=2)
-        super().save(*args, **kwargs)
-
     @property
     def full_name(self):
         return f"{self.first_name} {self.last_name}"
+    
+    @property
+    def end_date(self):
+        if self.start_date:
+            return self.start_date + relativedelta(years=2)
+        return None
 
     @property
     def age(self):
@@ -69,8 +71,8 @@ class Child(TimeStampedModel, SoftDeleteModel):
 
 
 class Caretaker(TimeStampedModel, SoftDeleteModel):
-    MALE = "Male"
-    FEMALE = "Female"
+    MALE = "MALE"
+    FEMALE = "FEMALE"
 
     GENDER_CHOICES = [
         (MALE, "Male"),
@@ -91,6 +93,7 @@ class Caretaker(TimeStampedModel, SoftDeleteModel):
 
     class Meta:
         db_table = "caretakers"
+        ordering = ["first_name","last_name"]
         verbose_name = "Caretaker"
         verbose_name_plural = "Caretakers"
 
@@ -132,10 +135,10 @@ class ChildCaretakerAssignment(TimeStampedModel):
 
 
 class EducationInstitution(TimeStampedModel):
-    SCHOOL = "School"
+    SCHOOL = "SCHOOL"
     TVET = "TVET"
-    ONLINE = "Online"
-    OTHER = "Other"
+    ONLINE = "ONLINE"
+    OTHER = "OTHER"
 
     TYPE_CHOICES = [
         (SCHOOL, "School"),
@@ -183,14 +186,14 @@ class EducationProgram(TimeStampedModel):
 
 
 class ChildEducation(TimeStampedModel):
-    ACTIVE = "Active"
-    COMPLETED = "Completed"
-    DISCONTINUED = "Discontinued"
+    ACTIVE = "ACTIVE"
+    COMPLETED = "COMPLETED"
+    DISCONTINUED = "DISCONTINUED"
 
     STATUS_CHOICES = [
-        ("Active", "Active"),
-        ("Completed", "Completed"),
-        ("Discontinued", "Discontinued"),
+        (ACTIVE, "Active"),
+        (COMPLETED, "Completed"),
+        (DISCONTINUED, "Discontinued"),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -216,9 +219,9 @@ class ChildEducation(TimeStampedModel):
 
 
 class ChildInsurance(TimeStampedModel):
-    PAID = "Paid"
-    PENDING = "Pending"
-    OVERDUE = "Overdue"
+    PAID = "PAID"
+    PENDING = "PENDING"
+    OVERDUE = "OVERDUE"
 
     PAYMENT_STATUS_CHOICES = [
         ("Paid", "Paid"),
@@ -296,9 +299,9 @@ class FoodItem(TimeStampedModel):
 
 
 class HealthRecord(TimeStampedModel):
-    MEDICAL_VISIT = "medical_visit"
-    VACCINATION = "Vaccination"
-    ILLNESS = "Illness"
+    MEDICAL_VISIT = "MEDICAL_VISIT"
+    VACCINATION = "VACCINATION"
+    ILLNESS = "ILLNESS"
 
     RECORD_TYPE_CHOICES = [
         (MEDICAL_VISIT, "Medical Visit"),
@@ -318,6 +321,7 @@ class HealthRecord(TimeStampedModel):
 
     class Meta:
         db_table = "health_records"
+        ordering = ["visit_date","record_type"]
         verbose_name = "Health Record"
         verbose_name_plural = "Health Records"
 

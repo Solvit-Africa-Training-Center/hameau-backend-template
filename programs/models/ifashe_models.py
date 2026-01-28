@@ -1,6 +1,8 @@
-from django.db import models
-from accounts.models import User
 import uuid
+
+from django.db import models
+
+from accounts.models import User
 from accounts.models import TimeStampedModel, SoftDeleteModel
 
 
@@ -17,6 +19,7 @@ class Family(TimeStampedModel, SoftDeleteModel):
 
     class Meta:
         db_table = "families"
+        ordering = ["family_name"]
         verbose_name = "Family"
         verbose_name_plural = "Families"
 
@@ -25,9 +28,9 @@ class Family(TimeStampedModel, SoftDeleteModel):
 
 
 class Parent(TimeStampedModel, SoftDeleteModel):
-    FATHER = "Father"
-    MOTHER = "Mother"
-    GUARDIAN = "Guardian"
+    FATHER = "FATHER"
+    MOTHER = "MOTHER"
+    GUARDIAN = "GUARDIAN"
 
     RELATIONSHIP_CHOICES = [
         (FATHER, "Father"),
@@ -46,6 +49,7 @@ class Parent(TimeStampedModel, SoftDeleteModel):
 
     class Meta:
         db_table = "parents"
+        ordering = ["first_name", "last_name"]
         verbose_name = "Parent"
         verbose_name_plural = "Parents"
 
@@ -58,8 +62,8 @@ class Parent(TimeStampedModel, SoftDeleteModel):
 
 
 class SponsoredChild(TimeStampedModel, SoftDeleteModel):
-    MALE = "Male"
-    FEMALE = "Female"
+    MALE = "MALE"
+    FEMALE = "MALE"
     GENDER_CHOICES = [
         (MALE, "Male"),
         (FEMALE, "Female"),
@@ -82,6 +86,7 @@ class SponsoredChild(TimeStampedModel, SoftDeleteModel):
 
     class Meta:
         db_table = "sponsored_children"
+        ordering = ["first_name", "last_name"]
         verbose_name = "Sponsored Child"
         verbose_name_plural = "Sponsored Children"
 
@@ -94,9 +99,9 @@ class SponsoredChild(TimeStampedModel, SoftDeleteModel):
 
 
 class Sponsorship(TimeStampedModel):
-    ACTIVE = "Active"
-    PAUSED = "Paused"
-    COMPLETED = "Completed"
+    ACTIVE = "ACTIVE"
+    PAUSED = "PAUSED"
+    COMPLETED = "COMPLETED"
 
     STATUS_CHOICES = [
         (ACTIVE, "Active"),
@@ -104,10 +109,10 @@ class Sponsorship(TimeStampedModel):
         (COMPLETED, "Completed"),
     ]
 
-    FULL = "full"
-    EDUCATION_ONLY = "education_only"
-    RENTING_ONLY = "renting_only"
-    DRESSING_ONLY = "dressing_only"
+    FULL = "FULL"
+    EDUCATION_ONLY = "EDUCATION_ONLY"
+    RENTING_ONLY = "RENTING_ONLY"
+    DRESSING_ONLY = "DRESSING_ONLY"
 
     SPONSORSHIP_TYPE = [
         (FULL, "Full"),
@@ -130,6 +135,7 @@ class Sponsorship(TimeStampedModel):
 
     class Meta:
         db_table = "sponsorships"
+        ordering = ["start_date"]
         verbose_name = "Sponsorship"
         verbose_name_plural = "Sponsorships"
 
@@ -146,6 +152,7 @@ class School(TimeStampedModel):
 
     class Meta:
         db_table = "schools"
+        ordering = ["name"]
         verbose_name = "School"
         verbose_name_plural = "Schools"
 
@@ -154,9 +161,9 @@ class School(TimeStampedModel):
 
 
 class SchoolSupport(TimeStampedModel):
-    PAID = "Paid"
-    PENDING = "Pending"
-    PARTIAL = "Partial"
+    PAID = "PAID"
+    PENDING = "PENDING"
+    PARTIAL = "PARTIAL"
 
     PAYMENT_STATUS_CHOICES = [
         (PAID, "Paid"),
@@ -215,9 +222,9 @@ class DressingDistribution(TimeStampedModel):
 
 
 class ParentWorkContract(TimeStampedModel):
-    ACTIVE = "Active"
-    PAUSED = "Paused"
-    TERMINATED = "Terminated"
+    ACTIVE = "ACTIVE"
+    PAUSED = "PAUSED"
+    TERMINATED = "TERMINATED"
 
     STATUS_CHOICES = [
         (ACTIVE, "Active"),
@@ -236,6 +243,7 @@ class ParentWorkContract(TimeStampedModel):
 
     class Meta:
         db_table = "parent_work_contracts"
+        ordering = ["job_role"]
         verbose_name = "Parent Work Contract"
         verbose_name_plural = "Parent Work Contracts"
 
@@ -244,10 +252,10 @@ class ParentWorkContract(TimeStampedModel):
 
 
 class ParentAttendance(TimeStampedModel):
-    PRESENT = "Present"
-    ABSENT = "Absent"
-    LATE = "Late"
-    SICK_LEAVE = "Sick_Leave"
+    PRESENT = "PRESENT"
+    ABSENT = "ABSENT"
+    LATE = "LATE"
+    SICK_LEAVE = "SICK_LEAVE"
 
     STATUS_CHOICES = [
         (PRESENT, "Present"),
@@ -266,6 +274,7 @@ class ParentAttendance(TimeStampedModel):
 
     class Meta:
         db_table = "parent_attendance"
+        ordering = ["attendance_date"]
         verbose_name = "Parent Attendance"
         verbose_name_plural = "Parent Attendance Records"
 
@@ -291,6 +300,7 @@ class ParentPerformance(TimeStampedModel):
 
     class Meta:
         db_table = "parent_performance"
+        ordering = ["evaluation_date"]
         verbose_name = "Parent Performance"
         verbose_name_plural = "Parent Performance Records"
 

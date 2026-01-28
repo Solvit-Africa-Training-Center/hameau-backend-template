@@ -1,3 +1,5 @@
+import uuid
+
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
@@ -5,7 +7,6 @@ from django.contrib.auth.models import (
 )
 from django.db import models
 from django.utils import timezone
-import uuid
 
 
 class SoftDeleteManager(models.Manager):
@@ -55,10 +56,10 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
-    ADMIN = "system_admin"
-    RESIDENTIAL_MANAGER = "residential_manager"
-    INTERNSHIP_MANAGER = "internship_manager"
-    IFASHE_MANAGER = "ifashe_manager"
+    ADMIN = "SYSTEM_ADMIN"
+    RESIDENTIAL_MANAGER = "RESIDENTIAL_MANAGER"
+    INTERNSHIP_MANAGER = "INTERNSHIPS_MANAGER"
+    IFASHE_MANAGER = "IFASHE_MANAGER"
 
     ROLE_CHOICES = [
         (ADMIN, "System Admin"),
@@ -82,21 +83,21 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
     REQUIRED_FIELDS = ["first_name", "last_name", "phone"]
 
     groups = models.ManyToManyField(
-        'auth.Group',
-        related_name='accounts_user_set', 
+        "auth.Group",
+        related_name="accounts_user_set",
         blank=True,
         help_text=(
-            'The groups this user belongs to. A user will get all permissions '
-            'granted to each of their groups.'
+            "The groups this user belongs to. A user will get all permissions "
+            "granted to each of their groups."
         ),
-        verbose_name='groups',
+        verbose_name="groups",
     )
     user_permissions = models.ManyToManyField(
-        'auth.Permission',
-        related_name='accounts_user_permissions_set', 
+        "auth.Permission",
+        related_name="accounts_user_permissions_set",
         blank=True,
-        help_text='Specific permissions for this user.',
-        verbose_name='user permissions',
+        help_text="Specific permissions for this user.",
+        verbose_name="user permissions",
     )
 
     class Meta:
@@ -113,9 +114,9 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
 
 
 class VerificationCode(models.Model):
-    EMAIL_VERIFICATION = "email_verification"
-    PASSWORD_RESET = "password_reset"
-    PASSWORD_CHANGE = "password_change"
+    EMAIL_VERIFICATION = " EMAIL_VERIFICATION"
+    PASSWORD_RESET = "PASSWORD_RESET"
+    PASSWORD_CHANGE = "PASSWORD_CHANGE"
 
     PURPOSE_CHOICES = [
         (EMAIL_VERIFICATION, "Email Verification"),

@@ -11,6 +11,7 @@ class GalleryCategory(TimeStampedModel):
 
     class Meta:
         db_table = "gallery_categories"
+        ordering = ["name"]
         verbose_name = "Gallery Category"
         verbose_name_plural = "Gallery Categories"
 
@@ -35,6 +36,7 @@ class GalleryMedia(TimeStampedModel):
 
     class Meta:
         db_table = "gallery_media"
+        ordering = ["title","created_on"]
         verbose_name = "Gallery Media"
         verbose_name_plural = "Gallery Media Items"
 
@@ -43,9 +45,9 @@ class GalleryMedia(TimeStampedModel):
 
 
 class Donor(TimeStampedModel, SoftDeleteModel):
-    INDIVIDUAL = "Individual"
-    ORGANIZATION = "Organization"
-    ANONYMOUS = "Anonymous"
+    INDIVIDUAL = "INDIVIDUAL"
+    ORGANIZATION = "ORGANIZATION"
+    ANONYMOUS = "ANONYMOUS"
 
     DONOR_TYPE_CHOICES = [
         (INDIVIDUAL, "Individual"),
@@ -62,6 +64,7 @@ class Donor(TimeStampedModel, SoftDeleteModel):
 
     class Meta:
         db_table = "donors"
+        ordering = ["fullname"]
         verbose_name = "Donor"
         verbose_name_plural = "Donors"
 
@@ -70,10 +73,10 @@ class Donor(TimeStampedModel, SoftDeleteModel):
 
 
 class Donation(TimeStampedModel):
-    CASH = "Cash"
-    MOBILE_MONEY = "mobile_money"
-    BANK_TRANSFER = "bank_transfer"
-    CREDIT_CARD = "credit_card"
+    CASH = "CASH"
+    MOBILE_MONEY = "MOBILE_MONEY"
+    BANK_TRANSFER = "BANK_TRANSFER"
+    CREDIT_CARD = "CREDIT_CARD"
 
     PAYMENT_METHOD_CHOICES = [
         (CASH, "Cash"),
@@ -104,6 +107,7 @@ class Donation(TimeStampedModel):
 
     class Meta:
         db_table = "donations"
+        ordering = ["donation_date"]
         verbose_name = "Donation"
         verbose_name_plural = "Donations"
 

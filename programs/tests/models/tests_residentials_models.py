@@ -160,7 +160,7 @@ class ChildrenModelsTest(APITestCase):
         self.assertIn("Local Market", str(self.food_item))
 
     def test_health_record(self):
-        self.assertIn("medical_visit", str(self.health_record))
+        self.assertIn("MEDICAL_VISIT", str(self.health_record))
 
     def test_residential_financial_plan_total_cost(self):
         self.assertEqual(

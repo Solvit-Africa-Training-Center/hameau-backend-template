@@ -1,8 +1,10 @@
-from rest_framework.test import APITestCase
+import uuid
+from datetime import timedelta
+
 from django.utils import timezone
 from django.db import IntegrityError
-from datetime import timedelta
-import uuid
+from rest_framework.test import APITestCase
+
 
 from accounts.models import (
     User,
