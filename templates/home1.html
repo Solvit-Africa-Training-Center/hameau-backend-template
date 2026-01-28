@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+        <title>Hameau des Jeunes API Home</title>
+        <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap"
+              rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap"
+              rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+              rel="stylesheet" />
+        <script id="tailwind-config">
+            tailwind.config = {
+                darkMode: "class",
+                theme: {
+                    extend: {
+                        colors: {
+                            "primary": "#1392ec",
+                            "background-light": "#f6f7f8",
+                            "background-dark": "#0a0a0a",
+                            "card-dark": "#161b22",
+                        },
+                        fontFamily: {
+                            "display": ["Inter"]
+                        },
+                        borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                    },
+                },
+            }
+        </script>
+        <style>
+            .imigongo-pattern {
+                background-color: #0a0a0a;
+                background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuCPSNmzFatsOP5L3MXEV33X3_hQ6r8VgvVFs83gO2udvGNDS-Lrq1g38hz1a7oGRz4ke4ljkGS3C8Z7KuPn_U7BmVifJ4kKxKQKini0hWAefAEyn-2JTtzuApwvA7vUnXGBZIETWg5UzYpu_aFUsGQ8mDmShm6vpSdrRQpFg2YHz4uAJ_AkNjLNyZ30WJZcFnJwS-_DCILSFWQ-qLdGrsaRpCQ5VI9OjuLmtBXJoj1O3atXXoi9aZidjSXcWox5QyLnLYMwWOdNduo)
+                }
+            .imigongo-lines {
+                background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuD-Zsng36KWfOZAEaKMoSxxM0KX_HuFi-MNZGWECSNmL3LnUDiFsWKXsyYXvoiv4L_MM51GuLBI7F1VaHeXSRT9TAlGN3xCWZ27JDn3RNECIwCST3M9JMOD1-g--g1u_8ZpQc2KibrtE40iavW7fxbYn005gw-WTrr4l3h-orlCe7QsdmAG8cNzBIOnYLIbL-SD9c2IGI6aJA1jbTpOGBzrxq15QkKiD2loGJYP4SJaMjUR_dOVUY0qsVFanqvQ7NQHWbUEi2reZ_E)
+                }
+        </style>
+    </head>
+    <body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen relative overflow-x-hidden">
+        <div class="fixed inset-0 z-0 imigongo-pattern opacity-40 pointer-events-none"></div>
+        <div class="fixed inset-0 z-0 imigongo-lines opacity-20 pointer-events-none"></div>
+        <div class="relative z-10 flex flex-col min-h-screen">
+            <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-[#283239] px-6 md:px-20 py-4 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md sticky top-0">
+                <div class="flex items-center gap-8">
+                    <div class="flex items-center gap-3 text-primary">
+                        <div class="size-8 text-white">
+                            <div class="size-8 bg-accent-gold rounded flex items-center justify-center">
+                                <span class="material-symbols-outlined text-background-dark font-bold text-white">account_tree</span>
+                            </div>
+                        </div>
+                        <h2 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight">BackendAPI</h2>
+                    </div>
+                    <nav class="hidden md:flex items-center gap-6">
+                        <a class="text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors"
+                           href="https://github.com/Solvit-Africa-Training-Center/hameau-backend">Support</a>
+                        <a class="text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors"
+                           href="https://github.com/Solvit-Africa-Training-Center/hameau-backend">GitHub</a>
+                    </nav>
+                </div>
+                <div class="flex flex-1 justify-end gap-4">
+                    <label class="hidden lg:flex flex-col min-w-40 h-10 max-w-64">
+                        <div class="flex w-full flex-1 items-stretch rounded-lg h-full">
+                            <div class="text-slate-400 flex border-none bg-slate-100 dark:bg-[#283239] items-center justify-center pl-4 rounded-l-lg">
+                                <span class="material-symbols-outlined text-[20px]">search</span>
+                            </div>
+                            <input class="form-input flex w-full min-w-0 flex-1 rounded-lg text-slate-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border-none bg-slate-100 dark:bg-[#283239] h-full placeholder:text-slate-400 px-4 rounded-l-none pl-2 text-sm"
+                                   placeholder="Search documentation..." />
+                        </div>
+                    </label>
+                    <a href="{% url 'admin:index' %}">
+                        <button class="flex items-center justify-center rounded-lg h-10 px-5 bg-primary text-white text-sm font-bold tracking-tight hover:brightness-110 transition-all">
+                            <span>Admin</span>
+                        </button>
+                    </a>
+                </div>
+            </header>
+            <main class="flex-1 max-w-[1200px] mx-auto w-full px-6 py-12 space-y-16">
+                <!-- Hero Section -->
+                <section class="text-center space-y-6 pt-10">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest border border-primary/20">
+                        <span class="relative flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                        </span>
+                        API v1.0 Live
+                    </div>
+                    <h1 class="text-slate-900 dark:text-white text-4xl md:text-6xl font-black leading-tight tracking-[-0.03em] max-w-3xl mx-auto">
+                        Hameau des Jeunes API Documentations
+                    </h1>
+                    <p class="text-slate-600 dark:text-slate-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+                        Build integrated youth programs and services with our developer-first API infrastructure. Start your integration in minutes.
+                    </p>
+                    <div class="flex flex-wrap justify-center gap-4 pt-4">
+                        <a href="{% url 'rapidoc' %}">
+                            <button class="bg-primary text-white px-8 py-3 rounded-lg font-bold text-base hover:shadow-lg hover:shadow-primary/20 transition-all">
+                                Get Started Now
+                            </button>
+                        </a>
+                    </div>
+                </section>
+                <!-- Documentation Cards -->
+                <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Swagger Card -->
+                    <div class="group bg-white dark:bg-card-dark p-8 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-primary/50 transition-all cursor-pointer shadow-sm hover:shadow-xl dark:shadow-none">
+                        <div class="w-12 h-12 bg-green-500/10 text-green-500 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-[32px]">bolt</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Interactive Swagger</h3>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-6">
+                            Test endpoints directly in your browser using our interactive console and real-time response previews.
+                        </p>
+                        <a href="{% url 'schema_swagger_ui' %}">
+                            <span class="text-primary font-bold text-sm flex items-center gap-2">
+                                Try API <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                            </span></a>
+                        </div>
+                        <!-- Redoc Card -->
+                        <div class="group bg-white dark:bg-card-dark p-8 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-primary/50 transition-all cursor-pointer shadow-sm hover:shadow-xl dark:shadow-none">
+                            <div class="w-12 h-12 bg-primary/10 text-primary rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                                <span class="material-symbols-outlined text-[32px]">reorder</span>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2">Clean Redoc</h3>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-6">
+                                A structured and organized overview of our complete API schemas. Perfect for deep architectural study.
+                            </p>
+                            <a href="{% url 'schema_redoc' %}">
+                                <span class="text-primary font-bold text-sm flex items-center gap-2">
+                                    View Reference <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                                </span>
+                            </a>
+                        </div>
+                        <!-- General Card -->
+                        <div class="group bg-white dark:bg-card-dark p-8 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-primary/50 transition-all cursor-pointer shadow-sm hover:shadow-xl dark:shadow-none">
+                            <div class="w-12 h-12 bg-purple-500/10 text-purple-500 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                                <span class="material-symbols-outlined text-[32px]">menu_book</span>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2">General Guides</h3>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-6">
+                                Deep dives into authentication, api info, and best practices for scaling your integration.
+                            </p>
+                            <a href="{% url 'rapidoc' %}">
+                                <span class="text-primary font-bold text-sm flex items-center gap-2">
+                                    Read Guides <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                                </span>
+                            </a>
+                        </div>
+                    </section>
+                    <!-- Getting Started & Code Section -->
+                    <section class="bg-white dark:bg-card-dark rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                        <div class="grid grid-cols-1 lg:grid-cols-2">
+                            <div class="p-10 space-y-6">
+                                <h2 class="text-2xl font-bold">Getting Started</h2>
+                                <div class="space-y-6">
+                                    <div class="flex gap-4">
+                                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">
+                                            1
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold">Navigate to this bakcend API</h4>
+                                            <p class="text-slate-500 dark:text-slate-400 text-sm">
+                                                The link is shared by backend team and allow you to navigate to this Documentation
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-4">
+                                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">
+                                            2
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold">Choose the prefered Documentation-UI</h4>
+                                            <p class="text-slate-500 dark:text-slate-400 text-sm">They are 3, choose amond Swagger UI, Redoc UI and Rapidoc</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-4">
+                                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">
+                                            3
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold">Make your first request</h4>
+                                            <p class="text-slate-500 dark:text-slate-400 text-sm">Try from the new screen you'll get. Use our cURL examples.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-slate-900 p-8 flex flex-col justify-center">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex gap-1.5">
+                                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                                    </div>
+                                    <span class="text-slate-500 text-xs font-mono">bash / curl</span>
+                                </div>
+                                <pre class="text-slate-300 font-mono text-sm overflow-x-auto"><code>curl -X 'POST' \
+  'https://tricky-cyb-matabar-576778bf.koyeb.app/api/auth/registration/' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -H 'X-CSRFTOKEN: HRHP2wdLmixa7lTac4q9ex26S9mcvT04VqbcRQmEKMV6Q4BppHYFH0Z7agEFuAk2' \
+  -d '{
+  "email": "arnoldcikuru@gmail.com",
+  "password1": "Congo+243",
+  "password2": "Congo+243",
+  "first_name": "arnold",
+  "last_name": "matabar",
+  "phone_number": "+243791449889"
+}'</code></pre>
+                            </div>
+                        </div>
+                    </section>
+                    <!-- New Endpoints Section -->
+                    <section class="space-y-8 pb-10">
+                        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+                            <h2 class="text-[22px] font-bold">Latest API Updates</h2>
+                            <a class="text-primary text-sm font-semibold hover:underline"
+                               href="https://github.com/Solvit-Africa-Training-Center/hameau-backend ">View full changelog</a>
+                        </div>
+                        <div class="space-y-4">
+                            <!-- Update Item -->
+                            <div class="flex items-start gap-6 group">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-3 h-3 rounded-full bg-primary mt-1.5"></div>
+                                    <div class="w-px h-full bg-slate-200 dark:bg-slate-800 min-h-[40px] mt-2 group-last:hidden"></div>
+                                </div>
+                                <div class="pb-6">
+                                    <div class="flex items-center gap-3 mb-1">
+                                        <span class="text-sm font-bold text-slate-400">JAN 25, 2026</span>
+                                        <span class="px-2 py-0.5 rounded bg-green-500/10 text-green-500 text-[10px] font-black tracking-widest uppercase">NEW ENDPOINTS</span>
+                                    </div>
+                                    <h4 class="font-bold text-lg">Authentication based APIs</h4>
+                                    <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">
+                                        Allow user registration , managing accounts( passwords, verification,etc).
+                                    </p>
+                                </div>
+                            </div>
+                            <!-- Update Item -->
+                            <div class="flex items-start gap-6 group">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-3 h-3 rounded-full bg-slate-400 mt-1.5"></div>
+                                    <div class="w-px h-full bg-slate-200 dark:bg-slate-800 min-h-[40px] mt-2 group-last:hidden"></div>
+                                </div>
+                                <div class="pb-6">
+                                    <div class="flex items-center gap-3 mb-1">
+                                        <span class="text-sm font-bold text-slate-400">JAN 25, 2026</span>
+                                        <span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-500 text-[10px] font-black tracking-widest uppercase">Tests</span>
+                                    </div>
+                                    <h4 class="font-bold text-lg">Tests</h4>
+                                    <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">
+                                        We've tried some endpoints as for development preparation
+                                    </p>
+                                </div>
+                            </div>
+                            <!-- Update Item -->
+                            <div class="flex items-start gap-6 group">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-3 h-3 rounded-full bg-slate-400 mt-1.5"></div>
+                                    <div class="w-px h-full bg-slate-200 dark:bg-slate-800 min-h-[40px] mt-2 group-last:hidden"></div>
+                                </div>
+                                <div class="pb-6">
+                                    <div class="flex items-center gap-3 mb-1">
+                                        <span class="text-sm font-bold text-slate-400">JAN 24, 2026</span>
+                                        <span class="px-2 py-0.5 rounded bg-orange-500/10 text-orange-500 text-[10px] font-black tracking-widest uppercase">IMPROVEMENT</span>
+                                    </div>
+                                    <h4 class="font-bold text-lg">CREATE API DOC</h4>
+                                    <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">
+                                        Made it possible for everyone to access the API Documentations in development
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </main>
+                <footer class="border-t border-slate-200 dark:border-slate-800 bg-background-light dark:bg-background-dark/50 py-12 px-6">
+                    <div class="max-w-[1200px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
+                        <div class="col-span-2">
+                            <div class="flex items-center gap-2 text-primary mb-4">
+                                 <div class="size-8 bg-accent-gold rounded flex items-center justify-center">
+                                <span class="material-symbols-outlined text-background-dark font-bold text-white">account_tree</span>
+                            </div>
+                                <h3 class="font-bold text-white">Hameau des Jeunes</h3>
+                            </div>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm max-w-xs leading-relaxed">
+                                Empowering the next generation of Hameau de Jeunes through digital access and structured backendAPI ready for use.
+                            </p>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-sm uppercase tracking-widest text-slate-400 mb-4">Resources</h4>
+                            <ul class="space-y-2 text-sm text-slate-500 dark:text-slate-400">
+                                <li>
+                                    <a class="hover:text-primary transition-colors" href="#">Documentation</a>
+                                </li>
+                                <li>
+                                    <a class="hover:text-primary transition-colors" href="#">API Reference</a>
+                                </li>
+                                <li>
+                                    <a class="hover:text-primary transition-colors" href="#">Status Page</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="max-w-[1200px] mx-auto pt-10 mt-10 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center text-xs text-slate-500">
+                        <p>© 2026 Hameau des Jeunes. All rights reserved.</p>
+                    </div>
+                </footer>
+            </div>
+        </body>
+    </html>
