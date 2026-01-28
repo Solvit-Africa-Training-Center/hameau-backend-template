@@ -33,9 +33,7 @@ INSTALLED_APPS = [
 
     'accounts',
     'public_modules',
-    'residentials',
-    'internships',
-    'ifashe',
+    'programs'
 ]
 
 SITE_ID = 1

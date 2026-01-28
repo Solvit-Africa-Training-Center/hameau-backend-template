@@ -2,7 +2,7 @@ from datetime import date
 from rest_framework.test import APITestCase
 
 from accounts.models import User
-from ifashe.models import (
+from programs.models import (
     Family,
     Parent,
     SponsoredChild,

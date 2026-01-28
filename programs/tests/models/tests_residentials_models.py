@@ -5,7 +5,7 @@ from django.test import override_settings
 from django.utils import timezone
 from rest_framework.test import APITestCase
 
-from ..models import (
+from programs.models import (
     Child,
     Caretaker,
     House,

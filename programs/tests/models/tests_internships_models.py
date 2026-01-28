@@ -3,7 +3,7 @@ from django.test import TestCase
 from rest_framework.test import APITestCase
 from accounts.models import User
 
-from internships.models import (
+from programs.models import (
     InternshipApplication,
     Department,
     Supervisor,
