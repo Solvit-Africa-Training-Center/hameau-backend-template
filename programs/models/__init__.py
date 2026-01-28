@@ -1,0 +1,33 @@
+from .internships_models import (
+    InternshipApplication,
+    Department,
+    Supervisor,
+    InternshipFeedback,
+    InternshipProgram,
+)
+from .ifashe_models import (
+    Family,
+    Parent,
+    SponsoredChild,
+    Sponsorship,
+    School,
+    SchoolSupport,
+    DressingDistribution,
+    ParentWorkContract,
+    ParentAttendance,
+    ParentPerformance,
+)
+from . residentials_models import (
+    Child,
+    Caretaker,
+    House,
+    ChildCaretakerAssignment,
+    EducationInstitution,
+    EducationProgram,
+    ChildEducation,
+    ChildInsurance,
+    FoodSupplier,
+    FoodItem,
+    HealthRecord,
+    ResidentialFinancialPlan,
+)
