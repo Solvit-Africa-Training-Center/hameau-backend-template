@@ -85,7 +85,7 @@ class Supervisor(TimeStampedModel, SoftDeleteModel):
 
     class Meta:
         db_table = "supervisors"
-        ordering = ["first_name"]
+        ordering = ["first_name","last_name"]
         verbose_name = "Supervisor"
         verbose_name_plural = "Supervisors"
 

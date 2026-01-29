@@ -11,7 +11,6 @@ from .models import User
 
 
 class ManagerSerializer(serializers.ModelSerializer):
-    id = serializers.UUIDField(read_only = True)
     class Meta:
         model = User
         fields = [
@@ -53,7 +52,7 @@ class LoginSerializer(serializers.Serializer):
 
         refresh = RefreshToken.for_user(user)
 
-        return {
+        to_return = {
             "access": str(refresh.access_token),
             "refresh": str(refresh),
             "user": {
@@ -64,3 +63,5 @@ class LoginSerializer(serializers.Serializer):
                 "role": user.role,
             },
         }
+
+        return to_return

@@ -32,7 +32,7 @@ class ManagerViewset(viewsets.ModelViewSet):
             return [IsSystemAdmin()]
 
         elif self.action == "destroy":
-            return [(CanDestroyManager())]
+            return [CanDestroyManager()]
         return super().get_permissions()
 
     @action(methods=["get"], detail=False)
@@ -50,14 +50,7 @@ class ManagerViewset(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
-        return Response(
-            {
-                "message": "User created successfully, credentials are sent to the email",
-                "email": user.email,
-                "phone_number": user.phone,
-            },
-            status=status.HTTP_201_CREATED,
-        )
+        return Response( serializer.data)
 
 
 class LoginView(APIView):
