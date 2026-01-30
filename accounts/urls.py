@@ -8,7 +8,7 @@ router.register('managers',ManagerViewset)
 
 urlpatterns = [
     path("managers/login/", LoginView.as_view()),
-    path("logout/", LogoutAPIView.as_view())
+    path("managers/logout/", LogoutAPIView.as_view())
 ]
 
 urlpatterns += router.urls
