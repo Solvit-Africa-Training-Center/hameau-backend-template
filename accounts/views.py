@@ -15,6 +15,7 @@ from .permissions import (
     IsSystemAdmin,
 )
 from .serializers import ( 
+    LogoutSerializer,
     ManagerSerializer, 
     LoginSerializer, 
     RequestPasswordResetSerializer, 
@@ -156,3 +157,12 @@ class ResetPasswordConfirmView(APIView):
             {"message": "Password reset successfully"},
             status=status.HTTP_200_OK
         )
+class LogoutAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        serializer = LogoutSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)

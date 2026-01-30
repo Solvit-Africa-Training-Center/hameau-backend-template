@@ -1,7 +1,7 @@
 from django.contrib.auth import authenticate
 
 from rest_framework import serializers
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework.exceptions import AuthenticationFailed
 from datetime import timezone, timedelta, datetime
 
@@ -139,3 +139,18 @@ class ResetPasswordConfirmSerializer(serializers.Serializer):
         verification_code.is_used = True
         verification_code.save()
 
+
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
+
+    def validate(self, attrs):
+        self.token = attrs['refresh']
+
+        return attrs
+    
+    def save(self, **kwargs):
+
+        try:
+            RefreshToken(self.token).blacklist
+        except TokenError:
+            self.fail('Wrong Token!')
