@@ -14,7 +14,7 @@ from .permissions import (
     IsResidentialManager,
     IsSystemAdmin,
 )
-from .serializers import ManagerSerializer, LoginSerializer
+from .serializers import ManagerSerializer, LoginSerializer, LogoutSerializer
 
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -113,3 +113,12 @@ class LoginView(APIView):
             serializer.validated_data,
             status=status.HTTP_200_OK,
         )
+class LogoutAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        serializer = LogoutSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)

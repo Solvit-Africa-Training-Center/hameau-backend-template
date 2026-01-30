@@ -1,7 +1,7 @@
 from django.contrib.auth import authenticate
 
 from rest_framework import serializers
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework.exceptions import AuthenticationFailed
 
 from utils.general_codes import generate_manager_password
@@ -65,3 +65,18 @@ class LoginSerializer(serializers.Serializer):
         }
 
         return to_return
+
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
+
+    def validate(self, attrs):
+        self.token = attrs['refresh']
+
+        return attrs
+    
+    def save(self, **kwargs):
+
+        try:
+            RefreshToken(self.token).blacklist
+        except TokenError:
+            self.fail('Wrong Token!')
