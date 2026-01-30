@@ -19,7 +19,8 @@ from .serializers import (
     ManagerSerializer, 
     LoginSerializer, 
     RequestPasswordResetSerializer, 
-    ResetPasswordConfirmSerializer
+    ResetPasswordConfirmSerializer,
+    ChangePasswordSerializer
 )
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -166,3 +167,25 @@ class LogoutAPIView(APIView):
         serializer.save()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+class ChangePasswordView(APIView):
+    """
+    API endpoint for changing user password.
+    """
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_summary="Change password",
+        operation_description="Allows authenticated users to change their password. If they had a temporary password, it marks it as changed.",
+        request_body=ChangePasswordSerializer,
+        responses={
+            200: openapi.Response(description="Password changed successfully"),
+            400: openapi.Response(description="Invalid data or old password"),
+        },
+        tags=["Authentication"],
+    )
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"message": "Password changed successfully"}, status=status.HTTP_200_OK)
