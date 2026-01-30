@@ -14,8 +14,13 @@ from .permissions import (
     IsResidentialManager,
     IsSystemAdmin,
 )
-from .serializers import ManagerSerializer, LoginSerializer, LogoutSerializer
-
+from .serializers import ( 
+    LogoutSerializer,
+    ManagerSerializer, 
+    LoginSerializer, 
+    RequestPasswordResetSerializer, 
+    ResetPasswordConfirmSerializer
+)
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
@@ -112,6 +117,45 @@ class LoginView(APIView):
         return Response(
             serializer.validated_data,
             status=status.HTTP_200_OK,
+        )
+    
+class RequestPasswordResetView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    @swagger_auto_schema(
+        operation_summary="Request password reset",
+        request_body=RequestPasswordResetSerializer,
+        responses={200: "Reset code sent successfully", 400: "Invalid email"},
+        tags=["managers"],
+    )
+    def post(self, request):
+        serializer = RequestPasswordResetSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            {"message": "Password reset code sent to your email"},
+            status=status.HTTP_200_OK
+        )
+
+
+class ResetPasswordConfirmView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    @swagger_auto_schema(
+        operation_summary="Confirm password reset",
+        request_body=ResetPasswordConfirmSerializer,
+        responses={200: "Password reset successfully", 400: "Invalid code or passwords"},
+        tags=["managers"],
+    )
+    def post(self, request):
+        serializer = ResetPasswordConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            {"message": "Password reset successfully"},
+            status=status.HTTP_200_OK
         )
 class LogoutAPIView(APIView):
     permission_classes = (IsAuthenticated,)
