@@ -25,4 +25,23 @@ def send_temporary_credentials(email, password):
     email_message.attach_alternative(html_content, "text/html")
     return email_message.send()
 
-    
+def send_password_reset_email(email, code):
+    subject = "Reset your password"
+
+    context = {
+        "code": code,
+        "year": now().year,
+    }
+
+    html_content = render_to_string("emails/email_reset_password.html", context)
+    text_content = f"Your password reset code is: {code}"
+
+    email_message = EmailMultiAlternatives(
+        subject=subject,
+        body=text_content,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[email],
+    )
+
+    email_message.attach_alternative(html_content, "text/html")
+    return email_message.send()
