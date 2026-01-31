@@ -5,7 +5,7 @@ venv/
 env/
 .pytest_cache/
 
-
+dbc.sqlite3
 .env
 *.pyc
 __pycache__
