@@ -19,6 +19,8 @@ from .ifashe_models import (
 )
 from . residentials_models import (
     Child,
+    ChildProgress,
+    ProgressMedia,
     Caretaker,
     House,
     ChildCaretakerAssignment,

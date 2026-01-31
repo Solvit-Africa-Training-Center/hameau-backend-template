@@ -32,10 +32,11 @@ class Child(TimeStampedModel, SoftDeleteModel):
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
     profile_image = models.ImageField(upload_to="profile_images_children/", blank=True)
     start_date = models.DateField()    
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Active")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=ACTIVE)
     special_needs = models.TextField(blank=True)
     vigilant_contact_name = models.CharField(max_length=100, blank=True)
     vigilant_contact_phone = models.CharField(max_length=20, blank=True)
+    story = models.TextField(null = True, blank=True)
 
     class Meta:
         db_table = "children"
@@ -68,7 +69,27 @@ class Child(TimeStampedModel, SoftDeleteModel):
                 )
             )
         return None
+class ChildProgress(TimeStampedModel,SoftDeleteModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    notes = models.TextField()    
+    child = models.ForeignKey(
+        Child, on_delete=models.CASCADE, related_name="child_progress"
+    )
 
+    class Meta:
+        ordering = ["created_on"]
+        verbose_name = "Progress of the Child"
+        verbose_name_plural = "Progresses of the Child"
+
+class ProgressMedia(TimeStampedModel, SoftDeleteModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    progress_image = models.ImageField(upload_to="child_progress_images/", null= True, blank=True)
+    progress_video = models.FileField(upload_to="child_progress_videos/", null = True, blank= True)
+    progress = models.ForeignKey(ChildProgress, on_delete=models.CASCADE, related_name="progress_media")
+
+    class Meta:
+        ordering = ["created_on"]
+        
 
 class Caretaker(TimeStampedModel, SoftDeleteModel):
     MALE = "MALE"
