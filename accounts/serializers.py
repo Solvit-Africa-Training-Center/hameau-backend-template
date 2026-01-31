@@ -158,6 +158,12 @@ class LogoutSerializer(serializers.Serializer):
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
+    password_confirm = serializers.CharField(required=True)
+
+    def validate(self, attrs):
+        if attrs["new_password"] != attrs["password_confirm"]:
+            raise serializers.ValidationError({"password": "Passwords do not match"})
+        return attrs
 
     def validate_old_password(self, value):
         user = self.context["request"].user

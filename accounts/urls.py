@@ -11,7 +11,7 @@ urlpatterns = [
     path("managers/logout/", LogoutAPIView.as_view()),
     path("managers/password-reset/request/", RequestPasswordResetView.as_view()),
     path("managers/password-reset/confirm/", ResetPasswordConfirmView.as_view()),
-    path("auth/change-password/", ChangePasswordView.as_view()),
+    path("managers/change-password/", ChangePasswordView.as_view()),
 ]
 
 urlpatterns += router.urls

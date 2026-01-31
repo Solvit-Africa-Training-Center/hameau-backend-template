@@ -182,7 +182,7 @@ class ChangePasswordView(APIView):
             200: openapi.Response(description="Password changed successfully"),
             400: openapi.Response(description="Invalid data or old password"),
         },
-        tags=["Authentication"],
+        tags=["managers"],
     )
     def post(self, request):
         serializer = ChangePasswordSerializer(data=request.data, context={"request": request})
