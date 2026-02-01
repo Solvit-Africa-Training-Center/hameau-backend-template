@@ -1,6 +1,8 @@
 import os
 from rest_framework import serializers
 from django.utils import timezone
+from rest_framework.response import Response
+from rest_framework import status
 from decimal import Decimal
 from ..models import (
     Child,
@@ -9,6 +11,8 @@ from ..models import (
     ChildEducation,
     EducationInstitution,
     EducationProgram,
+    Caretaker,
+    HealthRecord,
 )
 
 
@@ -250,3 +254,127 @@ class ChildEducationReadSerializer(serializers.ModelSerializer):
             "updated_on",
         ]
         read_only_fields = ["id", "created_on", "updated_on"]
+
+
+class CaretakerReadSerializer(serializers.ModelSerializer):
+    """Serializer for reading caretaker data"""
+    full_name = serializers.ReadOnlyField()
+    
+    class Meta:
+        model = Caretaker
+        fields = "__all__"
+        read_only_fields = ('id', 'created_on', 'updated_on', 'deleted_on')
+
+
+class CaretakerWriteSerializer(serializers.ModelSerializer):
+    """Serializer for creating/updating caretaker data"""
+    
+    class Meta:
+        model = Caretaker
+        fields = [
+            'first_name', 'last_name', 'date_of_birth', 'gender', 
+            'phone', 'email', 'address', 'role', 'hire_date', 'is_active'
+        ]
+        
+    def validate_phone(self, value):
+        """Validate phone number format"""
+        if value and not value.startswith('+'):
+            raise serializers.ValidationError("Phone number must start with country code (e.g., +250)")
+        return value
+
+
+class CaretakerListSerializer(serializers.ModelSerializer):
+    """Lighter serializer for list views"""
+    full_name = serializers.ReadOnlyField()
+    
+    class Meta:
+        model = Caretaker
+        fields = [
+            'id', 'full_name', 'first_name', 'last_name', 
+            'phone', 'email', 'role', 'is_active', 'hire_date'
+        ]
+
+class HealthRecordReadSerializer(serializers.ModelSerializer):
+    """Serializer for reading health records"""
+    
+    child_name = serializers.SerializerMethodField()
+    child_details = ChildReadSerializer(source='child', read_only=True)
+    cost_formatted = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = HealthRecord
+        fields = [
+            'id', 'child', 'child_name', 'child_details', 'record_type',
+            'visit_date', 'hospital_name', 'diagnosis', 'treatment',
+            'description', 'cost', 'cost_formatted', 'created_on', 'updated_on'
+        ]
+        read_only_fields = ('id', 'created_on', 'updated_on')
+    
+    def get_child_name(self, obj):
+        return f"{obj.child.first_name} {obj.child.last_name}"
+    
+    def get_cost_formatted(self, obj):
+        """Format cost with currency"""
+        return f"{obj.cost:,.2f} RWF"
+
+
+class HealthRecordWriteSerializer(serializers.ModelSerializer):
+    """Serializer for creating/updating health records"""
+    
+    class Meta:
+        model = HealthRecord
+        fields = [
+            'child', 'record_type', 'visit_date', 'hospital_name',
+            'diagnosis', 'treatment', 'description', 'cost'
+        ]
+    
+    def validate_visit_date(self, value):
+        """Ensure visit date is not in the future"""
+        from django.utils import timezone
+        if value > timezone.now().date():
+            raise serializers.ValidationError("Visit date cannot be in the future")
+        return value
+    
+    def validate_cost(self, value):
+        """Ensure cost is not negative"""
+        if value < 0:
+            raise serializers.ValidationError("Cost cannot be negative")
+        return value
+    
+    def validate(self, attrs):
+        """Custom validation"""
+        record_type = attrs.get('record_type')
+        
+        # Require diagnosis for illness records
+        if record_type == 'Illness' and not attrs.get('diagnosis'):
+            raise serializers.ValidationError({
+                'diagnosis': 'Diagnosis is required for illness records'
+            })
+        
+        # Require treatment for treatment records
+        if record_type == 'Treatment' and not attrs.get('treatment'):
+            raise serializers.ValidationError({
+                'treatment': 'Treatment details are required for treatment records'
+            })
+        
+        return attrs
+
+
+class HealthRecordListSerializer(serializers.ModelSerializer):
+    """Lighter serializer for list views"""
+    
+    child_name = serializers.SerializerMethodField()
+    cost_formatted = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = HealthRecord
+        fields = [
+            'id', 'child', 'child_name', 'record_type', 'visit_date',
+            'hospital_name', 'diagnosis', 'cost', 'cost_formatted', 'created_on'
+        ]
+    
+    def get_child_name(self, obj):
+        return f"{obj.child.first_name} {obj.child.last_name}"
+    
+    def get_cost_formatted(self, obj):
+        return f"{obj.cost:,.2f} RWF"
