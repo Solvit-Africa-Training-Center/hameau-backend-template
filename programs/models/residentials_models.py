@@ -1,5 +1,6 @@
 import uuid
-
+from decimal import Decimal
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
 
@@ -32,10 +33,11 @@ class Child(TimeStampedModel, SoftDeleteModel):
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
     profile_image = models.ImageField(upload_to="profile_images_children/", blank=True)
     start_date = models.DateField()    
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Active")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=ACTIVE)
     special_needs = models.TextField(blank=True)
     vigilant_contact_name = models.CharField(max_length=100, blank=True)
     vigilant_contact_phone = models.CharField(max_length=20, blank=True)
+    story = models.TextField(null = True, blank=True)
 
     class Meta:
         db_table = "children"
@@ -68,7 +70,27 @@ class Child(TimeStampedModel, SoftDeleteModel):
                 )
             )
         return None
+class ChildProgress(TimeStampedModel,SoftDeleteModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    notes = models.TextField()    
+    child = models.ForeignKey(
+        Child, on_delete=models.CASCADE, related_name="child_progress"
+    )
 
+    class Meta:
+        ordering = ["created_on"]
+        verbose_name = "Progress of the Child"
+        verbose_name_plural = "Progresses of the Child"
+
+class ProgressMedia(TimeStampedModel, SoftDeleteModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    progress_image = models.ImageField(upload_to="child_progress_images/", null= True, blank=True)
+    progress_video = models.FileField(upload_to="child_progress_videos/", null = True, blank= True)
+    progress = models.ForeignKey(ChildProgress, on_delete=models.CASCADE, related_name="progress_media")
+
+    class Meta:
+        ordering = ["created_on"]
+        
 
 class Caretaker(TimeStampedModel, SoftDeleteModel):
     MALE = "MALE"
@@ -358,3 +380,53 @@ class ResidentialFinancialPlan(TimeStampedModel):
             + self.insurance_cost
             + self.other_costs
         )
+
+
+class HealthRecord(models.Model):
+    """Health records for children including visits, vaccinations, and illnesses"""
+    
+    RECORD_TYPE_CHOICES = [
+        ('Medical Visit', 'Medical Visit'),
+        ('Vaccination', 'Vaccination'),
+        ('Illness', 'Illness'),
+        ('Treatment', 'Treatment'),
+    ]
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    child = models.ForeignKey(
+        Child, 
+        on_delete=models.CASCADE, 
+        related_name='health_records'
+    )
+    record_type = models.CharField(
+        max_length=50, 
+        choices=RECORD_TYPE_CHOICES
+    )
+    visit_date = models.DateField()
+    hospital_name = models.CharField(max_length=100, blank=True, null=True)
+    diagnosis = models.TextField(blank=True, null=True)
+    treatment = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    cost = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2,
+        default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+        help_text='Cost in RWF (Rwandan Francs)'
+    )
+    created_on = models.DateTimeField(default=timezone.now)
+    updated_on = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'health_records'
+        ordering = ['-visit_date', '-created_on']
+        verbose_name = 'Health Record'
+        verbose_name_plural = 'Health Records'
+        indexes = [
+            models.Index(fields=['child', 'visit_date']),
+            models.Index(fields=['record_type']),
+            models.Index(fields=['cost']),
+        ]
+    
+    def __str__(self):
+        return f"{self.record_type} for {self.child} on {self.visit_date} - {self.cost} RWF"

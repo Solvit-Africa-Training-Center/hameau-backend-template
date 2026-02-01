@@ -45,7 +45,8 @@ def homeDocs(request):
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("", include("accounts.urls")),
+    path("api/", include("accounts.urls")),
+    path("api/",include("programs.urls")),
     path(
         "swagger/",
         schema_view.with_ui("swagger", cache_timeout=0),
