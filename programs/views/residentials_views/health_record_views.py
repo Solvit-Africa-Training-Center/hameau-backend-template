@@ -13,9 +13,11 @@ from programs.serializers import (
     HealthRecordReadSerializer,
     HealthRecordWriteSerializer,
     HealthRecordListSerializer,
+    SpendingReportSerializer,
 )
 from utils.filters.health_records_filters import HealthRecordFilter
 from utils.paginators import StandardResultsSetPagination
+from utils.search import CustomSearchFilter
 from accounts.permissions import IsResidentialManager
 
 
@@ -37,7 +39,7 @@ class HealthRecordViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsResidentialManager]
     filter_backends = [
         DjangoFilterBackend,
-        filters.SearchFilter,
+        CustomSearchFilter,
         filters.OrderingFilter,
     ]
     filterset_class = HealthRecordFilter
@@ -348,6 +350,22 @@ class HealthRecordViewSet(viewsets.ModelViewSet):
                     }
                     for item in monthly_costs
                 ]
+            },
+            status=status.HTTP_200_OK
+        )
+
+    @action(detail=False, methods=['get'])
+    def spending_summary(self, request):
+        """
+        Get spending summary for:
+        - Normal health spending (kids without special diets)
+        - Special diet spending (kids with special diets)
+        - Education spending
+        """
+        return Response(
+            {
+                'success': True,
+                'data': SpendingReportSerializer({}, context={'request': request}).data
             },
             status=status.HTTP_200_OK
         )

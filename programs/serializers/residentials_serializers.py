@@ -4,6 +4,7 @@ from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework import status
 from decimal import Decimal
+from django.db.models import Sum, Q, F
 from ..models import (
     Child,
     ChildProgress,
@@ -12,7 +13,10 @@ from ..models import (
     EducationInstitution,
     EducationProgram,
     Caretaker,
+    Caretaker,
     HealthRecord,
+    ChildInsurance,
+    ResidentialFinancialPlan,
 )
 
 
@@ -376,5 +380,81 @@ class HealthRecordListSerializer(serializers.ModelSerializer):
     def get_child_name(self, obj):
         return f"{obj.child.first_name} {obj.child.last_name}"
     
+    
     def get_cost_formatted(self, obj):
         return f"{obj.cost:,.2f} RWF"
+
+
+class SpendingReportSerializer(serializers.Serializer):
+    """Serializer for residential spending report"""
+    
+    normal_spending = serializers.SerializerMethodField()
+    special_diet_spending = serializers.SerializerMethodField()
+    education_spending = serializers.SerializerMethodField()
+    total_spending = serializers.SerializerMethodField()
+    currency = serializers.CharField(default="RWF")
+    
+    def get_date_filters(self, date_field):
+        request = self.context.get('request')
+        filters = {}
+        if request:
+            start_date = request.query_params.get('start_date') or request.query_params.get('date_from')
+            end_date = request.query_params.get('end_date') or request.query_params.get('date_to')
+            
+            if start_date:
+                filters[f'{date_field}__gte'] = start_date
+            if end_date:
+                filters[f'{date_field}__lte'] = end_date
+        return filters
+
+    def _calculate_total_costs(self, children_queryset):
+        # Health Costs
+        health_filters = self.get_date_filters('visit_date')
+        health_cost = HealthRecord.objects.filter(
+            child__in=children_queryset, **health_filters
+        ).aggregate(total=Sum('cost'))['total'] or Decimal('0.00')
+
+        # Education Costs
+        edu_filters = self.get_date_filters('start_date')
+        edu_cost = ChildEducation.objects.filter(
+            child__in=children_queryset, **edu_filters
+        ).aggregate(total=Sum('cost'))['total'] or Decimal('0.00')
+
+        # Insurance Costs
+        ins_filters = self.get_date_filters('start_date')
+        ins_cost = ChildInsurance.objects.filter(
+            child__in=children_queryset, **ins_filters
+        ).aggregate(total=Sum('cost'))['total'] or Decimal('0.00')
+        
+        # Food Costs (from ResidentialFinancialPlan)
+        # Assuming financial plans track monthly food costs.
+        # We might need to filter by month/year which is tricky with date ranges.
+        # For simplicity, we use the 'month' field (which is a DateField)
+        plan_filters = self.get_date_filters('month')
+        food_cost = ResidentialFinancialPlan.objects.filter(
+            child__in=children_queryset, **plan_filters
+        ).aggregate(total=Sum('food_cost'))['total'] or Decimal('0.00')
+
+        return health_cost + edu_cost + ins_cost + food_cost
+
+    def get_normal_spending(self, obj):
+        # Children without special needs
+        children = Child.objects.filter(
+            Q(special_needs__isnull=True) | Q(special_needs__exact='')
+        )
+        return self._calculate_total_costs(children)
+
+    def get_special_diet_spending(self, obj):
+        # Children with special needs
+        children = Child.objects.exclude(
+            Q(special_needs__isnull=True) | Q(special_needs__exact='')
+        )
+        return self._calculate_total_costs(children)
+
+    def get_education_spending(self, obj):
+        # Total education spending for ALL children
+        filters = self.get_date_filters('start_date')
+        return ChildEducation.objects.filter(**filters).aggregate(total=Sum('cost'))['total'] or Decimal('0.00')
+
+    def get_total_spending(self, obj):
+        return self.get_normal_spending(obj) + self.get_special_diet_spending(obj)
