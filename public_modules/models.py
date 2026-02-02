@@ -85,6 +85,20 @@ class Donation(TimeStampedModel):
         (CREDIT_CARD, "Credit Card"),
     ]
 
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('COMPLETED', 'Completed'),
+        ('FAILED', 'Failed'),
+    ]
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='PENDING'
+    )
+    
+    stripe_payment_intent_id = models.CharField(max_length=255, blank=True, null=True)
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     donor = models.ForeignKey(
         Donor,
