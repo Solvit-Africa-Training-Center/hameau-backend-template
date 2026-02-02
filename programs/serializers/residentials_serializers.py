@@ -4,6 +4,7 @@ from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework import status
 from decimal import Decimal
+from django.db.models import Sum, Q, F
 from ..models import (
     Child,
     ChildProgress,
@@ -12,8 +13,13 @@ from ..models import (
     EducationInstitution,
     EducationProgram,
     Caretaker,
+    Caretaker,
     HealthRecord,
+    ChildInsurance,
+    ResidentialFinancialPlan,
 )
+from django.db.models import Sum, Count, Avg, F
+from django.db.models.functions import ExtractMonth, ExtractYear
 
 
 class ChildReadSerializer(serializers.ModelSerializer):
@@ -376,5 +382,170 @@ class HealthRecordListSerializer(serializers.ModelSerializer):
     def get_child_name(self, obj):
         return f"{obj.child.first_name} {obj.child.last_name}"
     
+    
     def get_cost_formatted(self, obj):
         return f"{obj.cost:,.2f} RWF"
+
+
+class SpendingReportSerializer(serializers.Serializer):
+    """Serializer for residential spending report"""
+    
+    normal_spending = serializers.SerializerMethodField()
+    special_diet_spending = serializers.SerializerMethodField()
+    education_spending = serializers.SerializerMethodField()
+    total_spending = serializers.SerializerMethodField()
+    currency = serializers.CharField(default="RWF")
+    
+    def get_date_filters(self, date_field):
+        request = self.context.get('request')
+        filters = {}
+        if request:
+            start_date = request.query_params.get('start_date') or request.query_params.get('date_from')
+            end_date = request.query_params.get('end_date') or request.query_params.get('date_to')
+            
+            if start_date:
+                filters[f'{date_field}__gte'] = start_date
+            if end_date:
+                filters[f'{date_field}__lte'] = end_date
+        return filters
+
+    def _calculate_total_costs(self, children_queryset):
+
+        health_filters = self.get_date_filters('visit_date')
+        health_cost = HealthRecord.objects.filter(
+            child__in=children_queryset, **health_filters
+        ).aggregate(total=Sum('cost'))['total'] or Decimal('0.00')
+
+        
+        edu_filters = self.get_date_filters('start_date')
+        edu_cost = ChildEducation.objects.filter(
+            child__in=children_queryset, **edu_filters
+        ).aggregate(total=Sum('cost'))['total'] or Decimal('0.00')
+
+        
+        ins_filters = self.get_date_filters('start_date')
+        ins_cost = ChildInsurance.objects.filter(
+            child__in=children_queryset, **ins_filters
+        ).aggregate(total=Sum('cost'))['total'] or Decimal('0.00')
+        
+        
+        plan_filters = self.get_date_filters('month')
+        food_cost = ResidentialFinancialPlan.objects.filter(
+            child__in=children_queryset, **plan_filters
+        ).aggregate(total=Sum('food_cost'))['total'] or Decimal('0.00')
+
+        return health_cost + edu_cost + ins_cost + food_cost
+
+    def get_normal_spending(self, obj):
+        # Children without special needs
+        children = Child.objects.filter(
+            Q(special_needs__isnull=True) | Q(special_needs__exact='')
+        )
+        return self._calculate_total_costs(children)
+
+    def get_special_diet_spending(self, obj):
+        # Children with special needs
+        children = Child.objects.exclude(
+            Q(special_needs__isnull=True) | Q(special_needs__exact='')
+        )
+        return self._calculate_total_costs(children)
+
+    def get_education_spending(self, obj):
+        # Total education spending for ALL children
+        filters = self.get_date_filters('start_date')
+        return ChildEducation.objects.filter(**filters).aggregate(total=Sum('cost'))['total'] or Decimal('0.00')
+
+
+    def get_total_spending(self, obj):
+        return self.get_normal_spending(obj) + self.get_special_diet_spending(obj)
+
+
+class CostReportSerializer(serializers.Serializer):
+    """Serializer for detailed cost report"""
+    date_range = serializers.SerializerMethodField()
+    total_cost = serializers.SerializerMethodField()
+    cost_by_type = serializers.SerializerMethodField()
+    top_10_children_by_cost = serializers.SerializerMethodField()
+    monthly_breakdown = serializers.SerializerMethodField()
+
+    def _get_queryset(self):
+        request = self.context.get('request')
+        queryset = HealthRecord.objects.select_related('child')
+        
+        if request:
+            date_from = request.query_params.get('date_from')
+            date_to = request.query_params.get('date_to')
+            
+            if date_from:
+                queryset = queryset.filter(visit_date__gte=date_from)
+            if date_to:
+                queryset = queryset.filter(visit_date__lte=date_to)
+        return queryset
+
+    def get_date_range(self, obj):
+        request = self.context.get('request')
+        return {
+            'from': request.query_params.get('date_from') if request else None,
+            'to': request.query_params.get('date_to') if request else None
+        }
+
+    def get_total_cost(self, obj):
+        queryset = self._get_queryset()
+        return queryset.aggregate(total=Sum('cost'))['total'] or Decimal('0.00')
+
+    def get_cost_by_type(self, obj):
+        queryset = self._get_queryset()
+        data = queryset.values('record_type').annotate(
+            total_cost=Sum('cost'),
+            count=Count('id'),
+            average_cost=Avg('cost')
+        ).order_by('-total_cost')
+        
+        return [
+            {
+                'record_type': item['record_type'],
+                'total_cost': float(item['total_cost'] or 0),
+                'count': item['count'],
+                'average_cost': float(item['average_cost'] or 0),
+            }
+            for item in data
+        ]
+
+    def get_top_10_children_by_cost(self, obj):
+        queryset = self._get_queryset()
+        data = queryset.values(
+            'child__id', 'child__first_name', 'child__last_name'
+        ).annotate(
+            total_cost=Sum('cost'),
+            record_count=Count('id')
+        ).order_by('-total_cost')[:10]
+        
+        return [
+            {
+                'child_id': str(item['child__id']),
+                'child_name': f"{item['child__first_name']} {item['child__last_name']}",
+                'total_cost': float(item['total_cost'] or 0),
+                'record_count': item['record_count'],
+            }
+            for item in data
+        ]
+
+    def get_monthly_breakdown(self, obj):
+        queryset = self._get_queryset()
+        data = queryset.annotate(
+            month=ExtractMonth('visit_date'),
+            year=ExtractYear('visit_date')
+        ).values('year', 'month').annotate(
+            total_cost=Sum('cost'),
+            count=Count('id')
+        ).order_by('year', 'month')
+        
+        return [
+            {
+                'year': item['year'],
+                'month': item['month'],
+                'total_cost': float(item['total_cost'] or 0),
+                'count': item['count'],
+            }
+            for item in data
+        ]
