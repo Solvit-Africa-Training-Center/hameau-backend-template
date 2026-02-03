@@ -4,15 +4,16 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Sum, Count, Avg
 from decimal import Decimal
-from django.http import HttpResponse
 
 from programs.models import HealthRecord, ChildEducation, ResidentialFinancialPlan, ChildInsurance, Child
 from programs.serializers import (
     SpendingReportSerializer,
     CostReportSerializer,
+    FinancialReportDataSerializer,
 )
 from accounts.permissions import IsResidentialManager
-from utils.reports import generate_pdf_report, generate_excel_report
+from rest_framework import viewsets, status, renderers
+from utils.reports import PDFRenderer, ExcelRenderer
 
 
 class ResidentialFinanceViewSet(viewsets.ViewSet):
@@ -49,26 +50,27 @@ class ResidentialFinanceViewSet(viewsets.ViewSet):
             status=status.HTTP_200_OK
         )
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], renderer_classes=[renderers.JSONRenderer, PDFRenderer, ExcelRenderer])
     def download_report(self, request):
         """
         Download financial report as PDF or Excel.
         Query params:
-        - format: 'pdf' or 'excel' (default: 'pdf')
+        - format: 'pdf', 'excel', or 'json' (default: 'json')
         - report_type: 'spending' or 'cost' (default: 'spending')
         - date_from, date_to: Date filters
         """
-        format_type = request.query_params.get('format', 'pdf').lower()
         report_type = request.query_params.get('report_type', 'spending')
         
         filename = f"financial_report_{report_type}"
         data = []
         title = "Financial Report"
+        date_range = {}
 
         if report_type == 'cost':
              serializer = CostReportSerializer({}, context={'request': request})
              report_data = serializer.data
              title = f"Cost Report ({report_data['date_range']['from']} - {report_data['date_range']['to']})"
+             date_range = report_data['date_range']
              
              for item in report_data['cost_by_type']:
                  data.append({
@@ -90,15 +92,13 @@ class ResidentialFinanceViewSet(viewsets.ViewSet):
                  {"Category": "Total Spending", "Amount": f"{report_data['total_spending']:.2f}"},
              ]
 
-        if format_type == 'excel':
-            buffer = generate_excel_report(data, filename)
-            content_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-            extension = 'xlsx'
-        else:
-            buffer = generate_pdf_report(data, title, filename)
-            content_type = 'application/pdf'
-            extension = 'pdf'
-
-        response = HttpResponse(buffer, content_type=content_type)
-        response['Content-Disposition'] = f'attachment; filename="{filename}.{extension}"'
-        return response
+        report_context = {
+            "report_type": report_type,
+            "title": title,
+            "filename": filename,
+            "data": data,
+            "date_range": date_range
+        }
+        
+        serializer = FinancialReportDataSerializer(report_context)
+        return Response(serializer.data)

@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status, filters
+from rest_framework import viewsets, status, filters, renderers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -23,6 +23,7 @@ from programs.serializers import (
     EducationInstitutionSerializer,
     EducationProgramReadSerializer,
     EducationProgramWriteSerializer,
+    ChildProgressReportSerializer,
 )
 from utils.filters.child_filters import (
     ChildFilter,
@@ -35,8 +36,7 @@ from utils.paginators import (
     ProgressCursorPagination,
     SmallResultsSetPagination,
 )
-from utils.reports import generate_child_progress_pdf
-from django.http import HttpResponse
+from utils.reports import generate_child_progress_pdf, PDFRenderer
 
 from accounts.permissions import (
     IsResidentialManager,
@@ -114,26 +114,30 @@ class ChildViewSet(viewsets.ModelViewSet):
         serializer = ChildEducationReadSerializer(education_records, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=["get"])
+    @action(detail=True, methods=["get"], renderer_classes=[renderers.JSONRenderer, PDFRenderer])
     def download_progress_report(self, request, pk=None):
         child = self.get_object()
         
         # Get latest progress
-        latest_progress = child.child_progress.first() # Ordered by -created_on in model/view
+        progress_queryset = child.child_progress.all() # Ordered by -created_on
+        latest_progress = progress_queryset.first()
         
         if not latest_progress:
              return Response({"error": "No progress records found for this child"}, status=status.HTTP_404_NOT_FOUND)
 
         # Get previous progress (second latest)
         previous_progress = None
-        if child.child_progress.count() > 1:
-            previous_progress = child.child_progress.all()[1]
+        if progress_queryset.count() > 1:
+            previous_progress = progress_queryset[1]
             
-        buffer = generate_child_progress_pdf(child, latest_progress, previous_progress)
+        report_data = {
+            'child': child,
+            'latest_progress': latest_progress,
+            'previous_progress': previous_progress
+        }
         
-        response = HttpResponse(buffer, content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="progress_report_{child.first_name}.pdf"'
-        return response
+        serializer = ChildProgressReportSerializer(report_data)
+        return Response(serializer.data)
 
 
 class ChildProgressViewSet(viewsets.ModelViewSet):

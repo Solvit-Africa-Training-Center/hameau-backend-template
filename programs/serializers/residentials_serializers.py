@@ -549,3 +549,30 @@ class CostReportSerializer(serializers.Serializer):
             }
             for item in data
         ]
+
+
+class ChildProgressReportSerializer(serializers.Serializer):
+    child = ChildReadSerializer(read_only=True)
+    latest_progress = ChildProgressReadSerializer(read_only=True)
+    previous_progress = ChildProgressReadSerializer(read_only=True)
+    comparison_summary = serializers.SerializerMethodField()
+
+    def get_comparison_summary(self, obj):
+        latest = obj.get('latest_progress')
+        previous = obj.get('previous_progress')
+        
+        if not latest:
+            return "No progress records found."
+        
+        if not previous:
+            return "Initial report. No previous records for comparison."
+            
+        return f"Comparison between {latest.created_on.date()} and {previous.created_on.date()}."
+
+
+class FinancialReportDataSerializer(serializers.Serializer):
+    report_type = serializers.CharField()
+    title = serializers.CharField()
+    data = serializers.ListField(child=serializers.DictField())
+    date_range = serializers.DictField(required=False)
+

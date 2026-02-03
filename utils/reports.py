@@ -28,25 +28,29 @@ def generate_pdf_report(data, title, filename):
 
     if data:
         # Create table data
-        # Assume all dicts in data have the same keys, use keys as headers
         headers = list(data[0].keys())
         table_data = [headers]
         
         for row in data:
             table_data.append([str(row.get(h, '')) for h in headers])
 
+        # Calculate column widths (simple approach)
+        col_widths = [120] * len(headers) 
+        
         # Create the table
-        t = Table(table_data)
+        t = Table(table_data, colWidths=col_widths)
         
         # Add style to the table
         t.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4F81BD')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.whitesmoke),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ]))
         
         elements.append(t)
@@ -117,3 +121,43 @@ def generate_child_progress_pdf(child, current_progress, previous_progress=None)
     doc.build(elements)
     buffer.seek(0)
     return buffer
+
+
+from rest_framework import renderers
+
+class PDFRenderer(renderers.BaseRenderer):
+    media_type = 'application/pdf'
+    format = 'pdf'
+    render_style = 'binary'
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        if not data:
+            return b''
+            
+        if 'latest_progress' in data:
+            buffer = generate_child_progress_pdf(
+                data['child'], 
+                data['latest_progress'], 
+                data.get('previous_progress')
+            )
+        else:
+            title = data.get('title', 'Report')
+            filename = data.get('filename', 'report')
+            buffer = generate_pdf_report(data.get('data', []), title, filename)
+            
+        return buffer.getvalue()
+
+class ExcelRenderer(renderers.BaseRenderer):
+    media_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    format = 'excel'
+    render_style = 'binary'
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        if not data:
+            return b''
+            
+        filename = data.get('filename', 'report')
+        buffer = generate_excel_report(data.get('data', []), filename)
+        
+        return buffer.getvalue()
+
