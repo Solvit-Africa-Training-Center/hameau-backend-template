@@ -5,8 +5,6 @@ CORS_ALLOWED_ORIGINS = [
     "https://hameau-des-jeunes.vercel.app"
 ]
 
-# CORS_ALL_ORIGINS = True
-
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_HEADERS = [
