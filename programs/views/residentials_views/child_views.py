@@ -35,6 +35,8 @@ from utils.paginators import (
     ProgressCursorPagination,
     SmallResultsSetPagination,
 )
+from utils.reports import generate_child_progress_pdf
+from django.http import HttpResponse
 
 from accounts.permissions import (
     IsResidentialManager,
@@ -111,6 +113,27 @@ class ChildViewSet(viewsets.ModelViewSet):
         education_records = child.education_records.all().order_by("-start_date")
         serializer = ChildEducationReadSerializer(education_records, many=True)
         return Response(serializer.data)
+
+    @action(detail=True, methods=["get"])
+    def download_progress_report(self, request, pk=None):
+        child = self.get_object()
+        
+        # Get latest progress
+        latest_progress = child.child_progress.first() # Ordered by -created_on in model/view
+        
+        if not latest_progress:
+             return Response({"error": "No progress records found for this child"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Get previous progress (second latest)
+        previous_progress = None
+        if child.child_progress.count() > 1:
+            previous_progress = child.child_progress.all()[1]
+            
+        buffer = generate_child_progress_pdf(child, latest_progress, previous_progress)
+        
+        response = HttpResponse(buffer, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="progress_report_{child.first_name}.pdf"'
+        return response
 
 
 class ChildProgressViewSet(viewsets.ModelViewSet):
