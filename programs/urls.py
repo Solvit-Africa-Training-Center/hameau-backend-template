@@ -6,7 +6,6 @@ from .views import (
     EducationProgramViewSet,
     ChildEducationViewSet,
     CaretakerViewSet,
-    CaretakerViewSet,
     HealthRecordViewSet,
     ResidentialFinanceViewSet,
 )
