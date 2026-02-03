@@ -320,35 +320,35 @@ class FoodItem(TimeStampedModel):
         return 0
 
 
-class HealthRecord(TimeStampedModel):
-    MEDICAL_VISIT = "MEDICAL_VISIT"
-    VACCINATION = "VACCINATION"
-    ILLNESS = "ILLNESS"
+# class HealthRecord(TimeStampedModel):
+#     MEDICAL_VISIT = "MEDICAL_VISIT"
+#     VACCINATION = "VACCINATION"
+#     ILLNESS = "ILLNESS"
 
-    RECORD_TYPE_CHOICES = [
-        (MEDICAL_VISIT, "Medical Visit"),
-        (VACCINATION, "Vaccination"),
-        (ILLNESS, "Illness"),
-    ]
+#     RECORD_TYPE_CHOICES = [
+#         (MEDICAL_VISIT, "Medical Visit"),
+#         (VACCINATION, "Vaccination"),
+#         (ILLNESS, "Illness"),
+#     ]
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    child = models.ForeignKey(
-        Child, on_delete=models.CASCADE, related_name="health_records"
-    )
-    record_type = models.CharField(max_length=50, choices=RECORD_TYPE_CHOICES)
-    visit_date = models.DateField()
-    diagnosis = models.TextField(blank=True)
-    treatment = models.TextField(blank=True)
-    notes = models.TextField(blank=True)
+#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+#     child = models.ForeignKey(
+#         Child, on_delete=models.CASCADE, related_name="health_records"
+#     )
+#     record_type = models.CharField(max_length=50, choices=RECORD_TYPE_CHOICES)
+#     visit_date = models.DateField()
+#     diagnosis = models.TextField(blank=True)
+#     treatment = models.TextField(blank=True)
+#     notes = models.TextField(blank=True)
 
-    class Meta:
-        db_table = "health_records"
-        ordering = ["visit_date","record_type"]
-        verbose_name = "Health Record"
-        verbose_name_plural = "Health Records"
+#     class Meta:
+#         db_table = "health_records"
+#         ordering = ["visit_date","record_type"]
+#         verbose_name = "Health Record"
+#         verbose_name_plural = "Health Records"
 
-    def __str__(self):
-        return f"{self.child} - {self.record_type} on {self.visit_date}"
+#     def __str__(self):
+#         return f"{self.child} - {self.record_type} on {self.visit_date}"
 
 
 class ResidentialFinancialPlan(TimeStampedModel):
@@ -383,14 +383,14 @@ class ResidentialFinancialPlan(TimeStampedModel):
 
 
 class HealthRecord(models.Model):
-    """Health records for children including visits, vaccinations, and illnesses"""
-    
+    MEDICAL_VISIT = "MEDICAL_VISIT"
+    VACCINATION = "VACCINATION"
+    ILLNESS = "ILLNESS"
+
     RECORD_TYPE_CHOICES = [
-        ('Medical Visit', 'Medical Visit'),
-        ('Vaccination', 'Vaccination'),
-        ('Illness', 'Illness'),
-        ('Treatment', 'Treatment'),
-    ]
+        (MEDICAL_VISIT, "Medical Visit"),
+        (VACCINATION, "Vaccination"),
+        (ILLNESS, "Illness"),    ]    
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     child = models.ForeignKey(
@@ -426,7 +426,8 @@ class HealthRecord(models.Model):
             models.Index(fields=['child', 'visit_date']),
             models.Index(fields=['record_type']),
             models.Index(fields=['cost']),
-        ]
+        ]    
+    
     
     def __str__(self):
-        return f"{self.record_type} for {self.child} on {self.visit_date} - {self.cost} RWF"
+        return f"{self.child} - {self.record_type} on {self.visit_date}"
