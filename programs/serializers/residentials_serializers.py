@@ -175,7 +175,13 @@ class EducationInstitutionSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = EducationInstitution
-        fields = "__all__"
+        fields = [
+            "id", 
+            "name", 
+            "address", 
+            "phone", 
+            "email", 
+            "website"]
         read_only_fields = ["id", "created_on", "updated_on"]
 
 
@@ -184,7 +190,13 @@ class EducationProgramReadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EducationProgram
-        fields = "__all__"
+        fields = [
+            "id", 
+            "institution", 
+            "program_name", 
+            "program_level",
+            "cost"
+        ]
         read_only_fields = ["id", "created_on", "updated_on"]
 
 
@@ -268,7 +280,18 @@ class CaretakerReadSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Caretaker
-        fields = "__all__"
+        fields = [
+            "id",
+            "full_name",
+            "date_of_birth",
+            "gender",
+            "phone",
+            "email",
+            "address",
+            "role",
+            "hire_date",
+            "is_active",
+        ]
         read_only_fields = ('id', 'created_on', 'updated_on', 'deleted_on')
 
 
