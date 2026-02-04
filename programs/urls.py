@@ -7,6 +7,7 @@ from .views import (
     ChildEducationViewSet,
     CaretakerViewSet,
     HealthRecordViewSet,
+    ResidentialFinanceViewSet,
 )
 
 router = DefaultRouter()
@@ -18,6 +19,7 @@ router.register('children_educational_programs', EducationProgramViewSet, basena
 router.register('children_programs_enrollments', ChildEducationViewSet, basename='enrollment')
 router.register('caretakers', CaretakerViewSet, basename='caretaker')
 router.register('health-records', HealthRecordViewSet, basename='health-record')
+router.register('residential-finance', ResidentialFinanceViewSet, basename='residential-finance')
 
 urlpatterns = router.urls
 
