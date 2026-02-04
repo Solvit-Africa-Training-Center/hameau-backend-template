@@ -30,4 +30,10 @@ class CreatePaymentIntentSerializer(serializers.Serializer):
     currency = serializers.CharField(max_length=3, default='usd')
     donor_id = serializers.CharField(required=False, allow_null=True)
     donation_purpose = serializers.CharField(required=False, allow_blank=True)
-
+    
+    # New fields for inline donor creation
+    first_name = serializers.CharField(required=False, allow_blank=True)
+    last_name = serializers.CharField(required=False, allow_blank=True)
+    email = serializers.EmailField(required=False, allow_blank=True)
+    phone = serializers.CharField(required=False, allow_blank=True)
+    

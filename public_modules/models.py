@@ -84,11 +84,18 @@ class Donation(TimeStampedModel):
         (BANK_TRANSFER, "Bank Transfer"),
         (CREDIT_CARD, "Credit Card"),
     ]
-
+    PENDING = 'PENDING'
+    PAID = 'PAID'
+    COMPLETED = 'COMPLETED'
+    FAILED = 'FAILED'
+    CANCELLED = 'CANCELLED'
+    
     STATUS_CHOICES = [
-        ('PENDING', 'Pending'),
-        ('COMPLETED', 'Completed'),
-        ('FAILED', 'Failed'),
+        (PENDING, 'Pending'),
+        (PAID, 'Paid'),
+        (COMPLETED,'Completed'),
+        (FAILED, 'Failed'),
+        (CANCELLED, 'Cancelled')
     ]
 
     status = models.CharField(

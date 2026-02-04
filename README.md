@@ -136,6 +136,10 @@ EMAIL_USE_TLS=True
 EMAIL_HOST_USER=your@gmail.com
 EMAIL_HOST_PASSWORD=your-app-password
 
+STRIPE_PUBLISHABLE_KEY= xxx
+STRIPE_SECRET_KEY= xxx
+STRIPE_WEBHOOK_SECRET= xxx
+
 
 ```
 
@@ -169,27 +173,3 @@ git commit -m "Add feature"
 git push origin feature/your-feature-name
 ```
 
-10. Payment Integration (Stripe)
-
-To enable donation payments:
-
-1. Add your Stripe keys to `.env`:
-   ```
-   STRIPE_PUBLISHABLE_KEY= xxx
-   STRIPE_SECRET_KEY= xxx
-   STRIPE_WEBHOOK_SECRET= xxx
-
-   ```
-
-2. API Endpoints:
-   - **Create Payment Intent**: `POST /api/create-payment-intent/`
-     - **Body**:
-       ```json
-       {
-         "amount": 50.00,
-         "currency": "usd",
-         "donation_purpose": "Sponsorship",
-         "donor_id": "optional-donor-id" 
-       }
-       ```
-     - **Response**: Returns logic `clientSecret` for frontend processing.

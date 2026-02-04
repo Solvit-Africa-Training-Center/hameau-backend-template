@@ -22,7 +22,30 @@ class CreatePaymentIntentView(APIView):
             currency = serializer.validated_data['currency']
             donation_purpose = serializer.validated_data.get('donation_purpose', '')
 
-    # donor_id = serializer.validated_data.get('donor_id') # Optional handling
+            # Handle Donor Creation/Linking
+            donor = None
+            donor_id = serializer.validated_data.get('donor_id')
+            
+            if donor_id:
+                try:
+                    donor = Donor.objects.get(id=donor_id)
+                except Donor.DoesNotExist:
+                    pass 
+            elif serializer.validated_data.get('email'):
+                email = serializer.validated_data.get('email')
+                first_name = serializer.validated_data.get('first_name', '')
+                last_name = serializer.validated_data.get('last_name', '')
+                fullname = f"{first_name} {last_name}".strip()
+                phone = serializer.validated_data.get('phone', '')
+
+                donor, created = Donor.objects.get_or_create(
+                    email=email,
+                    defaults={
+                        'fullname': fullname,
+                        'phone': phone,
+                        'donor_type': Donor.INDIVIDUAL 
+                    }
+                )
 
             try:
                 # Create a PaymentIntent with the order amount and currency
@@ -34,7 +57,8 @@ class CreatePaymentIntentView(APIView):
                     },
                     metadata={
                         'donation_purpose': donation_purpose,
-                        # 'donor_id': donor_id
+                        'donor_id': str(donor.id) if donor else None,
+                        'email': donor.email if donor else None
                     }
                 )
 
@@ -45,8 +69,7 @@ class CreatePaymentIntentView(APIView):
                     donation_purpose=donation_purpose,
                     status='PENDING',
                     stripe_payment_intent_id=intent['id'],
-                    # donor=... # Here is where i want to link donor here if provided
-                    donor_id = serializer.validated_data.get('donor_id') # Optional            handling
+                    donor=donor
                 )
 
                 return Response({
