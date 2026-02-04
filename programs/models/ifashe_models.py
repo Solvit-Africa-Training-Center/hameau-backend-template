@@ -10,16 +10,46 @@ class Family(TimeStampedModel, SoftDeleteModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     family_name = models.CharField(max_length=100)
     address = models.TextField()
-    province = models.CharField(max_length=100, blank=True)
-    district = models.CharField(max_length=100, blank=True)
-    sector = models.CharField(max_length=100, blank=True)
-    cell = models.CharField(max_length=100, blank=True)
-    village = models.CharField(max_length=100, blank=True)
-    family_members = models.IntegerField(null=True, blank=True)
+    family_id = models.CharField(max_length=20, unique=True)
+    province = models.CharField(max_length=100)
+    district = models.CharField(max_length=100)
+    sector = models.CharField(max_length=100)
+    cell = models.CharField(max_length=100)
+    village = models.CharField(max_length=100)
+    
+    # Socio-economic Data
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    CRITICAL = "CRITICAL"
+    
+    VULNERABILITY_CHOICES = [
+        (LOW, 'Low'),
+        (MEDIUM, 'Medium'),
+        (HIGH, 'High'),
+        (CRITICAL, 'Critical'),
+    ]
+    vulnerability_level = models.CharField(max_length=20, choices=VULNERABILITY_CHOICES, default=LOW)
+    
+    OWNED = "OWNED"
+    RENTED = "RENTED"
+    TEMPORARY = "TEMPORARY"
+
+    HOUSING_CHOICES = [
+        (OWNED, 'Owned'),
+        (RENTED, 'Rented'),
+        (TEMPORARY, 'Temporary'),
+    ]
+    housing_condition = models.CharField(max_length=20, choices=HOUSING_CHOICES)
+    family_members = models.IntegerField(help_text="Total members in household")
+    
+    social_worker_assessment = models.TextField(blank=True)
+    
+    proof_of_residence = models.FileField(upload_to='ifashe/families/residence/', blank=True)
 
     class Meta:
         db_table = "families"
-        ordering = ["family_name"]
+        ordering = ["family_name", "created_on"]
         verbose_name = "Family"
         verbose_name_plural = "Families"
 
@@ -38,14 +68,45 @@ class Parent(TimeStampedModel, SoftDeleteModel):
         (GUARDIAN, "Guardian"),
     ]
 
+    MALE = "MALE"
+    FEMALE = "FEMALE"
+
+    GENDER_CHOICES = [
+        (MALE, "Male"),
+        (FEMALE, "Female"),
+    ]
+
+    SINGLE = "SINGLE"
+    MARRIED = "MARRIED"
+    WIDOWED = "WIDOWED"
+    SEPARATED = "SEPARATED"
+    DIVORCED = "DIVORCED"
+
+    MARITAL_STATUS_CHOICES = [
+        (SINGLE, 'Single'),
+        (MARRIED, 'Married'),
+        (WIDOWED, 'Widowed'),
+        (SEPARATED, 'Separated'),
+        (DIVORCED, 'Divorced'),
+    ]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     family = models.ForeignKey(Family, on_delete=models.CASCADE, related_name="parents")
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
     relationship = models.CharField(max_length=50, choices=RELATIONSHIP_CHOICES)
-    phone = models.CharField(max_length=20, blank=True)
-    national_id = models.CharField(max_length=20, unique=True, blank=True, null=True)
-    date_of_birth = models.DateField(null=True, blank=True)
+    phone = models.CharField(max_length=20)
+    address = models.TextField(blank=True, help_text="Specific address if different from family")
+    national_id = models.CharField(max_length=20, unique=True)
+    date_of_birth = models.DateField()
+    education_level = models.CharField(max_length=100)
+    marital_status = models.CharField(max_length=50, choices=MARITAL_STATUS_CHOICES)
+    previous_employment = models.CharField(max_length=200, blank=True)
+    monthly_income = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    
+    # Documents
+    national_id_doc = models.FileField(upload_to='ifashe/parents/ids/', blank=True)
 
     class Meta:
         db_table = "parents"
@@ -63,7 +124,7 @@ class Parent(TimeStampedModel, SoftDeleteModel):
 
 class SponsoredChild(TimeStampedModel, SoftDeleteModel):
     MALE = "MALE"
-    FEMALE = "MALE"
+    FEMALE = "FEMALE"
     GENDER_CHOICES = [
         (MALE, "Male"),
         (FEMALE, "Female"),
@@ -76,13 +137,31 @@ class SponsoredChild(TimeStampedModel, SoftDeleteModel):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     date_of_birth = models.DateField()
-    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, blank=True)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
+    school_name = models.CharField(max_length=200)
     school_level = models.CharField(
-        max_length=100, blank=True, help_text="Primary, Secondary, etc."
+        max_length=100, help_text="Primary, Secondary, etc.", default="Primary"
     )
+    health_conditions = models.TextField(blank=True)
+    
+    ACTIVE = "ACTIVE"
+    INACTIVE = "INACTIVE"
+    EXITED = "EXITED"
+
+    SUPPORT_STATUS_CHOICES = [
+        (ACTIVE, 'Active in program'),
+        (INACTIVE, 'Temporarily inactive'),
+        (EXITED, 'Exited program'),
+    ]
+    support_status = models.CharField(max_length=20, choices=SUPPORT_STATUS_CHOICES, default='ACTIVE')
+    
     profile_image = models.ImageField(
         upload_to="sponsored_children_profiles/", blank=True
     )
+    
+    # Documents
+    birth_certificate = models.FileField(upload_to='ifashe/children/birth_cert/', blank=True)
+    school_report = models.FileField(upload_to='ifashe/children/school_reports/', blank=True)
 
     class Meta:
         db_table = "sponsored_children"
