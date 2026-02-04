@@ -20,6 +20,11 @@ from ..models import (
 )
 from django.db.models import Sum, Count, Avg, F
 from django.db.models.functions import ExtractMonth, ExtractYear
+from utils.validators import (
+    validate_not_future_date, 
+    validate_not_negative,
+    validate_rwanda_phone
+)
 
 
 class ChildReadSerializer(serializers.ModelSerializer):
@@ -69,11 +74,7 @@ class ChildWriteSerializer(serializers.ModelSerializer):
         ]
 
     def validate_date_of_birth(self, value):
-        if value > timezone.now().date():
-            raise serializers.ValidationError(
-                "Date of birth can not be in the future."
-            )
-        return value
+        return validate_not_future_date(value, "Date of birth")
 
     def validate_start_date(self, value):
         if value < timezone.now().date().replace(year=timezone.now().year - 10):
@@ -184,6 +185,9 @@ class EducationInstitutionSerializer(serializers.ModelSerializer):
             "website"]
         read_only_fields = ["id", "created_on", "updated_on"]
 
+    def validate_phone(self, value):
+        return validate_rwanda_phone(value)
+
 
 class EducationProgramReadSerializer(serializers.ModelSerializer):
     institution = EducationInstitutionSerializer(read_only=True)
@@ -212,11 +216,7 @@ class EducationProgramWriteSerializer(serializers.ModelSerializer):
         ]
 
     def validate_cost(self, value):
-        if value is not None and value < Decimal('0'):
-            raise serializers.ValidationError(
-                "Cost must be positive."
-            )
-        return value
+        return validate_not_negative(value, "Cost")
 
 
 class ChildEducationWriteSerializer(serializers.ModelSerializer):
@@ -234,11 +234,7 @@ class ChildEducationWriteSerializer(serializers.ModelSerializer):
         ]
 
     def validate_cost(self, value):
-        if value is not None and value < Decimal('0'):
-            raise serializers.ValidationError(
-                "Cost must be positive"
-            )
-        return value
+        return validate_not_negative(value, "Cost")
 
     def validate(self, attrs):
         start_date = attrs.get('start_date')
@@ -306,10 +302,7 @@ class CaretakerWriteSerializer(serializers.ModelSerializer):
         ]
         
     def validate_phone(self, value):
-        """Validate phone number format"""
-        if value and not value.startswith('+'):
-            raise serializers.ValidationError("Phone number must start with country code (e.g., +250)")
-        return value
+        return validate_rwanda_phone(value)
 
 
 class CaretakerListSerializer(serializers.ModelSerializer):
@@ -358,17 +351,10 @@ class HealthRecordWriteSerializer(serializers.ModelSerializer):
         ]
     
     def validate_visit_date(self, value):
-        """Ensure visit date is not in the future"""
-        from django.utils import timezone
-        if value > timezone.now().date():
-            raise serializers.ValidationError("Visit date cannot be in the future")
-        return value
+        return validate_not_future_date(value, "Visit date")
     
     def validate_cost(self, value):
-        """Ensure cost is not negative"""
-        if value < 0:
-            raise serializers.ValidationError("Cost cannot be negative")
-        return value
+        return validate_not_negative(value, "Cost")
     
     def validate(self, attrs):
         """Custom validation"""

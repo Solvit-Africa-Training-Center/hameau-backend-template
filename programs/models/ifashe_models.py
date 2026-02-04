@@ -10,7 +10,7 @@ class Family(TimeStampedModel, SoftDeleteModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     family_name = models.CharField(max_length=100)
     address = models.TextField()
-    family_id = models.CharField(max_length=20, unique=True, null=True, blank=True)
+    family_id = models.CharField(max_length=20, unique=True)
     province = models.CharField(max_length=100)
     district = models.CharField(max_length=100)
     sector = models.CharField(max_length=100)
@@ -40,8 +40,8 @@ class Family(TimeStampedModel, SoftDeleteModel):
         (RENTED, 'Rented'),
         (TEMPORARY, 'Temporary'),
     ]
-    housing_condition = models.CharField(max_length=20, choices=HOUSING_CHOICES, default=OWNED)
-    family_members = models.IntegerField(default=1, help_text="Total members in household")
+    housing_condition = models.CharField(max_length=20, choices=HOUSING_CHOICES)
+    family_members = models.IntegerField(help_text="Total members in household")
     
     social_worker_assessment = models.TextField(blank=True)
     
@@ -56,21 +56,6 @@ class Family(TimeStampedModel, SoftDeleteModel):
     def __str__(self):
         return self.family_name
 
-    def save(self, *args, **kwargs):
-        if not self.family_id:
-            # Generate a unique family_id if not provided
-            # Format: IF-YYYY-XXXX (e.g., IF-2024-0001)
-            import datetime
-            year = datetime.date.today().year
-            last_family = Family.objects.filter(family_id__startswith=f"IF-{year}").order_by('family_id').last()
-            if last_family:
-                last_number = int(last_family.family_id.split('-')[-1])
-                new_number = last_number + 1
-            else:
-                new_number = 1
-            self.family_id = f"IF-{year}-{new_number:04d}"
-        super().save(*args, **kwargs)
-
 
 class Parent(TimeStampedModel, SoftDeleteModel):
     FATHER = "FATHER"
@@ -83,26 +68,38 @@ class Parent(TimeStampedModel, SoftDeleteModel):
         (GUARDIAN, "Guardian"),
     ]
 
+    MALE = "MALE"
+    FEMALE = "FEMALE"
+
+    GENDER_CHOICES = [
+        (MALE, "Male"),
+        (FEMALE, "Female"),
+    ]
+
+    SINGLE = "SINGLE"
+    MARRIED = "MARRIED"
+    WIDOWED = "WIDOWED"
+    SEPARATED = "SEPARATED"
+    DIVORCED = "DIVORCED"
+
     MARITAL_STATUS_CHOICES = [
-        ('SINGLE', 'Single'),
-        ('MARRIED', 'Married'),
-        ('WIDOWED', 'Widowed'),
-        ('SEPARATED', 'Separated'),
-        ('DIVORCED', 'Divorced'),
+        (SINGLE, 'Single'),
+        (MARRIED, 'Married'),
+        (WIDOWED, 'Widowed'),
+        (SEPARATED, 'Separated'),
+        (DIVORCED, 'Divorced'),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     family = models.ForeignKey(Family, on_delete=models.CASCADE, related_name="parents")
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
-    gender = models.CharField(max_length=10, choices=[('MALE', 'Male'), ('FEMALE', 'Female')])
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
     relationship = models.CharField(max_length=50, choices=RELATIONSHIP_CHOICES)
     phone = models.CharField(max_length=20)
     address = models.TextField(blank=True, help_text="Specific address if different from family")
     national_id = models.CharField(max_length=20, unique=True)
     date_of_birth = models.DateField()
-    
-    # New Fields
     education_level = models.CharField(max_length=100)
     marital_status = models.CharField(max_length=50, choices=MARITAL_STATUS_CHOICES)
     previous_employment = models.CharField(max_length=200, blank=True)
@@ -140,17 +137,21 @@ class SponsoredChild(TimeStampedModel, SoftDeleteModel):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     date_of_birth = models.DateField()
-    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default=FEMALE)
-    school_name = models.CharField(max_length=200, default="Not Enrolled")
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
+    school_name = models.CharField(max_length=200)
     school_level = models.CharField(
         max_length=100, help_text="Primary, Secondary, etc.", default="Primary"
     )
     health_conditions = models.TextField(blank=True)
     
+    ACTIVE = "ACTIVE"
+    INACTIVE = "INACTIVE"
+    EXITED = "EXITED"
+
     SUPPORT_STATUS_CHOICES = [
-        ('ACTIVE', 'Active in program'),
-        ('INACTIVE', 'Temporarily inactive'),
-        ('EXITED', 'Exited program'),
+        (ACTIVE, 'Active in program'),
+        (INACTIVE, 'Temporarily inactive'),
+        (EXITED, 'Exited program'),
     ]
     support_status = models.CharField(max_length=20, choices=SUPPORT_STATUS_CHOICES, default='ACTIVE')
     

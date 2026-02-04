@@ -16,6 +16,6 @@ class IfasheFamilyViewSet(viewsets.ModelViewSet):
     permission_classes = [IsIfasheManager]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['province', 'district', 'sector', 'vulnerability_level', 'housing_condition']
-    search_fields = ['family_name', 'family_id', 'address']
+    search_fields = ['family_name', 'address']
     ordering_fields = ['created_on', 'family_name', 'vulnerability_level']
     ordering = ['-created_on']
