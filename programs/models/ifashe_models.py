@@ -207,6 +207,7 @@ class Sponsorship(TimeStampedModel):
     end_date = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=ACTIVE)
     pause_reason = models.TextField(blank=True)
+    description = models.TextField(blank=True)
 
     class Meta:
         db_table = "sponsorships"

@@ -19,7 +19,7 @@ class SponsorshipViewSet(viewsets.ModelViewSet):
     ordering = ['-created_on']
 
     @action(detail=False, methods=['get'])
-    def dashboard_stats(self, request):
+    def sponsorship_stats(self, request):
         stats = {
             'active_sponsorships': self.queryset.filter(status=Sponsorship.ACTIVE).count(),
             'total_sponsorships': self.queryset.count(),
