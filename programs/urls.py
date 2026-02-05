@@ -11,6 +11,8 @@ from .views import (
     IfasheFamilyViewSet,
     IfasheChildViewSet,
     IfasheParentViewSet,
+    SponsorshipViewSet,
+    SchoolSupportViewSet,
 )
 
 router = DefaultRouter()
@@ -26,6 +28,8 @@ router.register('residential-finance', ResidentialFinanceViewSet, basename='resi
 router.register('ifashe-families', IfasheFamilyViewSet, basename='ifashe-family')
 router.register('ifashe-children', IfasheChildViewSet, basename='ifashe-child')
 router.register('ifashe-parents', IfasheParentViewSet, basename='ifashe-parent')
+router.register('ifashe-sponsorships', SponsorshipViewSet, basename='ifashe-sponsorship')
+router.register('ifashe-school-support', SchoolSupportViewSet, basename='ifashe-school-support')
 
 urlpatterns = router.urls
 

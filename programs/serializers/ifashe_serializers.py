@@ -1,6 +1,8 @@
 from django.utils import timezone
 from rest_framework import serializers
-from programs.models import Family, Parent, SponsoredChild
+from programs.models.ifashe_models import (
+    Family, Parent, SponsoredChild, Sponsorship, SchoolSupport, SchoolPayment
+)
 import re
 from utils.validators import (
     validate_rwanda_phone, 
@@ -41,6 +43,74 @@ class IfasheParentSerializer(serializers.ModelSerializer):
         return validate_not_negative(value, "Monthly income")
 
 
+class SponsorshipSerializer(serializers.ModelSerializer):
+    child_name = serializers.ReadOnlyField(source='child.full_name')
+
+    class Meta:
+        model = Sponsorship
+        fields = [
+            'id', 'child', 'child_name', 'sponsorship_type', 
+            'start_date', 'end_date', 'status', 'pause_reason'
+        ]
+        
+    def validate(self, data):
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+        
+        if start_date and end_date and start_date > end_date:
+            raise serializers.ValidationError({
+                "end_date": "End date must be after start date."
+            })
+            
+        status = data.get('status')
+        pause_reason = data.get('pause_reason')
+        if status == Sponsorship.SUSPENDED and not pause_reason:
+            raise serializers.ValidationError({
+                "pause_reason": "Pause reason is required when status is Suspended."
+            })
+            
+        return data
+
+
+class SchoolPaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SchoolPayment
+        fields = ['id', 'school_support', 'amount', 'date']
+
+    def validate_amount(self, value):
+        return validate_not_negative(value, "Payment amount")
+
+
+class SchoolSupportSerializer(serializers.ModelSerializer):
+    child_name = serializers.ReadOnlyField(source='child.full_name')
+    school_name = serializers.ReadOnlyField(source='school.name')
+    payments = SchoolPaymentSerializer(many=True, read_only=True)
+    total_paid = serializers.SerializerMethodField()
+    balance_due = serializers.SerializerMethodField()
+    is_overdue = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = SchoolSupport
+        fields = [
+            'id', 'child', 'child_name', 'school', 'school_name', 
+            'academic_year', 'school_fees', 'materials_cost', 
+            'total_cost', 'payment_status', 'notes', 
+            'payments', 'total_paid', 'balance_due', 'is_overdue'
+        ]
+        
+    def get_total_paid(self, obj):
+        return sum(payment.amount for payment in obj.payments.all())
+        
+    def get_balance_due(self, obj):
+        return obj.total_cost - self.get_total_paid(obj)
+        
+    def get_is_overdue(self, obj):
+        return (
+            obj.payment_status == SchoolSupport.PENDING or 
+            obj.payment_status == SchoolSupport.OVERDUE
+        ) and self.get_balance_due(obj) > 0
+
+
 class IfasheChildSerializer(serializers.ModelSerializer):
     full_name = serializers.ReadOnlyField()
     family_name = serializers.ReadOnlyField(source='family.family_name')
@@ -49,6 +119,8 @@ class IfasheChildSerializer(serializers.ModelSerializer):
         queryset=Family.objects.all(),
         required=False
     )
+    sponsorships = SponsorshipSerializer(many=True, read_only=True)
+    school_support = SchoolSupportSerializer(many=True, read_only=True)
 
     class Meta:
         model = SponsoredChild
@@ -56,7 +128,8 @@ class IfasheChildSerializer(serializers.ModelSerializer):
             'id', 'family_id', 'family_name', 'first_name', 'last_name', 
             'full_name', 'date_of_birth', 'gender', 'school_name', 
             'school_level', 'health_conditions', 'support_status', 
-            'profile_image', 'birth_certificate', 'school_report'
+            'profile_image', 'birth_certificate', 'school_report',
+            'sponsorships', 'school_support'
         ]
         extra_kwargs = {
             'gender': {'required': True},
@@ -69,7 +142,6 @@ class IfasheChildSerializer(serializers.ModelSerializer):
 
 
 class IfasheFamilySerializer(serializers.ModelSerializer):
-    family_id = serializers.ReadOnlyField(source='id')
     parents = IfasheParentSerializer(many=True, required=False)
     children = IfasheChildSerializer(many=True, required=False)
     children_count = serializers.SerializerMethodField()
@@ -77,18 +149,15 @@ class IfasheFamilySerializer(serializers.ModelSerializer):
     class Meta:
         model = Family
         fields = [
-            'id', 'family_id', 'family_name', 'address', 'province',
+            'id', 'family_name', 'address', 'province',
             'district', 'sector', 'cell', 'village',
             'vulnerability_level', 'housing_condition', 'family_members',
             'social_worker_assessment', 'proof_of_residence',
             'parents', 'children', 'children_count'
         ]
-        extra_kwargs = {
-            'family_id': {'read_only': True}
-        }
+        # family_id removed from fields
 
     def validate_family_members(self, value):
-        # Using 1 as minimum as per previous logic
         if value is not None and value < 1:
             raise serializers.ValidationError("Family members count must be at least 1.")
         return value
