@@ -8,6 +8,7 @@ from dateutil.relativedelta import relativedelta
 
 from accounts.models import TimeStampedModel, SoftDeleteModel
 
+
 class Child(TimeStampedModel, SoftDeleteModel):
     MALE = "MALE"
     FEMALE = "FEMALE"
@@ -32,12 +33,12 @@ class Child(TimeStampedModel, SoftDeleteModel):
     date_of_birth = models.DateField()
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
     profile_image = models.ImageField(upload_to="profile_images_children/", blank=True)
-    start_date = models.DateField()    
+    start_date = models.DateField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=ACTIVE)
     special_needs = models.TextField(blank=True)
     vigilant_contact_name = models.CharField(max_length=100, blank=True)
     vigilant_contact_phone = models.CharField(max_length=20, blank=True)
-    story = models.TextField(null = True, blank=True)
+    story = models.TextField(null=True, blank=True)
 
     class Meta:
         db_table = "children"
@@ -50,7 +51,7 @@ class Child(TimeStampedModel, SoftDeleteModel):
     @property
     def full_name(self):
         return f"{self.first_name} {self.last_name}"
-    
+
     @property
     def end_date(self):
         if self.start_date:
@@ -70,9 +71,11 @@ class Child(TimeStampedModel, SoftDeleteModel):
                 )
             )
         return None
-class ChildProgress(TimeStampedModel,SoftDeleteModel):
+
+
+class ChildProgress(TimeStampedModel, SoftDeleteModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    notes = models.TextField()    
+    notes = models.TextField()
     child = models.ForeignKey(
         Child, on_delete=models.CASCADE, related_name="child_progress"
     )
@@ -82,15 +85,22 @@ class ChildProgress(TimeStampedModel,SoftDeleteModel):
         verbose_name = "Progress of the Child"
         verbose_name_plural = "Progresses of the Child"
 
+
 class ProgressMedia(TimeStampedModel, SoftDeleteModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    progress_image = models.ImageField(upload_to="child_progress_images/", null= True, blank=True)
-    progress_video = models.FileField(upload_to="child_progress_videos/", null = True, blank= True)
-    progress = models.ForeignKey(ChildProgress, on_delete=models.CASCADE, related_name="progress_media")
+    progress_image = models.ImageField(
+        upload_to="child_progress_images/", null=True, blank=True
+    )
+    progress_video = models.FileField(
+        upload_to="child_progress_videos/", null=True, blank=True
+    )
+    progress = models.ForeignKey(
+        ChildProgress, on_delete=models.CASCADE, related_name="progress_media"
+    )
 
     class Meta:
         ordering = ["created_on"]
-        
+
 
 class Caretaker(TimeStampedModel, SoftDeleteModel):
     MALE = "MALE"
@@ -115,7 +125,7 @@ class Caretaker(TimeStampedModel, SoftDeleteModel):
 
     class Meta:
         db_table = "caretakers"
-        ordering = ["first_name","last_name"]
+        ordering = ["first_name", "last_name"]
         verbose_name = "Caretaker"
         verbose_name_plural = "Caretakers"
 
@@ -320,35 +330,35 @@ class FoodItem(TimeStampedModel):
         return 0
 
 
-class HealthRecord(TimeStampedModel):
-    MEDICAL_VISIT = "MEDICAL_VISIT"
-    VACCINATION = "VACCINATION"
-    ILLNESS = "ILLNESS"
+# class HealthRecord(TimeStampedModel):
+#     MEDICAL_VISIT = "MEDICAL_VISIT"
+#     VACCINATION = "VACCINATION"
+#     ILLNESS = "ILLNESS"
 
-    RECORD_TYPE_CHOICES = [
-        (MEDICAL_VISIT, "Medical Visit"),
-        (VACCINATION, "Vaccination"),
-        (ILLNESS, "Illness"),
-    ]
+#     RECORD_TYPE_CHOICES = [
+#         (MEDICAL_VISIT, "Medical Visit"),
+#         (VACCINATION, "Vaccination"),
+#         (ILLNESS, "Illness"),
+#     ]
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    child = models.ForeignKey(
-        Child, on_delete=models.CASCADE, related_name="health_records"
-    )
-    record_type = models.CharField(max_length=50, choices=RECORD_TYPE_CHOICES)
-    visit_date = models.DateField()
-    diagnosis = models.TextField(blank=True)
-    treatment = models.TextField(blank=True)
-    notes = models.TextField(blank=True)
+#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+#     child = models.ForeignKey(
+#         Child, on_delete=models.CASCADE, related_name="health_records"
+#     )
+#     record_type = models.CharField(max_length=50, choices=RECORD_TYPE_CHOICES)
+#     visit_date = models.DateField()
+#     diagnosis = models.TextField(blank=True)
+#     treatment = models.TextField(blank=True)
+#     notes = models.TextField(blank=True)
 
-    class Meta:
-        db_table = "health_records"
-        ordering = ["visit_date","record_type"]
-        verbose_name = "Health Record"
-        verbose_name_plural = "Health Records"
+#     class Meta:
+#         db_table = "health_records"
+#         ordering = ["visit_date","record_type"]
+#         verbose_name = "Health Record"
+#         verbose_name_plural = "Health Records"
 
-    def __str__(self):
-        return f"{self.child} - {self.record_type} on {self.visit_date}"
+#     def __str__(self):
+#         return f"{self.child} - {self.record_type} on {self.visit_date}"
 
 
 class ResidentialFinancialPlan(TimeStampedModel):
@@ -382,51 +392,45 @@ class ResidentialFinancialPlan(TimeStampedModel):
         )
 
 
-class HealthRecord(models.Model):
-    """Health records for children including visits, vaccinations, and illnesses"""
-    
+class HealthRecord(TimeStampedModel, SoftDeleteModel):
+    MEDICAL_VISIT = "MEDICAL_VISIT"
+    VACCINATION = "VACCINATION"
+    ILLNESS = "ILLNESS"
+
     RECORD_TYPE_CHOICES = [
-        ('Medical Visit', 'Medical Visit'),
-        ('Vaccination', 'Vaccination'),
-        ('Illness', 'Illness'),
-        ('Treatment', 'Treatment'),
+        (MEDICAL_VISIT, "Medical Visit"),
+        (VACCINATION, "Vaccination"),
+        (ILLNESS, "Illness"),
     ]
-    
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     child = models.ForeignKey(
-        Child, 
-        on_delete=models.CASCADE, 
-        related_name='health_records'
+        Child, on_delete=models.CASCADE, related_name="health_records"
     )
-    record_type = models.CharField(
-        max_length=50, 
-        choices=RECORD_TYPE_CHOICES
-    )
+    record_type = models.CharField(max_length=50, choices=RECORD_TYPE_CHOICES)
     visit_date = models.DateField()
     hospital_name = models.CharField(max_length=100, blank=True, null=True)
     diagnosis = models.TextField(blank=True, null=True)
     treatment = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     cost = models.DecimalField(
-        max_digits=10, 
+        max_digits=10,
         decimal_places=2,
-        default=Decimal('0.00'),
-        validators=[MinValueValidator(Decimal('0.00'))],
-        help_text='Cost in RWF (Rwandan Francs)'
+        default=Decimal("0.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+        help_text="Cost in RWF (Rwandan Francs)",
     )
-    created_on = models.DateTimeField(default=timezone.now)
-    updated_on = models.DateTimeField(auto_now=True)
     
     class Meta:
-        db_table = 'health_records'
-        ordering = ['-visit_date', '-created_on']
-        verbose_name = 'Health Record'
-        verbose_name_plural = 'Health Records'
+        db_table = "health_records"
+        ordering = ["-visit_date", "-created_on"]
+        verbose_name = "Health Record"
+        verbose_name_plural = "Health Records"
         indexes = [
-            models.Index(fields=['child', 'visit_date']),
-            models.Index(fields=['record_type']),
-            models.Index(fields=['cost']),
+            models.Index(fields=["child", "visit_date"]),
+            models.Index(fields=["record_type"]),
+            models.Index(fields=["cost"]),
         ]
-    
+
     def __str__(self):
-        return f"{self.record_type} for {self.child} on {self.visit_date} - {self.cost} RWF"
+        return f"{self.child} - {self.record_type} on {self.visit_date}"
