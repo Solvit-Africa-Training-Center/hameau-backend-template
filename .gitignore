@@ -16,5 +16,6 @@ __pycache__
 !**/migrations/__init__.py
 
 *.sqlite3
+API_keys
 
-
+venv/
