@@ -20,3 +20,4 @@ API_keys
 
 venv/
 dbc.sqlite3
+donations_receipts/
