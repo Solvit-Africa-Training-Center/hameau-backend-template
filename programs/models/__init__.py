@@ -12,6 +12,7 @@ from .ifashe_models import (
     Sponsorship,
     School,
     SchoolSupport,
+    SchoolPayment,
     DressingDistribution,
     ParentWorkContract,
     ParentAttendance,

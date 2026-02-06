@@ -232,23 +232,43 @@ class ParentWorkContract(TimeStampedModel):
         (TERMINATED, "Terminated"),
     ]
 
+    KITCHEN = "KITCHEN"
+    CLEANING = "CLEANING"
+    FARMING = "FARMING"
+    OTHER = "OTHER"
+
+    DEPARTMENT_CHOICES = [
+        (KITCHEN, "Kitchen"),
+        (CLEANING, "Cleaning"),
+        (FARMING, "Farming"),
+        (OTHER, "Other"),
+    ]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     parent = models.ForeignKey(
         Parent, on_delete=models.CASCADE, related_name="work_contracts"
     )
-    job_role = models.CharField(max_length=100)
+    department = models.CharField(max_length=100, choices=DEPARTMENT_CHOICES, default=OTHER)
+    supervisor = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="supervised_contracts",
+        help_text="Supervisor responsible for this parent"
+    )
     contract_start_date = models.DateField()
     contract_end_date = models.DateField(null=True, blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Active")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=ACTIVE)
 
     class Meta:
         db_table = "parent_work_contracts"
-        ordering = ["job_role"]
+        ordering = ["department"]
         verbose_name = "Parent Work Contract"
         verbose_name_plural = "Parent Work Contracts"
 
     def __str__(self):
-        return f"{self.parent} - {self.job_role}"
+        return f"{self.parent} - {self.department}"
 
 
 class ParentAttendance(TimeStampedModel):
