@@ -5,3 +5,5 @@ from programs.views.residentials_views.residential_finance_views import *
 from programs.views.ifashe_views.family_views import *
 from programs.views.ifashe_views.child_views import *
 from programs.views.ifashe_views.parent_views import *
+from programs.views.ifashe_views.sponsorship_views import *
+from programs.views.ifashe_views.school_views import *
