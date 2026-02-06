@@ -1,7 +1,8 @@
 from django.utils import timezone
 from rest_framework import serializers
 from programs.models.ifashe_models import (
-    Family, Parent, SponsoredChild, Sponsorship, SchoolSupport, SchoolPayment
+    Family, Parent, SponsoredChild, Sponsorship, SchoolSupport,
+    DressingDistribution, ParentWorkContract, ParentAttendance, ParentPerformance
 )
 import re
 from utils.validators import (
@@ -72,43 +73,64 @@ class SponsorshipSerializer(serializers.ModelSerializer):
         return data
 
 
-class SchoolPaymentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SchoolPayment
-        fields = ['id', 'school_support', 'amount', 'date']
-
-    def validate_amount(self, value):
-        return validate_not_negative(value, "Payment amount")
-
-
 class SchoolSupportSerializer(serializers.ModelSerializer):
     child_name = serializers.ReadOnlyField(source='child.full_name')
     school_name = serializers.ReadOnlyField(source='school.name')
-    payments = SchoolPaymentSerializer(many=True, read_only=True)
-    total_paid = serializers.SerializerMethodField()
-    balance_due = serializers.SerializerMethodField()
-    is_overdue = serializers.SerializerMethodField()
+    total_cost = serializers.ReadOnlyField()
     
     class Meta:
         model = SchoolSupport
         fields = [
             'id', 'child', 'child_name', 'school', 'school_name', 
             'academic_year', 'school_fees', 'materials_cost', 
-            'total_cost', 'payment_status', 'notes', 
-            'payments', 'total_paid', 'balance_due', 'is_overdue'
+            'total_cost', 'payment_status', 'notes'
         ]
-        
-    def get_total_paid(self, obj):
-        return sum(payment.amount for payment in obj.payments.all())
-        
-    def get_balance_due(self, obj):
-        return obj.total_cost - self.get_total_paid(obj)
-        
-    def get_is_overdue(self, obj):
-        return (
-            obj.payment_status == SchoolSupport.PENDING or 
-            obj.payment_status == SchoolSupport.OVERDUE
-        ) and self.get_balance_due(obj) > 0
+
+
+class DressingDistributionSerializer(serializers.ModelSerializer):
+    child_name = serializers.ReadOnlyField(source='child.full_name')
+
+    class Meta:
+        model = DressingDistribution
+        fields = [
+            'id', 'child', 'child_name', 'distribution_date', 
+            'item_type', 'size', 'quantity', 'notes'
+        ]
+
+
+class ParentWorkContractSerializer(serializers.ModelSerializer):
+    parent_name = serializers.ReadOnlyField(source='parent.full_name')
+
+    class Meta:
+        model = ParentWorkContract
+        fields = [
+            'id', 'parent', 'parent_name', 'job_role',
+            'contract_start_date', 'contract_end_date', 'status'
+        ]
+
+
+class ParentAttendanceSerializer(serializers.ModelSerializer):
+    parent_name = serializers.ReadOnlyField(source='work_record.parent.full_name')
+    job_role = serializers.ReadOnlyField(source='work_record.job_role')
+
+    class Meta:
+        model = ParentAttendance
+        fields = [
+            'id', 'work_record', 'parent_name', 'job_role',
+            'attendance_date', 'status', 'notes'
+        ]
+
+
+class ParentPerformanceSerializer(serializers.ModelSerializer):
+    parent_name = serializers.ReadOnlyField(source='work_record.parent.full_name')
+    evaluator_name = serializers.ReadOnlyField(source='evaluated_by.username')
+
+    class Meta:
+        model = ParentPerformance
+        fields = [
+            'id', 'work_record', 'parent_name', 'evaluation_date',
+            'rating', 'comments', 'evaluated_by', 'evaluator_name'
+        ]
 
 
 class IfasheChildSerializer(serializers.ModelSerializer):
@@ -121,6 +143,7 @@ class IfasheChildSerializer(serializers.ModelSerializer):
     )
     sponsorships = SponsorshipSerializer(many=True, read_only=True)
     school_support = SchoolSupportSerializer(many=True, read_only=True)
+    dressing_distributions = DressingDistributionSerializer(many=True, read_only=True)
 
     class Meta:
         model = SponsoredChild
@@ -129,7 +152,7 @@ class IfasheChildSerializer(serializers.ModelSerializer):
             'full_name', 'date_of_birth', 'gender', 'school_name', 
             'school_level', 'health_conditions', 'support_status', 
             'profile_image', 'birth_certificate', 'school_report',
-            'sponsorships', 'school_support'
+            'sponsorships', 'school_support', 'dressing_distributions'
         ]
         extra_kwargs = {
             'gender': {'required': True},
@@ -155,7 +178,6 @@ class IfasheFamilySerializer(serializers.ModelSerializer):
             'social_worker_assessment', 'proof_of_residence',
             'parents', 'children', 'children_count'
         ]
-        # family_id removed from fields
 
     def validate_family_members(self, value):
         if value is not None and value < 1:

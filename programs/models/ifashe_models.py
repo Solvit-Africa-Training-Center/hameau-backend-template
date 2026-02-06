@@ -272,28 +272,6 @@ class SchoolSupport(TimeStampedModel):
     def __str__(self):
         return f"{self.child} - {self.academic_year}"
 
-    @property
-    def total_cost(self):
-        return self.school_fees + self.materials_cost
-
-
-class SchoolPayment(TimeStampedModel):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    school_support = models.ForeignKey(
-        SchoolSupport, on_delete=models.CASCADE, related_name="payments"
-    )
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    date = models.DateField()
-    
-    class Meta:
-        db_table = "school_payments"
-        ordering = ["-date"]
-        verbose_name = "School Payment"
-        verbose_name_plural = "School Payments"
-
-    def __str__(self):
-        return f"{self.school_support} - {self.amount}"
-
 
 class DressingDistribution(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -319,12 +297,12 @@ class DressingDistribution(TimeStampedModel):
 
 class ParentWorkContract(TimeStampedModel):
     ACTIVE = "ACTIVE"
-    PAUSED = "PAUSED"
+    COMPLETED = "COMPLETED"
     TERMINATED = "TERMINATED"
 
     STATUS_CHOICES = [
         (ACTIVE, "Active"),
-        (PAUSED, "Paused"),
+        (COMPLETED, "Completed"),
         (TERMINATED, "Terminated"),
     ]
 
@@ -335,7 +313,7 @@ class ParentWorkContract(TimeStampedModel):
     job_role = models.CharField(max_length=100)
     contract_start_date = models.DateField()
     contract_end_date = models.DateField(null=True, blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Active")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=ACTIVE)
 
     class Meta:
         db_table = "parent_work_contracts"

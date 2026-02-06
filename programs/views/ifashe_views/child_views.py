@@ -3,8 +3,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 
-from programs.models import SponsoredChild
-from programs.serializers.ifashe_serializers import IfasheChildSerializer
+from programs.models import SponsoredChild, DressingDistribution
+from programs.serializers.ifashe_serializers import IfasheChildSerializer, DressingDistributionSerializer
 from utils.reports import ExcelRenderer
 
 
@@ -19,3 +19,14 @@ class IfasheChildViewSet(viewsets.ModelViewSet):
     search_fields = ['first_name', 'last_name', 'family__family_name']
     ordering_fields = ['created_on', 'first_name', 'last_name', 'date_of_birth']
     ordering = ['-created_on']
+
+
+class DressingDistributionViewSet(viewsets.ModelViewSet):
+    queryset = DressingDistribution.objects.all().select_related('child')
+    serializer_class = DressingDistributionSerializer
+    permission_classes = [IsIfasheManager]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['item_type', 'size', 'distribution_date']
+    search_fields = ['child__first_name', 'child__last_name', 'notes']
+    ordering_fields = ['distribution_date']
+    ordering = ['-distribution_date']
