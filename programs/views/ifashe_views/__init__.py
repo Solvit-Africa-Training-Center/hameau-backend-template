@@ -7,6 +7,7 @@ from .parent_work_views import (
     ParentPerformanceViewSet
 )
 from .education_views import SchoolSupportViewSet
+from .school_views import SchoolPaymentViewSet
 from .sponsorship_views import SponsorshipViewSet
 # from .school_views import DressingDistributionViewSet # Deleted file
 from .child_views import DressingDistributionViewSet

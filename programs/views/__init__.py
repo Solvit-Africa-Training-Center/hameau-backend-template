@@ -8,3 +8,4 @@ from programs.views.ifashe_views.parent_views import *
 from programs.views.ifashe_views.sponsorship_views import *
 from programs.views.ifashe_views.education_views import *
 from programs.views.ifashe_views.parent_work_views import *
+from programs.views.ifashe_views.school_views import *

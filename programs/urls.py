@@ -13,6 +13,7 @@ from .views import (
     IfasheParentViewSet,
     SponsorshipViewSet,
     SchoolSupportViewSet,
+    SchoolPaymentViewSet,
     DressingDistributionViewSet,
     ParentWorkContractViewSet,
     ParentAttendanceViewSet,
@@ -34,6 +35,7 @@ router.register('ifashe-children', IfasheChildViewSet, basename='ifashe-child')
 router.register('ifashe-parents', IfasheParentViewSet, basename='ifashe-parent')
 router.register('ifashe-sponsorships', SponsorshipViewSet, basename='ifashe-sponsorship')
 router.register('ifashe-school-support', SchoolSupportViewSet, basename='ifashe-school-support')
+router.register('ifashe-school-payments', SchoolPaymentViewSet, basename='ifashe-school-payment')
 router.register('ifashe-dressing-distributions', DressingDistributionViewSet, basename='ifashe-dressing-distribution')
 router.register('ifashe-parent-work-contracts', ParentWorkContractViewSet, basename='ifashe-parent-work-contract')
 router.register('ifashe-parent-attendance', ParentAttendanceViewSet, basename='ifashe-parent-attendance')

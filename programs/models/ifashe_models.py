@@ -219,6 +219,39 @@ class Sponsorship(TimeStampedModel):
         return f"{self.child} - {self.sponsorship_type}"
 
 
+
+class SchoolPayment(TimeStampedModel):
+    PAID = "PAID"
+    PENDING = "PENDING"
+    PARTIAL = "PARTIAL"
+    OVERDUE = "OVERDUE"
+
+    PAYMENT_STATUS_CHOICES = [
+        (PAID, "Paid"),
+        (PENDING, "Pending"),
+        (PARTIAL, "Partial"),
+        (OVERDUE, "Overdue"),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    school_support = models.ForeignKey(
+        'SchoolSupport', on_delete=models.CASCADE, related_name="payments"
+    )
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_date = models.DateField()
+    receipt_number = models.CharField(max_length=50, blank=True)
+    status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default=PAID)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        db_table = "school_payments"
+        verbose_name = "School Payment"
+        verbose_name_plural = "School Payments"
+
+    def __str__(self):
+        return f"{self.school_support} - {self.amount}"
+
+
 class School(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=200)
