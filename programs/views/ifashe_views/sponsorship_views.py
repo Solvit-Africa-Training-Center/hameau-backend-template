@@ -2,12 +2,15 @@ from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import Count, Q
+from django.db.models import Count
 
 from programs.models.ifashe_models import Sponsorship
 from programs.serializers.ifashe_serializers import SponsorshipSerializer
 from accounts.permissions import IsIfasheManager
-
+from drf_spectacular.utils import extend_schema
+@extend_schema(
+    tags=["IfasheTugufashe - Sponsorship "],
+)
 class SponsorshipViewSet(viewsets.ModelViewSet):
     queryset = Sponsorship.objects.all()
     serializer_class = SponsorshipSerializer

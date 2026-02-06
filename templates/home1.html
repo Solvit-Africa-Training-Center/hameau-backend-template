@@ -113,12 +113,11 @@
                         <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-6">
                             Test endpoints directly in your browser using our interactive console and real-time response previews.
                         </p>
-                        <a href="{% url 'schema_swagger_ui' %}">
+                        <a href="{% url 'swagger-ui' %}">
                             <span class="text-primary font-bold text-sm flex items-center gap-2">
                                 Try API <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
                             </span></a>
                         </div>
-                        <!-- Redoc Card -->
                         <div class="group bg-white dark:bg-card-dark p-8 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-primary/50 transition-all cursor-pointer shadow-sm hover:shadow-xl dark:shadow-none">
                             <div class="w-12 h-12 bg-primary/10 text-primary rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                 <span class="material-symbols-outlined text-[32px]">reorder</span>
@@ -127,7 +126,7 @@
                             <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-6">
                                 A structured and organized overview of our complete API schemas. Perfect for deep architectural study.
                             </p>
-                            <a href="{% url 'schema_redoc' %}">
+                            <a href="{% url 'redoc' %}">
                                 <span class="text-primary font-bold text-sm flex items-center gap-2">
                                     View Reference <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
                                 </span>
