@@ -50,7 +50,6 @@ class InternshipApplicationViewSetTest(APITestCase):
 
     def test_filter_applications(self):
         InternshipApplication.objects.create(**self.application_data)
-        # Create another with different country
         data2 = self.application_data.copy()
         data2['email'] = "jane@example.com"
         data2['country'] = "Kenya"
@@ -70,4 +69,4 @@ class InternshipApplicationViewSetTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         app.refresh_from_db()
         self.assertEqual(app.status, InternshipApplication.APPROVED)
-        # Email triggered logic is in serializer, we verify the patch worked.
+        
