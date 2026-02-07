@@ -30,6 +30,7 @@ from .views import (
     ParentWorkExcelReportView,
     ResidentialFinanceExcelReportView,
     ResidentialFinancePDFReportView,
+    InternshipApplicationViewSet,
 )
 
 router = DefaultRouter()
@@ -80,6 +81,11 @@ router.register(
     "ifashe-parent-performance",
     ParentPerformanceViewSet,
     basename="ifashe-parent-performance",
+)
+router.register(
+    "internship-applications",
+    InternshipApplicationViewSet,
+    basename="internship-application",
 )
 
 urlpatterns = router.urls
