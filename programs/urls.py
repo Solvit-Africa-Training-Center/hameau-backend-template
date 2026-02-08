@@ -20,13 +20,11 @@ from .views import (
     IfasheParentViewSet,
     SponsorshipViewSet,
     SchoolSupportViewSet,
-<<<<<<< HEAD
     InternshipApplicationViewSet,
     DepartmentViewSet,
     SupervisorViewSet,
     InternshipProgramViewSet,
     InternshipFeedbackViewSet,
-=======
     FamilyOverviewPDFReportView,
     FamilyOverviewExcelReportView,
     IfasheSummaryPDFReportView,
@@ -37,32 +35,10 @@ from .views import (
     ParentWorkExcelReportView,
     ResidentialFinanceExcelReportView,
     ResidentialFinancePDFReportView,
-    InternshipApplicationViewSet,
->>>>>>> e5007aa329cde90bb4138dd96c1d4ef871f9a328
 )
 
 router = DefaultRouter()
 
-<<<<<<< HEAD
-router.register('children', ChildViewSet, basename='child')
-router.register('children_progress', ChildProgressViewSet, basename='progress')
-router.register('children_educational_institutions', EducationInstitutionViewSet, basename='institution')
-router.register('children_educational_programs', EducationProgramViewSet, basename='program')
-router.register('children_programs_enrollments', ChildEducationViewSet, basename='enrollment')
-router.register('caretakers', CaretakerViewSet, basename='caretaker')
-router.register('health-records', HealthRecordViewSet, basename='health-record')
-router.register('residential-finance', ResidentialFinanceViewSet, basename='residential-finance')
-router.register('ifashe-families', IfasheFamilyViewSet, basename='ifashe-family')
-router.register('ifashe-children', IfasheChildViewSet, basename='ifashe-child')
-router.register('ifashe-parents', IfasheParentViewSet, basename='ifashe-parent')
-router.register('ifashe-sponsorships', SponsorshipViewSet, basename='ifashe-sponsorship')
-router.register('ifashe-school-support', SchoolSupportViewSet, basename='ifashe-school-support')
-router.register('internship-applications', InternshipApplicationViewSet, basename='internship-application')
-router.register('departments', DepartmentViewSet, basename='department')
-router.register('supervisors', SupervisorViewSet, basename='supervisor')
-router.register('internship-programs', InternshipProgramViewSet, basename='internship-program')
-router.register('internship-feedback', InternshipFeedbackViewSet, basename='internship-feedback')
-=======
 router.register("children", ChildViewSet, basename="child")
 router.register("children_progress", ChildProgressViewSet, basename="progress")
 router.register(
@@ -115,7 +91,10 @@ router.register(
     InternshipApplicationViewSet,
     basename="internship-application",
 )
->>>>>>> e5007aa329cde90bb4138dd96c1d4ef871f9a328
+router.register('departments', DepartmentViewSet, basename='department')
+router.register('supervisors', SupervisorViewSet, basename='supervisor')
+router.register('internship-programs', InternshipProgramViewSet, basename='internship-program')
+router.register('internship-feedback', InternshipFeedbackViewSet, basename='internship-feedback')
 
 urlpatterns = router.urls
 

@@ -1,15 +1,3 @@
-<<<<<<< HEAD
-from programs.views.residentials_views.child_views import *
-from programs.views.residentials_views.caretaker_views import *
-from programs.views.residentials_views.health_record_views import *
-from programs.views.residentials_views.residential_finance_views import *
-from programs.views.ifashe_views.family_views import *
-from programs.views.ifashe_views.child_views import *
-from programs.views.ifashe_views.parent_views import *
-from programs.views.ifashe_views.sponsorship_views import *
-from programs.views.ifashe_views.school_views import *
-from programs.views.internships_views import *
-=======
 # Residentials Views
 from .residentials_views.child_views import (
     ChildViewSet,
@@ -52,5 +40,10 @@ from .ifashe_views.all_reports_views import (
 )
 
 # Internships Views
-from .internships_views.application_views import InternshipApplicationViewSet
->>>>>>> e5007aa329cde90bb4138dd96c1d4ef871f9a328
+from .internships_views.internship_views import (
+    InternshipApplicationViewSet,
+    DepartmentViewSet,
+    SupervisorViewSet,
+    InternshipProgramViewSet,
+    InternshipFeedbackViewSet,
+)

@@ -1,5 +1,4 @@
 from rest_framework import serializers
-<<<<<<< HEAD
 from programs.models.internships_models import (
     InternshipApplication,
     Department,
@@ -8,11 +7,7 @@ from programs.models.internships_models import (
     InternshipFeedback,
 )
 
-class InternshipApplicationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = InternshipApplication
-        fields = "__all__"
-        read_only_fields = ("id", "applied_on", "reviewed_on", "reviewed_by")
+
 
 class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -31,14 +26,17 @@ class SupervisorSerializer(serializers.ModelSerializer):
 class InternshipProgramSerializer(serializers.ModelSerializer):
     application_name = serializers.ReadOnlyField(source="application.full_name")
     department_name = serializers.ReadOnlyField(source="department.name")
-    supervisor_name = serializers.ReadOnlyField(source="supervisor.full_name") #
+    supervisor_name = serializers.ReadOnlyField(source="supervisor.full_name") ###########
 
     class Meta:
         model = InternshipProgram
         fields = "__all__"
         read_only_fields = ("id",)
 
-    def validate(self, data):
+         #i have updated the validation starting date is 
+         # before the end date and the supervisor belongs to the selected department
+
+    def validate(self, data):                
         start_date = data.get('start_date')
         end_date = data.get('end_date')
         supervisor = data.get('supervisor')
@@ -64,7 +62,7 @@ class InternshipFeedbackSerializer(serializers.ModelSerializer):
         model = InternshipFeedback
         fields = "__all__"
         read_only_fields = ("id", "submitted_on", "submitted_by")
-=======
+
 from ..models.internships_models import InternshipApplication
 from utils.emails import send_internship_status_email
 
@@ -126,4 +124,66 @@ class InternshipApplicationSerializer(serializers.ModelSerializer):
                 print(f"Error sending email: {e}")
 
         return instance
->>>>>>> e5007aa329cde90bb4138dd96c1d4ef871f9a328
+
+
+class InternshipAssignmentSerializer(serializers.Serializer):
+    department = serializers.PrimaryKeyRelatedField(queryset=Department.objects.all())
+    supervisor = serializers.PrimaryKeyRelatedField(queryset=Supervisor.objects.all())
+    start_date = serializers.DateField()
+    end_date = serializers.DateField()
+
+    def validate(self, data):
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+        supervisor = data.get('supervisor')
+        department = data.get('department')
+
+        if start_date and end_date and start_date >= end_date:
+            raise serializers.ValidationError({
+                "end_date": "End date must be after start date."
+            })
+        
+        if supervisor and department and supervisor.department != department:
+            raise serializers.ValidationError({
+                "supervisor": "The assigned supervisor must belong to the selected department."
+            })
+            
+        return data
+
+    def create(self, validated_data):
+        # We are "creating" an assignment, but effectively updating the application and creating/updating the program
+        # ideally this is called via serializer.save() which calls create or update depending on if instance is passed.
+        # But we are using a Serializer, not ModelSerializer, so we define how it behaves.
+        # Actually, it's better to pass the application as 'instance' to the serializer and use update().
+        pass
+
+    def update(self, instance, validated_data):
+        # instance is InternshipApplication
+        from django.utils import timezone
+        
+        # 1. Update Application status
+        instance.status = InternshipApplication.APPROVED
+        instance.reviewed_on = timezone.now()
+        instance.reviewed_by = self.context['request'].user
+        instance.save()
+
+        # 2. Create or Update InternshipProgram
+        InternshipProgram.objects.update_or_create(
+            application=instance,
+            defaults={
+                'department': validated_data['department'],
+                'supervisor': validated_data['supervisor'],
+                'start_date': validated_data['start_date'],
+                'end_date': validated_data['end_date'],
+                'status': InternshipProgram.ACTIVE
+            }
+        )
+        
+        # Send email notification
+        try:
+            send_internship_status_email(instance)
+        except Exception as e:
+            print(f"Error sending email: {e}")
+
+        return instance
+

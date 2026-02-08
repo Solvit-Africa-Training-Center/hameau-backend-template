@@ -1,7 +1,13 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.utils import timezone
+
+from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import extend_schema 
+from accounts.permissions import IsInternshipManager
+from rest_framework.permissions import AllowAny
+from utils.paginators import StandardResultsSetPagination
+
 from programs.models.internships_models import (
     InternshipApplication,
     Department,
@@ -13,51 +19,38 @@ from programs.serializers.internships_serializers import (
     InternshipApplicationSerializer,
     DepartmentSerializer,
     SupervisorSerializer,
+    InternshipAssignmentSerializer,
     InternshipProgramSerializer,
     InternshipFeedbackSerializer,
 )
-from programs.permissions import IsInternshipManager
 
+@extend_schema(tags=["Internship - Applications"])
 class InternshipApplicationViewSet(viewsets.ModelViewSet):
-    queryset = InternshipApplication.objects.all()
+    queryset = InternshipApplication.objects.all().order_by("-applied_on")
     serializer_class = InternshipApplicationSerializer
-    permission_classes = [permissions.IsAuthenticated, IsInternshipManager]
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ["country", "education_level", "status"]
+    search_fields = ["first_name", "last_name", "email", "phone", "school_university"]
+    ordering_fields = ["applied_on", "status"]
 
+    def get_permissions(self):
+        if self.action == 'create':
+            return [AllowAny()]
+        return [permissions.IsAuthenticated(), IsInternshipManager()]
+
+    @extend_schema(request=InternshipAssignmentSerializer, responses={200: InternshipApplicationSerializer})
     @action(detail=True, methods=['post'], url_path='approve-and-assign')
     def approve_and_assign(self, request, pk=None):
         """
         Approve an application and create/update its internship program assignment.
         """
         application = self.get_object()
+        serializer = InternshipAssignmentSerializer(application, data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
         
-        # 1. Update Application status
-        application.status = InternshipApplication.ACCEPTED
-        application.reviewed_on = timezone.now()
-        application.reviewed_by = request.user
-        application.save()
-
-        # 2. Create or Update InternshipProgram
-        # Expected data: department, supervisor, start_date, end_date
-        assignment_data = request.data.copy()
-        assignment_data['application'] = application.id
-        assignment_data['status'] = InternshipProgram.ACTIVE
-
-        # Try to find existing program or create new
-        try:
-            program = InternshipProgram.objects.get(application=application)
-            serializer = InternshipProgramSerializer(program, data=assignment_data, partial=True)
-        except InternshipProgram.DoesNotExist:
-            serializer = InternshipProgramSerializer(data=assignment_data)
-
-        if serializer.is_valid():
-            serializer.save()
-            return Response({
-                "message": "Application approved and internship assigned successfully.",
-                "application_status": application.status,
-                "program": serializer.data
-            }, status=status.HTTP_200_OK)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(InternshipApplicationSerializer(application).data, status=status.HTTP_200_OK)
 
 class DepartmentViewSet(viewsets.ModelViewSet):
     queryset = Department.objects.all()
