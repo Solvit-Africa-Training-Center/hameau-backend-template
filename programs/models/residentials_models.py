@@ -420,9 +420,7 @@ class HealthRecord(TimeStampedModel, SoftDeleteModel):
         validators=[MinValueValidator(Decimal("0.00"))],
         help_text="Cost in RWF (Rwandan Francs)",
     )
-    created_on = models.DateTimeField(default=timezone.now)
-    updated_on = models.DateTimeField(auto_now=True)
-
+    
     class Meta:
         db_table = "health_records"
         ordering = ["-visit_date", "-created_on"]

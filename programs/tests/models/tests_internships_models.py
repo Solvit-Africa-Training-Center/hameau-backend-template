@@ -35,7 +35,7 @@ class InternshipApplicationModelTest(APITestCase):
             is_in_rwanda=True,
             school_university="University of Rwanda",
             field_of_study="Computer Science",
-            status=InternshipApplication.PENDING,
+            status=InternshipApplication.SUBMITTED,
             reviewed_by=self.user,
         )
 
@@ -45,7 +45,7 @@ class InternshipApplicationModelTest(APITestCase):
     def test_application_str(self):
         self.assertEqual(
             str(self.application),
-            "applicant name - PENDING"
+            "applicant name - SUBMITTED"
         )
 
     def test_full_name_property(self):
@@ -63,7 +63,7 @@ class InternshipApplicationModelTest(APITestCase):
             school_university="UoN",
             field_of_study="IT",
         )
-        self.assertEqual(app.status, InternshipApplication.PENDING)
+        self.assertEqual(app.status, InternshipApplication.SUBMITTED)
 
 
 class DepartmentModelTest(APITestCase):
@@ -132,9 +132,10 @@ class InternshipProgramModelTest(APITestCase):
             is_in_rwanda=True,
             school_university="UR",
             field_of_study="Engineering",
-            status=InternshipApplication.ACCEPTED,
+            status=InternshipApplication.APPROVED,
             reviewed_by=self.user,
         )
+
 
         self.program = InternshipProgram.objects.create(
             application=self.application,

@@ -22,7 +22,7 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'rest_framework.authtoken',
-    'drf_yasg',
+    'drf_spectacular',
     'corsheaders',
     "rest_framework_simplejwt.token_blacklist",
     "django_filters",

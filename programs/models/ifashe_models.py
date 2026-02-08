@@ -10,16 +10,44 @@ class Family(TimeStampedModel, SoftDeleteModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     family_name = models.CharField(max_length=100)
     address = models.TextField()
-    province = models.CharField(max_length=100, blank=True)
-    district = models.CharField(max_length=100, blank=True)
-    sector = models.CharField(max_length=100, blank=True)
-    cell = models.CharField(max_length=100, blank=True)
-    village = models.CharField(max_length=100, blank=True)
-    family_members = models.IntegerField(null=True, blank=True)
+    province = models.CharField(max_length=100)
+    district = models.CharField(max_length=100)
+    sector = models.CharField(max_length=100)
+    cell = models.CharField(max_length=100)
+    village = models.CharField(max_length=100)
+    
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    CRITICAL = "CRITICAL"
+    
+    VULNERABILITY_CHOICES = [
+        (LOW, 'Low'),
+        (MEDIUM, 'Medium'),
+        (HIGH, 'High'),
+        (CRITICAL, 'Critical'),
+    ]
+    vulnerability_level = models.CharField(max_length=20, choices=VULNERABILITY_CHOICES, default=LOW)
+    
+    OWNED = "OWNED"
+    RENTED = "RENTED"
+    TEMPORARY = "TEMPORARY"
+
+    HOUSING_CHOICES = [
+        (OWNED, 'Owned'),
+        (RENTED, 'Rented'),
+        (TEMPORARY, 'Temporary'),
+    ]
+    housing_condition = models.CharField(max_length=20, choices=HOUSING_CHOICES, default=OWNED)
+    family_members = models.IntegerField(help_text="Total members in household", default=1)
+    
+    social_worker_assessment = models.TextField(blank=True)
+    
+    proof_of_residence = models.FileField(upload_to='ifashe/families/residence/', blank=True)
 
     class Meta:
         db_table = "families"
-        ordering = ["family_name"]
+        ordering = ["family_name", "created_on"]
         verbose_name = "Family"
         verbose_name_plural = "Families"
 
@@ -38,14 +66,44 @@ class Parent(TimeStampedModel, SoftDeleteModel):
         (GUARDIAN, "Guardian"),
     ]
 
+    MALE = "MALE"
+    FEMALE = "FEMALE"
+
+    GENDER_CHOICES = [
+        (MALE, "Male"),
+        (FEMALE, "Female"),
+    ]
+
+    SINGLE = "SINGLE"
+    MARRIED = "MARRIED"
+    WIDOWED = "WIDOWED"
+    SEPARATED = "SEPARATED"
+    DIVORCED = "DIVORCED"
+
+    MARITAL_STATUS_CHOICES = [
+        (SINGLE, 'Single'),
+        (MARRIED, 'Married'),
+        (WIDOWED, 'Widowed'),
+        (SEPARATED, 'Separated'),
+        (DIVORCED, 'Divorced'),
+    ]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     family = models.ForeignKey(Family, on_delete=models.CASCADE, related_name="parents")
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
-    relationship = models.CharField(max_length=50, choices=RELATIONSHIP_CHOICES)
-    phone = models.CharField(max_length=20, blank=True)
-    national_id = models.CharField(max_length=20, unique=True, blank=True, null=True)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, null=True, blank=True)
+    relationship = models.CharField(max_length=50, choices=RELATIONSHIP_CHOICES, null=True, blank=True)
+    phone = models.CharField(max_length=20)
+    address = models.TextField(blank=True, help_text="Specific address if different from family")
+    national_id = models.CharField(max_length=20, unique=True,null=True, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
+    education_level = models.CharField(max_length=100, default="studied")
+    marital_status = models.CharField(max_length=50, choices=MARITAL_STATUS_CHOICES, default=MARRIED)
+    previous_employment = models.CharField(max_length=200, blank=True)
+    monthly_income = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    
+    national_id_doc = models.FileField(upload_to='ifashe/parents/ids/', blank=True,null=True)
 
     class Meta:
         db_table = "parents"
@@ -63,7 +121,7 @@ class Parent(TimeStampedModel, SoftDeleteModel):
 
 class SponsoredChild(TimeStampedModel, SoftDeleteModel):
     MALE = "MALE"
-    FEMALE = "MALE"
+    FEMALE = "FEMALE"
     GENDER_CHOICES = [
         (MALE, "Male"),
         (FEMALE, "Female"),
@@ -76,13 +134,30 @@ class SponsoredChild(TimeStampedModel, SoftDeleteModel):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     date_of_birth = models.DateField()
-    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, blank=True)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
+    school_name = models.CharField(max_length=200, null=True, blank=True)
     school_level = models.CharField(
-        max_length=100, blank=True, help_text="Primary, Secondary, etc."
+        max_length=100, help_text="Primary, Secondary, etc.", default="Primary"
     )
+    health_conditions = models.TextField(blank=True)
+    
+    ACTIVE = "ACTIVE"
+    INACTIVE = "INACTIVE"
+    EXITED = "EXITED"
+
+    SUPPORT_STATUS_CHOICES = [
+        (ACTIVE, 'Active in program'),
+        (INACTIVE, 'Temporarily inactive'),
+        (EXITED, 'Exited program'),
+    ]
+    support_status = models.CharField(max_length=20, choices=SUPPORT_STATUS_CHOICES, default='ACTIVE')
+    
     profile_image = models.ImageField(
         upload_to="sponsored_children_profiles/", blank=True
     )
+    
+    birth_certificate = models.FileField(upload_to='ifashe/children/birth_cert/', blank=True)
+    school_report = models.FileField(upload_to='ifashe/children/school_reports/', blank=True)
 
     class Meta:
         db_table = "sponsored_children"
@@ -100,25 +175,21 @@ class SponsoredChild(TimeStampedModel, SoftDeleteModel):
 
 class Sponsorship(TimeStampedModel):
     ACTIVE = "ACTIVE"
-    PAUSED = "PAUSED"
+    SUSPENDED = "SUSPENDED"
     COMPLETED = "COMPLETED"
 
     STATUS_CHOICES = [
         (ACTIVE, "Active"),
-        (PAUSED, "Paused"),
+        (SUSPENDED, "Suspended"),
         (COMPLETED, "Completed"),
     ]
 
     FULL = "FULL"
-    EDUCATION_ONLY = "EDUCATION_ONLY"
-    RENTING_ONLY = "RENTING_ONLY"
-    DRESSING_ONLY = "DRESSING_ONLY"
+    PARTIAL = "PARTIAL"
 
     SPONSORSHIP_TYPE = [
-        (FULL, "Full"),
-        (EDUCATION_ONLY, "Education only"),
-        (RENTING_ONLY, "Renting only"),
-        (DRESSING_ONLY, "Dressing only"),
+        (FULL, "Full sponsorship"),
+        (PARTIAL, "Partial sponsorship"),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -132,6 +203,7 @@ class Sponsorship(TimeStampedModel):
     end_date = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=ACTIVE)
     pause_reason = models.TextField(blank=True)
+    description = models.TextField(blank=True)
 
     class Meta:
         db_table = "sponsorships"
@@ -164,11 +236,13 @@ class SchoolSupport(TimeStampedModel):
     PAID = "PAID"
     PENDING = "PENDING"
     PARTIAL = "PARTIAL"
+    OVERDUE = "OVERDUE"
 
     PAYMENT_STATUS_CHOICES = [
         (PAID, "Paid"),
         (PENDING, "Pending"),
         (PARTIAL, "Partial"),
+        (OVERDUE, "Overdue"),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -182,7 +256,7 @@ class SchoolSupport(TimeStampedModel):
     school_fees = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     materials_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     payment_status = models.CharField(
-        max_length=20, choices=PAYMENT_STATUS_CHOICES, blank=True
+        max_length=20, choices=PAYMENT_STATUS_CHOICES, blank=True, default=PENDING
     )
     notes = models.TextField(blank=True)
 
@@ -197,6 +271,24 @@ class SchoolSupport(TimeStampedModel):
     @property
     def total_cost(self):
         return self.school_fees + self.materials_cost
+
+
+class SchoolPayment(TimeStampedModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    school_support = models.ForeignKey(
+        SchoolSupport, on_delete=models.CASCADE, related_name="payments"
+    )
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    date = models.DateField()
+    
+    class Meta:
+        db_table = "school_payments"
+        ordering = ["-date"]
+        verbose_name = "School Payment"
+        verbose_name_plural = "School Payments"
+
+    def __str__(self):
+        return f"{self.school_support} - {self.amount}"
 
 
 class DressingDistribution(TimeStampedModel):
@@ -233,13 +325,14 @@ class ParentWorkContract(TimeStampedModel):
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    description= models.TextField(blank=True, null=True)
     parent = models.ForeignKey(
         Parent, on_delete=models.CASCADE, related_name="work_contracts"
     )
     job_role = models.CharField(max_length=100)
     contract_start_date = models.DateField()
     contract_end_date = models.DateField(null=True, blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Active")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=ACTIVE)
 
     class Meta:
         db_table = "parent_work_contracts"
@@ -288,7 +381,7 @@ class ParentPerformance(TimeStampedModel):
         ParentWorkContract, on_delete=models.CASCADE, related_name="performances"
     )
     evaluation_date = models.DateField()
-    rating = models.IntegerField(null=True, blank=True, help_text="1-5 scale")
+    rating = models.IntegerField(null=True, blank=True, help_text="1-10 scale")
     comments = models.TextField(blank=True)
     evaluated_by = models.ForeignKey(
         User,
