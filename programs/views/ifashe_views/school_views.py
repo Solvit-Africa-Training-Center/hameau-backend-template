@@ -4,12 +4,15 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db import models
 
-from programs.models.ifashe_models import SchoolSupport, SchoolPayment
+from programs.models.ifashe_models import SchoolSupport
 from programs.serializers.ifashe_serializers import (
     SchoolSupportSerializer, SchoolPaymentSerializer
 )
 from accounts.permissions import IsIfasheManager
-
+from drf_spectacular.utils import extend_schema
+@extend_schema(
+    tags=["IfasheTugufashe - Child School "],
+)
 class SchoolSupportViewSet(viewsets.ModelViewSet):
     queryset = SchoolSupport.objects.all().prefetch_related('payments')
     serializer_class = SchoolSupportSerializer
@@ -26,8 +29,6 @@ class SchoolSupportViewSet(viewsets.ModelViewSet):
         
         if serializer.is_valid():
             serializer.save(school_support=school_support)
-            
-            # Recalculate status
             total_paid = school_support.payments.aggregate(total=models.Sum('amount'))['total'] or 0
             if school_support.total_cost - total_paid <= 0:
                  school_support.payment_status = SchoolSupport.PAID
