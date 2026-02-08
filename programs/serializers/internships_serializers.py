@@ -39,6 +39,15 @@ class InternshipApplicationSerializer(serializers.ModelSerializer):
         old_status = instance.status
         new_status = validated_data.get("status", old_status)
 
+        # Logic: If status changed, update review metadata
+        if old_status != new_status:
+            from django.utils import timezone
+            instance.reviewed_on = timezone.now()
+            
+            request = self.context.get("request")
+            if request and request.user:
+                instance.reviewed_by = request.user
+
         # Update the instance
         instance = super().update(instance, validated_data)
 
