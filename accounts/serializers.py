@@ -3,7 +3,7 @@ from django.contrib.auth import authenticate
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework.exceptions import AuthenticationFailed
-from datetime import timezone, timedelta, datetime
+from datetime import datetime
 
 from utils.general_codes import generate_manager_password, generate_verification_code
 from utils.emails import send_temporary_credentials, send_password_reset_email
@@ -92,7 +92,6 @@ class RequestPasswordResetSerializer(serializers.Serializer):
             user=user,
             code=code,
             purpose=VerificationCode.PASSWORD_RESET,
-            expires_on=datetime.now() + timedelta(minutes=10),
         )
 
         send_password_reset_email(email, code)
@@ -122,13 +121,13 @@ class ResetPasswordConfirmSerializer(serializers.Serializer):
                 code=code,
                 purpose=VerificationCode.PASSWORD_RESET,
                 is_used=False,
-                expires_on__gt=datetime.now(),
             ).latest("created_on")
 
         except (User.DoesNotExist, VerificationCode.DoesNotExist):
-            raise serializers.ValidationError(
-                {"code": "Invalid or expired verification code"}
-            )
+            raise serializers.ValidationError({"code": "Invalid verification code"})
+
+        if not verification_code.is_valid:
+            raise serializers.ValidationError({"code": "Code is expired or used"})
 
         user.set_password(new_password)
         user.has_temporary_password = False

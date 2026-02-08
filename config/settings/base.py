@@ -1,6 +1,7 @@
 from pathlib import Path
 import environ 
 import os
+from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -82,5 +83,7 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
+
+VERIFICATION_CODE_LIFETIME = timedelta(minutes=15)
 
 

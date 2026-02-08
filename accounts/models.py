@@ -7,6 +7,7 @@ from django.contrib.auth.models import (
 )
 from django.db import models
 from django.utils import timezone
+from django.conf import settings
 
 
 class SoftDeleteManager(models.Manager):
@@ -131,7 +132,6 @@ class VerificationCode(models.Model):
     code = models.CharField(max_length=6)
     purpose = models.CharField(max_length=30, choices=PURPOSE_CHOICES)
     is_used = models.BooleanField(default=False)
-    expires_on = models.DateTimeField()
     created_on = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -141,3 +141,10 @@ class VerificationCode(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.purpose} - {self.code}"
+    
+    @property
+    def is_valid(self):           
+        expire_time = self.created_on + settings.VERIFICATION_CODE_LIFETIME
+        return expire_time > timezone.now() and not self.is_used
+    
+    
