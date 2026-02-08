@@ -4,11 +4,11 @@ from .base import BASE_DIR
 # DATABASES = {
 #     "default": {
 #         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": env("DB_NAME"),
-#         "USER": env("DB_USER"),
-#         "PASSWORD": env("DB_PASSWORD"),
-#         "HOST": env("DB_HOST"),
-#         "PORT": env("DB_PORT"),
+#         "NAME": env("Hamau_de_jeune_program_db"),
+#         "USER": env("postgres"),
+#         "PASSWORD": env("admin"),
+#         "HOST": env("localhost"),
+#         "PORT": env("5432"),
 #         "OPTIONS": {"sslmode": "require"},
 #     }
 # }

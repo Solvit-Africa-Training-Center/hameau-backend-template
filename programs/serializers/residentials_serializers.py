@@ -181,8 +181,7 @@ class EducationInstitutionSerializer(serializers.ModelSerializer):
             "name", 
             "address", 
             "phone", 
-            "email", 
-            "website"]
+            "email"]
         read_only_fields = ["id", "created_on", "updated_on"]
 
     def validate_phone(self, value):

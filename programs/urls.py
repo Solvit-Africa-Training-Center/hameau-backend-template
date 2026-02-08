@@ -13,6 +13,11 @@ from .views import (
     IfasheParentViewSet,
     SponsorshipViewSet,
     SchoolSupportViewSet,
+    InternshipApplicationViewSet,
+    DepartmentViewSet,
+    SupervisorViewSet,
+    InternshipProgramViewSet,
+    InternshipFeedbackViewSet,
 )
 
 router = DefaultRouter()
@@ -30,6 +35,11 @@ router.register('ifashe-children', IfasheChildViewSet, basename='ifashe-child')
 router.register('ifashe-parents', IfasheParentViewSet, basename='ifashe-parent')
 router.register('ifashe-sponsorships', SponsorshipViewSet, basename='ifashe-sponsorship')
 router.register('ifashe-school-support', SchoolSupportViewSet, basename='ifashe-school-support')
+router.register('internship-applications', InternshipApplicationViewSet, basename='internship-application')
+router.register('departments', DepartmentViewSet, basename='department')
+router.register('supervisors', SupervisorViewSet, basename='supervisor')
+router.register('internship-programs', InternshipProgramViewSet, basename='internship-program')
+router.register('internship-feedback', InternshipFeedbackViewSet, basename='internship-feedback')
 
 urlpatterns = router.urls
 

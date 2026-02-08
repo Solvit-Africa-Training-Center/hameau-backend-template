@@ -117,6 +117,9 @@ class InternshipProgram(TimeStampedModel):
     department = models.ForeignKey(
         Department, on_delete=models.CASCADE, related_name="internship_programs"
     )
+    supervisor = models.ForeignKey(
+        Supervisor, on_delete=models.SET_NULL, null=True, blank=True, related_name="internship_programs"
+    )
     start_date = models.DateField()
     end_date = models.DateField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, blank=True)
