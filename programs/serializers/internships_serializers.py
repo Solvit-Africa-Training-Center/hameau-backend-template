@@ -13,7 +13,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Department
         fields = ["id", "name", "description", "created_at", "updated_at"]
-        read_only_fields = ("id",)
+        read_only_fields = ["id", "created_at", "updated_at"]
         
 class SupervisorSerializer(serializers.ModelSerializer):
     department_name = serializers.ReadOnlyField(source="department.name")
@@ -32,7 +32,7 @@ class SupervisorSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ("id",)
+        read_only_fields = ["id", "department_name", "created_at", "updated_at"]
 
 
 class InternshipApplicationSerializer(serializers.ModelSerializer):
@@ -47,10 +47,6 @@ class InternshipApplicationSerializer(serializers.ModelSerializer):
             "full_name",
             "email",
             "phone",
-            "country",
-            "education_level",
-            "program",
-            "availability_hours",
             "date_of_birth",
             "nationality",
             "is_in_rwanda",
@@ -58,7 +54,6 @@ class InternshipApplicationSerializer(serializers.ModelSerializer):
             "field_of_study",
             "cv_url",
             "motivation_letter",
-            "passport_id_url",
             "status",
             "status_display",
             "admin_notes",
@@ -68,6 +63,7 @@ class InternshipApplicationSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "id",
+            "full_name",
             "applied_on",
             "reviewed_on",
             "reviewed_by",
@@ -115,7 +111,7 @@ class InternshipProgramSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ("id",)
+        read_only_fields = ["id", "application_name", "department_name", "supervisor_name", "created_at", "updated_at"]
 
     def validate(self, data):
         start_date = data.get("start_date")
