@@ -7,13 +7,14 @@ from programs.models.internships_models import (
     Supervisor,
     InternshipProgram
 )
+from django.db import transaction
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Department
-        fields = ["id", "name", "description", "created_at", "updated_at"]
-        read_only_fields = ["id", "created_at", "updated_at"]
+        fields = ["id", "name", "description", "created_on", "updated_on"]
+        read_only_fields = ["id", "created_on", "updated_on"]
         
 class SupervisorSerializer(serializers.ModelSerializer):
     department_name = serializers.ReadOnlyField(source="department.name")
@@ -29,10 +30,10 @@ class SupervisorSerializer(serializers.ModelSerializer):
             "department",
             "department_name",
             "is_active",
-            "created_at",
-            "updated_at",
+            "created_on",
+            "updated_on",
         ]
-        read_only_fields = ["id", "department_name", "created_at", "updated_at"]
+        read_only_fields = ["id", "department_name", "created_on", "updated_on"]
 
 
 class InternshipApplicationSerializer(serializers.ModelSerializer):
@@ -108,16 +109,18 @@ class InternshipProgramSerializer(serializers.ModelSerializer):
             "start_date",
             "end_date",
             "status",
-            "created_at",
-            "updated_at",
+            "created_on",
+            "updated_on",
         ]
-        read_only_fields = ["id", "application_name", "department_name", "supervisor_name", "created_at", "updated_at"]
+        read_only_fields = ["id", "application_name", "department_name", "supervisor_name", "created_on", "updated_on"]
 
     def validate(self, data):
         start_date = data.get("start_date")
         end_date = data.get("end_date")
         supervisor = data.get("supervisor")
         department = data.get("department")
+        application = data.get("application")
+        status_value = data.get("status")
 
         if start_date and end_date and start_date >= end_date:
             raise serializers.ValidationError({"end_date": "End date must be after start date."})
@@ -127,7 +130,53 @@ class InternshipProgramSerializer(serializers.ModelSerializer):
                 "supervisor": "The assigned supervisor must belong to the selected department."
             })
 
+        if not self.instance and application is not None:
+            if getattr(application, "internship_program", None) is not None:
+                raise serializers.ValidationError({
+                    "application": "Application already has an internship program"
+                })
+
+      
+        if status_value is not None:
+            valid_statuses = [InternshipProgram.ACTIVE, InternshipProgram.COMPLETED, InternshipProgram.TERMINATED]
+            if status_value not in valid_statuses:
+                raise serializers.ValidationError({
+                    "status": "Invalid status. Must be ACTIVE, COMPLETED, or TERMINATED."
+                })
+
+           
+            if self.instance and status_value in [InternshipProgram.COMPLETED, InternshipProgram.TERMINATED]:
+                if self.instance.status != InternshipProgram.ACTIVE:
+                    raise serializers.ValidationError({
+                        "status": "Only active programs can be ended."
+                    })
+
         return data
+
+    def create(self, validated_data):
+        application = validated_data.get("application")
+
+        
+        validated_data["status"] = InternshipProgram.ACTIVE
+
+        with transaction.atomic():
+            program = InternshipProgram.objects.create(**validated_data)
+
+            
+            if application is not None:
+                application.status = InternshipApplication.ACCEPTED
+                application.reviewed_on = timezone.now()
+                request = self.context.get("request")
+                if request and getattr(request, "user", None):
+                    application.reviewed_by = request.user
+                application.save()
+
+                try:
+                    send_internship_status_email(application)
+                except Exception as e:
+                    print(f"Error sending email: {e}")
+
+        return program
 
 
 
