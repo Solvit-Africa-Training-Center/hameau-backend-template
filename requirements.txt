@@ -2,6 +2,8 @@ asgiref==3.11.0
 attrs==25.4.0
 certifi==2026.1.4
 charset-normalizer==3.4.4
+celery
+redis
 cloudinary==1.44.1
 Django==6.0.2
 django-cloudinary-storage==0.3.0
