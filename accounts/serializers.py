@@ -3,10 +3,12 @@ from django.contrib.auth import authenticate
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework.exceptions import AuthenticationFailed
-from datetime import datetime
+# from datetime import datetime
 
+from .tasks import send_password_reset_email_task, send_temporary_credentials_task
 from utils.general_codes import generate_manager_password, generate_verification_code
-from utils.emails import send_temporary_credentials, send_password_reset_email
+
+# from utils.emails import send_temporary_credentials, send_password_reset_email
 from utils.validators import validate_rwanda_phone
 
 from .models import User, VerificationCode
@@ -31,8 +33,9 @@ class ManagerSerializer(serializers.ModelSerializer):
         password = generate_manager_password()
         user = User.objects.create_user(password=password, **validated_data)
 
-        if not send_temporary_credentials(user.email, password):
-            return
+        send_temporary_credentials_task.delay_on_commit(
+            user.email, password
+        )
         user.raw_password = password
         return user
 
@@ -94,7 +97,7 @@ class RequestPasswordResetSerializer(serializers.Serializer):
             purpose=VerificationCode.PASSWORD_RESET,
         )
 
-        send_password_reset_email(email, code)
+        send_password_reset_email_task.delay_on_commit(email, code)
 
 
 class ResetPasswordConfirmSerializer(serializers.Serializer):

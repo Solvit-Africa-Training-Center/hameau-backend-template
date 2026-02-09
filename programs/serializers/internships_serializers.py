@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from ..models.internships_models import InternshipApplication
-from utils.emails import send_internship_status_email
+# from utils.emails import send_internship_status_email
+from programs.tasks import send_status_email_task
 
 class InternshipApplicationSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source="get_status_display", read_only=True)
@@ -39,7 +40,6 @@ class InternshipApplicationSerializer(serializers.ModelSerializer):
         old_status = instance.status
         new_status = validated_data.get("status", old_status)
 
-        # Logic: If status changed, update review metadata
         if old_status != new_status:
             from django.utils import timezone
             instance.reviewed_on = timezone.now()
@@ -48,15 +48,12 @@ class InternshipApplicationSerializer(serializers.ModelSerializer):
             if request and request.user:
                 instance.reviewed_by = request.user
 
-        # Update the instance
         instance = super().update(instance, validated_data)
 
-        # Logic: If status changed, send email notification
         if old_status != new_status:
             try:
-                send_internship_status_email(instance)
+                send_status_email_task.delay_on_commit(instance.id)
             except Exception as e:
-                # Log error but don't fail the update
                 print(f"Error sending email: {e}")
 
         return instance
