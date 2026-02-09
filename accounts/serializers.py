@@ -3,10 +3,12 @@ from django.contrib.auth import authenticate
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework.exceptions import AuthenticationFailed
-from datetime import timezone, timedelta, datetime
+# from datetime import datetime
 
+from .tasks import send_password_reset_email_task, send_temporary_credentials_task
 from utils.general_codes import generate_manager_password, generate_verification_code
-from utils.emails import send_temporary_credentials, send_password_reset_email
+
+# from utils.emails import send_temporary_credentials, send_password_reset_email
 from utils.validators import validate_rwanda_phone
 
 from .models import User, VerificationCode
@@ -31,8 +33,9 @@ class ManagerSerializer(serializers.ModelSerializer):
         password = generate_manager_password()
         user = User.objects.create_user(password=password, **validated_data)
 
-        if not send_temporary_credentials(user.email, password):
-            return
+        send_temporary_credentials_task.delay_on_commit(
+            user.email, password
+        )
         user.raw_password = password
         return user
 
@@ -92,10 +95,9 @@ class RequestPasswordResetSerializer(serializers.Serializer):
             user=user,
             code=code,
             purpose=VerificationCode.PASSWORD_RESET,
-            expires_on=datetime.now() + timedelta(minutes=10),
         )
 
-        send_password_reset_email(email, code)
+        send_password_reset_email_task.delay_on_commit(email, code)
 
 
 class ResetPasswordConfirmSerializer(serializers.Serializer):
@@ -122,13 +124,13 @@ class ResetPasswordConfirmSerializer(serializers.Serializer):
                 code=code,
                 purpose=VerificationCode.PASSWORD_RESET,
                 is_used=False,
-                expires_on__gt=datetime.now(),
             ).latest("created_on")
 
         except (User.DoesNotExist, VerificationCode.DoesNotExist):
-            raise serializers.ValidationError(
-                {"code": "Invalid or expired verification code"}
-            )
+            raise serializers.ValidationError({"code": "Invalid verification code"})
+
+        if not verification_code.is_valid:
+            raise serializers.ValidationError({"code": "Code is expired or used"})
 
         user.set_password(new_password)
         user.has_temporary_password = False

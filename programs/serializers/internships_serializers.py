@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.utils import timezone
-from utils.emails import send_internship_status_email
+# from utils.emails import send_internship_status_email
+from programs.tasks import send_status_email_task
 from programs.models.internships_models import (
     InternshipApplication,
     Department,
@@ -85,7 +86,7 @@ class InternshipApplicationSerializer(serializers.ModelSerializer):
 
         if old_status != new_status:
             try:
-                send_internship_status_email (instance)
+                send_status_email_task.delay_on_commit(instance.id)
             except Exception as e:
                 print(f"Error sending email: {e}")
 
@@ -172,9 +173,9 @@ class InternshipProgramSerializer(serializers.ModelSerializer):
                 application.save()
 
                 try:
-                    send_internship_status_email(application)
+                    send_status_email_task.delay_on_commit(application.id)
                 except Exception as e:
-                    print(f"Error sending email: {e}")
+                    raise serializers.ValidationError("Fail to send the email:  application status",e)
 
         return program
 
