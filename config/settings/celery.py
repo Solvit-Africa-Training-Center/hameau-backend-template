@@ -2,6 +2,14 @@ from . base import env
 
 CELERY_BROKER_URL=env("CELERY_BROKER_URL")
 CELERY_RESULT_BACKEND=env("CELERY_RESULT_BACKEND")
+
+CELERY_BROKER_USE_SSL = {
+    'ssl_cert_reqs': 'none'
+}
+CELERY_REDIS_BACKEND_USE_SSL = {
+    'ssl_cert_reqs': 'none'
+}
+
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
