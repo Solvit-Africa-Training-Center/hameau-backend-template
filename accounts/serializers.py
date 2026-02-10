@@ -3,10 +3,11 @@ from django.contrib.auth import authenticate
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework.exceptions import AuthenticationFailed
-from datetime import timezone, timedelta, datetime
 
+from .tasks import send_password_reset_email_task, send_temporary_credentials_task
 from utils.general_codes import generate_manager_password, generate_verification_code
-from utils.emails import send_temporary_credentials, send_password_reset_email
+
+from utils.validators import validate_rwanda_phone
 
 from .models import User, VerificationCode
 
@@ -23,16 +24,18 @@ class ManagerSerializer(serializers.ModelSerializer):
             "role",
         ]
 
+    def validate_phone(self, value):
+        return validate_rwanda_phone(value)
+
     def create(self, validated_data):
         password = generate_manager_password()
-        user = User.objects.create_user(password=password,**validated_data)       
+        user = User.objects.create_user(password=password, **validated_data)
 
-
-        if not send_temporary_credentials(user.email, password):
-            return
+        send_temporary_credentials_task.delay(
+            user.email, password
+        )
         user.raw_password = password
         return user
-       
 
 
 class LoginSerializer(serializers.Serializer):
@@ -44,12 +47,12 @@ class LoginSerializer(serializers.Serializer):
         password = attrs["password"]
 
         user = authenticate(email=email, password=password)
-        
+
         if not user:
             raise AuthenticationFailed("Invalid email or password")
 
         if not user.is_active:
-            raise AuthenticationFailed("Account is disabled")       
+            raise AuthenticationFailed("Account is disabled")
 
         refresh = RefreshToken.for_user(user)
 
@@ -67,6 +70,7 @@ class LoginSerializer(serializers.Serializer):
 
         return to_return
 
+
 class RequestPasswordResetSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
@@ -77,26 +81,22 @@ class RequestPasswordResetSerializer(serializers.Serializer):
 
     def save(self):
         email = self.validated_data["email"]
-        user = User.objects.get(email=email)       
+        user = User.objects.get(email=email)
 
         code = generate_verification_code()
 
-        # Invalidate existing unused codes
         VerificationCode.objects.filter(
-            user=user,
-            purpose=VerificationCode.PASSWORD_RESET,
-            is_used=False
+            user=user, purpose=VerificationCode.PASSWORD_RESET, is_used=False
         ).update(is_used=True)
 
-        # Create new code
         VerificationCode.objects.create(
             user=user,
             code=code,
             purpose=VerificationCode.PASSWORD_RESET,
-            expires_on=datetime.now() + timedelta(minutes=10)
         )
 
-        send_password_reset_email(email, code)
+        send_password_reset_email_task.delay(email, code)
+
 
 class ResetPasswordConfirmSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -122,20 +122,18 @@ class ResetPasswordConfirmSerializer(serializers.Serializer):
                 code=code,
                 purpose=VerificationCode.PASSWORD_RESET,
                 is_used=False,
-                expires_on__gt=datetime.now()
             ).latest("created_on")
 
         except (User.DoesNotExist, VerificationCode.DoesNotExist):
-            raise serializers.ValidationError(
-                {"code": "Invalid or expired verification code"}
-            )
+            raise serializers.ValidationError({"code": "Invalid verification code"})
 
-        # Set new password
+        if not verification_code.is_valid:
+            raise serializers.ValidationError({"code": "Code is expired or used"})
+
         user.set_password(new_password)
         user.has_temporary_password = False
         user.save()
 
-        # Mark code as used
         verification_code.is_used = True
         verification_code.save()
 
@@ -144,16 +142,17 @@ class LogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()
 
     def validate(self, attrs):
-        self.token = attrs['refresh']
+        self.token = attrs["refresh"]
 
         return attrs
-    
+
     def save(self, **kwargs):
 
         try:
             RefreshToken(self.token).blacklist
         except TokenError:
-            self.fail('Wrong Token!')
+            self.fail("Wrong Token!")
+
 
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
