@@ -155,12 +155,7 @@ python manage.py migrate
 7. Create Superuser
 > python manage.py createsuperuser
 
-8. Run Development Server
-> python manage.py runserver
-
-Server will be available at: http://127.0.0.1:8000/ and you can then try out API endpoints available
-
-9. Git Workflow (Backend Team)
+8. Git Workflow (Backend Team)
 
 Recommended workflow:
 ```
@@ -168,3 +163,41 @@ git checkout -b feature/your-feature-name
 git commit -m "Add feature"
 git push origin feature/your-feature-name
 ```
+
+9. Celery and Redis installation
+
+- Installation of redis on Linux and Mac
+
+> sudo apt-get install redis 
+
+On windows, use these commands in your PowerSehell as Administrator
+
+> wsl --install   # Then restart your computer
+
+Then open the Ubuntu terminal and run,
+```
+sudo apt update
+sudo apt install redis-server
+```
+
+- Start Redis ( All computer, windows, mac and linux)
+> sudo service redis-server start
+
+- Now we go back to the project and install redis driver and celery
+> pip install redis celery
+
+- Add these two lines in your .env
+```
+CELERY_BROKER_URL=redis://localhost:6379/0
+CELERY_RESULT_BACKEND=redis://localhost:6379/0
+```
+
+10. Run Development Server
+> python manage.py runserver
+
+11. Run this in a new terminal
+> celery -A config worker --loglevel=info
+
+Server will be available at: http://127.0.0.1:8000/ and you can then try out API endpoints available
+
+
