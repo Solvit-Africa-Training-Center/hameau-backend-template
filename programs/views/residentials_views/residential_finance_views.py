@@ -1,5 +1,6 @@
 from django.http import FileResponse
 from rest_framework.views import APIView
+import logging
 
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -21,6 +22,7 @@ from utils.reports.residentials.spending_summary import (
 from utils.reports.ifashe.helpers import safe_filename
 from drf_spectacular.utils import extend_schema, extend_schema_view
 
+logger = logging.getLogger(__name__)
 
 @extend_schema_view(
     spending_summary=extend_schema(tags=["Residential Care Program - Finance"]),

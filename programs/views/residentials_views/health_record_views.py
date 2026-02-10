@@ -1,4 +1,4 @@
-# views.py
+import logging
 
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
@@ -21,6 +21,7 @@ from utils.paginators import StandardResultsSetPagination
 from utils.search import CustomSearchFilter
 from accounts.permissions import IsResidentialManager
 
+logger = logging.getLogger(__name__)
 
 @extend_schema_view(
     list=extend_schema(tags=["Residential Care Program - Health"]),

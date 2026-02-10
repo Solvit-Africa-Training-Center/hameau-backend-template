@@ -4,6 +4,8 @@ from drf_spectacular.utils import (
     OpenApiParameter,
     OpenApiResponse,
 )
+import logging
+
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -19,6 +21,7 @@ from programs.serializers import (
 from utils.paginators import StandardResultsSetPagination
 from accounts.permissions import IsResidentialManager
 
+logger = logging.getLogger(__name__)
 
 @extend_schema_view(
     list=extend_schema(
