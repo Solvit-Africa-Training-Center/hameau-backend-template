@@ -16,7 +16,8 @@ from utils.reports.ifashe.summary_reports import (
 )
 from utils.reports.ifashe.helpers import safe_filename
 from utils.reports.ifashe.supports_reports import (
-    ChildSupportExcelReport,
+    # ChildSupportExcelReport,
+    ChildSupportPDFReport,
     SupportExcelReport,
 )
 from drf_spectacular.utils import extend_schema
@@ -77,7 +78,7 @@ class IfasheSupportPDFReportView(APIView):
         filename = safe_filename("ifashe_support_report", "pdf")
         path = f"/tmp/{filename}"
 
-        report = ChildSupportExcelReport(path)
+        report = ChildSupportPDFReport(path)
         report.generate()
 
         return FileResponse(
@@ -88,7 +89,7 @@ class IfasheSupportPDFReportView(APIView):
         )
 
 
-class IfasheSupportExcelReportView(APIView):
+class IfasheSupportExcelReportView(APIView): 
     permission_classes = [IsAuthenticated, IsIfasheManager]
 
     @extend_schema(
