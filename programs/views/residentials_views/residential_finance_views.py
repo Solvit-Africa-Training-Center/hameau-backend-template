@@ -1,3 +1,5 @@
+import logging
+
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -15,6 +17,7 @@ from accounts.permissions import IsResidentialManager
 from rest_framework import viewsets, status, renderers
 from utils.reports import PDFRenderer, ExcelRenderer
 
+logger = logging.getLogger(__name__)
 
 class ResidentialFinanceViewSet(viewsets.ViewSet):
     """
