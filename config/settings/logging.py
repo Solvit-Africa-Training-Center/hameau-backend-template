@@ -1,7 +1,6 @@
 import os
-from pathlib import Path
+from .base import BASE_DIR
 
-BASE_DIR = Path(__file__).resolve().parent.parent
 
 LOGGING = {
     "version": 1,
@@ -31,7 +30,7 @@ LOGGING = {
     },
 
     "loggers": {
-        "hameau": {
+        "root": {
             "handlers": ["console", "file"],
             "level": "DEBUG",
             "propagate": True,

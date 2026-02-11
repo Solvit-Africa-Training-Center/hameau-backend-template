@@ -7,5 +7,6 @@ from .static import *
 from .cors import *
 from .third_party import *
 from .celery import *
+from .logging import *
 
 DEBUG = True

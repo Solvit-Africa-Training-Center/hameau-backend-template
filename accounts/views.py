@@ -190,9 +190,11 @@ class RequestPasswordResetView(APIView):
     authentication_classes = []
 
     def post(self, request):
+        logger.info("Initializing user password request")
         serializer = RequestPasswordResetSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        logger.success("Succefully sent the code to the user email")
         return Response(
             {"message": "Password reset code sent to your email"},
             status=status.HTTP_200_OK,
@@ -217,6 +219,8 @@ class ResetPasswordConfirmView(APIView):
         serializer = ResetPasswordConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        logger.success("Password reset successfully")
+
         return Response(
             {"message": "Password reset successfully"}, status=status.HTTP_200_OK
         )
@@ -266,6 +270,7 @@ class ChangePasswordView(APIView):
             data=request.data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
+        logger.success("Password changed successfully")
         serializer.save()
         return Response(
             {"message": "Password changed successfully"}, status=status.HTTP_200_OK
