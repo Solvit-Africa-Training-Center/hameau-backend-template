@@ -10,14 +10,12 @@ class Family(TimeStampedModel, SoftDeleteModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     family_name = models.CharField(max_length=100)
     address = models.TextField()
-    # family_id removed as per request
     province = models.CharField(max_length=100)
     district = models.CharField(max_length=100)
     sector = models.CharField(max_length=100)
     cell = models.CharField(max_length=100)
     village = models.CharField(max_length=100)
     
-    # Socio-economic Data
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
@@ -105,7 +103,6 @@ class Parent(TimeStampedModel, SoftDeleteModel):
     previous_employment = models.CharField(max_length=200, blank=True)
     monthly_income = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     
-    # Documents
     national_id_doc = models.FileField(upload_to='ifashe/parents/ids/', blank=True,null=True)
 
     class Meta:
@@ -159,7 +156,6 @@ class SponsoredChild(TimeStampedModel, SoftDeleteModel):
         upload_to="sponsored_children_profiles/", blank=True
     )
     
-    # Documents
     birth_certificate = models.FileField(upload_to='ifashe/children/birth_cert/', blank=True)
     school_report = models.FileField(upload_to='ifashe/children/school_reports/', blank=True)
 
@@ -340,6 +336,7 @@ class ParentWorkContract(TimeStampedModel):
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    description= models.TextField(blank=True, null=True)
     parent = models.ForeignKey(
         Parent, on_delete=models.CASCADE, related_name="work_contracts"
     )
@@ -395,7 +392,7 @@ class ParentPerformance(TimeStampedModel):
         ParentWorkContract, on_delete=models.CASCADE, related_name="performances"
     )
     evaluation_date = models.DateField()
-    rating = models.IntegerField(null=True, blank=True, help_text="1-5 scale")
+    rating = models.IntegerField(null=True, blank=True, help_text="1-10 scale")
     comments = models.TextField(blank=True)
     evaluated_by = models.ForeignKey(
         User,

@@ -7,23 +7,29 @@ from accounts.models import TimeStampedModel, SoftDeleteModel
 
 
 class InternshipApplication(TimeStampedModel):
-    PENDING = "PENDING"
-    ACCEPTED = "ACCEPTED"
+    SUBMITTED = "SUBMITTED"
+    UNDER_REVIEW = "UNDER_REVIEW"
+    MORE_INFO_NEEDED = "MORE_INFO_NEEDED"
+    APPROVED = "APPROVED"
     REJECTED = "REJECTED"
-    COMPLETED = "COMPLETED"
 
     STATUS_CHOICES = [
-        (PENDING, "Pending"),
-        (ACCEPTED, "Accepted"),
+        (SUBMITTED, "Submitted"),
+        (UNDER_REVIEW, "Under Review"),
+        (MORE_INFO_NEEDED, "More Info Needed"),
+        (APPROVED, "Approved"),
         (REJECTED, "Rejected"),
-        (COMPLETED, "Completed"),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
-    email = models.EmailField(max_length=50)
+    email = models.EmailField(max_length=254)
     phone = models.CharField(max_length=20)
+    country = models.CharField(max_length=100, null=True, blank=True)
+    education_level = models.CharField(max_length=100, null=True, blank=True)
+    program = models.CharField(max_length=200, null=True, blank=True)
+    availability_hours = models.CharField(max_length=100, null=True, blank=True)
     date_of_birth = models.DateField()
     nationality = models.CharField(max_length=30)
     is_in_rwanda = models.BooleanField(default=False)
@@ -31,7 +37,8 @@ class InternshipApplication(TimeStampedModel):
     field_of_study = models.CharField(max_length=200)
     cv_url = models.FileField(upload_to="applications_cvs/", null=True, blank=True)
     motivation_letter = models.FileField(upload_to="applications_letters/", blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
+    passport_id_url = models.FileField(upload_to="applications_ids/", null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=SUBMITTED)
     admin_notes = models.TextField(blank=True)
     applied_on = models.DateTimeField(auto_now_add=True)
     reviewed_on = models.DateTimeField(null=True, blank=True)
@@ -116,6 +123,9 @@ class InternshipProgram(TimeStampedModel):
     )
     department = models.ForeignKey(
         Department, on_delete=models.CASCADE, related_name="internship_programs"
+    )
+    supervisor = models.ForeignKey(
+        Supervisor, on_delete=models.SET_NULL, null=True, blank=True, related_name="internship_programs"
     )
     start_date = models.DateField()
     end_date = models.DateField()

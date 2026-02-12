@@ -1,9 +1,19 @@
+import logging
+
+from django.http import FileResponse
 from rest_framework import viewsets, status, filters, renderers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import (
+    extend_schema,
+    OpenApiResponse,
+    extend_schema_view,
+    OpenApiParameter,
+)
+
 
 from programs.models import (
     Child,
@@ -23,7 +33,6 @@ from programs.serializers import (
     EducationInstitutionSerializer,
     EducationProgramReadSerializer,
     EducationProgramWriteSerializer,
-    ChildProgressReportSerializer,
 )
 from utils.filters.child_filters import (
     ChildFilter,
@@ -36,13 +45,93 @@ from utils.paginators import (
     ProgressCursorPagination,
     SmallResultsSetPagination,
 )
-from utils.reports import generate_child_progress_pdf, PDFRenderer
+from utils.reports.general_reports import generate_child_progress_pdf
+from utils.reports.ifashe.helpers import safe_filename
 
 from accounts.permissions import (
     IsResidentialManager,
 )
 
+logger = logging.getLogger(__name__)
 
+@extend_schema_view(
+    list=extend_schema(
+        tags=["Residential Care Program - Children"],
+        summary="List children",
+        description="Retrieve a paginated list of children with filtering, search, and ordering.",
+        parameters=[
+            OpenApiParameter(
+                name="search",
+                description="Search by first name, last name, or story",
+                required=False,
+                type=str,
+            ),
+            OpenApiParameter(
+                name="ordering",
+                description="Order by first_name, last_name, date_of_birth, start_date, or created_on",
+                required=False,
+                type=str,
+            ),
+            OpenApiParameter(
+                name="active_only",
+                description="Return only active children (`true`)",
+                required=False,
+                type=bool,
+            ),
+        ],
+        responses={
+            200: ChildReadSerializer(many=True),
+            403: OpenApiResponse(description="Permission denied"),
+        },
+    ),
+    retrieve=extend_schema(
+        tags=["Residential Care Program - Children"],
+        summary="Retrieve child",
+        description="Retrieve detailed information about a specific child.",
+        responses={
+            200: ChildReadSerializer,
+            404: OpenApiResponse(description="Child not found"),
+        },
+    ),
+    create=extend_schema(
+        tags=["Residential Care Program - Children"],
+        summary="Create child",
+        description="Create a new child record.",
+        request=ChildWriteSerializer,
+        responses={
+            201: ChildReadSerializer,
+            400: OpenApiResponse(description="Validation error"),
+        },
+    ),
+    update=extend_schema(
+        tags=["Residential Care Program - Children"],
+        summary="Update child",
+        description="Update an existing child record.",
+        request=ChildWriteSerializer,
+        responses={
+            200: ChildReadSerializer,
+            400: OpenApiResponse(description="Validation error"),
+        },
+    ),
+    partial_update=extend_schema(
+        tags=["Residential Care Program - Children"],
+        summary="Partially update child",
+        description="Partially update an existing child record.",
+        request=ChildWriteSerializer,
+        responses={
+            200: ChildReadSerializer,
+            400: OpenApiResponse(description="Validation error"),
+        },
+    ),
+    destroy=extend_schema(
+        tags=["Residential Care Program - Children"],
+        summary="Delete child",
+        description="Delete a child record.",
+        responses={
+            204: OpenApiResponse(description="Child deleted successfully"),
+        },
+    ),
+)
 class ChildViewSet(viewsets.ModelViewSet):
     queryset = (
         Child.objects.all()
@@ -79,6 +168,12 @@ class ChildViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    @extend_schema(
+        tags=["Residential Care Program - Children"],
+        summary="Child progress list",
+        description="Retrieve progress history for a specific child.",
+        responses={200: ChildProgressReadSerializer(many=True)},
+    )
     @action(detail=True, methods=["get"])
     def progress(self, request, pk=None):
         child = self.get_object()
@@ -92,6 +187,16 @@ class ChildViewSet(viewsets.ModelViewSet):
         serializer = ChildProgressReadSerializer(progress_entries, many=True)
         return Response(serializer.data)
 
+    @extend_schema(
+        tags=["Residential Care Program - Children"],
+        summary="Add child progress",
+        description="Add a new progress entry for a specific child.",
+        request=ChildProgressWriteSerializer,
+        responses={
+            201: ChildProgressReadSerializer,
+            400: OpenApiResponse(description="Validation error"),
+        },
+    )
     @action(detail=True, methods=["post"])
     def add_progress(self, request, pk=None):
         child = self.get_object()
@@ -107,6 +212,12 @@ class ChildViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @extend_schema(
+        tags=["Residential Care Program - Children"],
+        summary="Child education records",
+        description="Retrieve education records for a specific child.",
+        responses={200: ChildEducationReadSerializer(many=True)},
+    )
     @action(detail=True, methods=["get"])
     def education(self, request, pk=None):
         child = self.get_object()
@@ -114,36 +225,93 @@ class ChildViewSet(viewsets.ModelViewSet):
         serializer = ChildEducationReadSerializer(education_records, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=["get"], renderer_classes=[renderers.JSONRenderer, PDFRenderer])
+    @extend_schema(
+        tags=["Residential Care Program - Children"],
+        summary="Download child progress report",
+        description="Generate and download the latest child progress report",
+        responses={
+            200: OpenApiResponse(description="PDF file response"),
+            404: OpenApiResponse(description="No progress records found"),
+        },
+    )
+    @action(
+        detail=True,
+        methods=["get"],
+    )
     def download_progress_report(self, request, pk=None):
         child = self.get_object()
-        
-        # Get latest progress
-        progress_queryset = child.child_progress.all() # Ordered by -created_on
-        latest_progress = progress_queryset.first()
-        
-        if not latest_progress:
-             return Response({"error": "No progress records found for this child"}, status=status.HTTP_404_NOT_FOUND)
 
-        # Get previous progress (second latest)
+        progress_queryset = child.child_progress.all()
+        latest_progress = progress_queryset.first()
+
+        if not latest_progress:
+            return Response(
+                {"error": "No progress records found for this child"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
         previous_progress = None
         if progress_queryset.count() > 1:
             previous_progress = progress_queryset[1]
-            
-        report_data = {
-            'child': child,
-            'latest_progress': latest_progress,
-            'previous_progress': previous_progress
-        }
-        
-        serializer = ChildProgressReportSerializer(report_data)
-        return Response(serializer.data)
+
+        filename = safe_filename(f"child_progress_report_{child.id}", "pdf")
+        path = f"/tmp/{filename}"
+
+        buffer = generate_child_progress_pdf(child, latest_progress, previous_progress)
+
+        with open(path, "wb") as f:
+            f.write(buffer.getvalue())
+
+        return FileResponse(
+            open(path, "rb"),
+            as_attachment=True,
+            filename=filename,
+            content_type="application/pdf",
+        )
 
 
+@extend_schema_view(
+    list=extend_schema(
+        tags=["Residential Care Program - Children"],
+        summary="List child progress",
+        description="Retrieve a paginated list of child progress entries.",
+        responses={200: ChildProgressReadSerializer(many=True)},
+    ),
+    retrieve=extend_schema(
+        tags=["Residential Care Program - Children"],
+        summary="Retrieve child progress",
+        responses={200: ChildProgressReadSerializer},
+    ),
+    create=extend_schema(
+        tags=["Residential Care Program - Children"],
+        summary="Create child progress",
+        description="Create a child progress entry (child_id required).",
+        request=ChildProgressWriteSerializer,
+        responses={201: ChildProgressReadSerializer},
+    ),
+    update=extend_schema(
+        tags=["Residential Care Program - Children"],
+        summary="Update child progress",
+        request=ChildProgressWriteSerializer,
+        responses={200: ChildProgressReadSerializer},
+    ),
+    partial_update=extend_schema(
+        tags=["Residential Care Program - Children"],
+        summary="Partially update child progress",
+        request=ChildProgressWriteSerializer,
+        responses={200: ChildProgressReadSerializer},
+    ),
+    destroy=extend_schema(
+        tags=["Residential Care Program - Children"],
+        summary="Delete child progress",
+        responses={204: OpenApiResponse(description="Deleted successfully")},
+    ),
+)
 class ChildProgressViewSet(viewsets.ModelViewSet):
     """
     Manage child progress CRUD
     """
+
     queryset = ChildProgress.objects.select_related("child").prefetch_related(
         "progress_media",
         "child__education_records",
@@ -170,6 +338,15 @@ class ChildProgressViewSet(viewsets.ModelViewSet):
         child = get_object_or_404(Child, pk=child_id)
         serializer.save(context={"child": child})
 
+    @extend_schema(
+        tags=["Residential Care Program - Children"],
+        summary="Add child progress media",
+        description="Upload image and/or video media for a progress entry.",
+        responses={
+            201: ChildProgressReadSerializer,
+            400: OpenApiResponse(description="No media found"),
+        },
+    )
     @action(detail=True, methods=["post"])
     def add_media(self, request, pk=None):
         progress = self.get_object()
@@ -197,6 +374,55 @@ class ChildProgressViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
+@extend_schema_view(
+    create=(
+        extend_schema(
+            tags=["Residential Care Program - Education Institutions"],
+            summary="Create education institution",
+            request=EducationInstitutionSerializer,
+            responses={201: EducationInstitutionSerializer},
+        ),
+    ),
+    update=(
+        extend_schema(
+            tags=["Residential Care Program - Education Institutions"],
+            summary="Update education institution",
+            request=EducationInstitutionSerializer,
+            responses={200: EducationInstitutionSerializer},
+        ),
+    ),
+    partial_update=(
+        extend_schema(
+            tags=["Residential Care Program - Education Institutions"],
+            summary="Partially update education institution",
+            request=EducationInstitutionSerializer,
+            responses={200: EducationInstitutionSerializer},
+        ),
+    ),
+    destroy=(
+        extend_schema(
+            tags=["Residential Care Program - Education Institutions"],
+            summary="Delete education institution",
+            responses={204: OpenApiResponse(description="Deleted successfully")},
+        ),
+    ),
+)
+@extend_schema_view(
+    list=extend_schema(tags=["Residential Care Program - Education Institutions"]),
+    retrieve=extend_schema(tags=["Residential Care Program - Education Institutions"]),
+    create=extend_schema(tags=["Residential Care Program - Education Institutions"]),
+    update=extend_schema(tags=["Residential Care Program - Education Institutions"]),
+    partial_update=extend_schema(
+        tags=["Residential Care Program - Education Institutions"]
+    ),
+    destroy=extend_schema(tags=["Residential Care Program - Education Institutions"]),
+    programs=extend_schema(
+        tags=["Residential Care Program - Education Institutions"],
+        responses={
+            200: EducationProgramReadSerializer(many=True)
+        },  
+    ),
+)
 class EducationInstitutionViewSet(viewsets.ModelViewSet):
     queryset = EducationInstitution.objects.all().prefetch_related("programs")
     serializer_class = EducationInstitutionSerializer
@@ -220,6 +446,9 @@ class EducationInstitutionViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
+@extend_schema(
+    tags=["Residential Care Program - Education "],
+)
 class EducationProgramViewSet(viewsets.ModelViewSet):
     queryset = EducationProgram.objects.all().select_related("institution")
     permission_classes = [IsAuthenticated, IsResidentialManager]
@@ -250,6 +479,9 @@ class EducationProgramViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
+@extend_schema(
+    tags=["Residential Care Program - Education "],
+)
 class ChildEducationViewSet(viewsets.ModelViewSet):
     queryset = ChildEducation.objects.all().select_related(
         "child", "program", "program__institution"

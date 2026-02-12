@@ -1,29 +1,36 @@
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
-from programs.models.ifashe_models import SchoolPayment, SchoolSupport
-from programs.serializers.ifashe_serializers import SchoolPaymentSerializer
+from django.db import models
 
-class SchoolPaymentViewSet(viewsets.ModelViewSet):
-    queryset = SchoolPayment.objects.all()
-    serializer_class = SchoolPaymentSerializer
+from programs.models.ifashe_models import SchoolSupport
+from programs.serializers.ifashe_serializers import (
+    SchoolSupportSerializer, SchoolPaymentSerializer
+)
+from accounts.permissions import IsIfasheManager
+from drf_spectacular.utils import extend_schema
+@extend_schema(
+    tags=["IfasheTugufashe - Child School "],
+)
+class SchoolSupportViewSet(viewsets.ModelViewSet):
+    queryset = SchoolSupport.objects.all().prefetch_related('payments')
+    serializer_class = SchoolSupportSerializer
+    permission_classes = [IsIfasheManager]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['school_support', 'status', 'payment_date']
-    search_fields = ['receipt_number', 'notes']
-    ordering_fields = ['payment_date', 'amount']
-    ordering = ['-payment_date']
+    filterset_fields = ['payment_status', 'academic_year', 'school']
+    search_fields = ['child__first_name', 'child__last_name', 'school__name']
+    ordering_fields = ['created_on', 'academic_year']
 
-    def perform_create(self, serializer):
-        payment = serializer.save()
-        # Update SchoolSupport payment status logic could go here
-        # Example: check total paid vs fees and update status
-        self._update_school_support_status(payment.school_support)
+    @action(detail=True, methods=['post'])
+    def add_payment(self, request, pk=None):
+        school_support = self.get_object()
+        serializer = SchoolPaymentSerializer(data=request.data)
+        
+        if serializer.is_valid():
+            serializer.save(school_support=school_support)
+            total_paid = school_support.payments.aggregate(total=models.Sum('amount'))['total'] or 0
+            if school_support.total_cost - total_paid <= 0:
+                 school_support.payment_status = SchoolSupport.PAID
+                 school_support.save()
 
-    def perform_update(self, serializer):
-        payment = serializer.save()
-        self._update_school_support_status(payment.school_support)
-
-    def _update_school_support_status(self, school_support):
-        # Allow manual override, but if status is pending, maybe auto-update?
-        # Keeping it simple for restoration: just recalculate if needed.
-        # For now, just save to trigger any signals if they exist.
-        school_support.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

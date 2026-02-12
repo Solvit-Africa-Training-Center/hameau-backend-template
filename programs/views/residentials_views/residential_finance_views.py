@@ -1,29 +1,36 @@
+from django.http import FileResponse
+from rest_framework.views import APIView
+import logging
+
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django.db.models import Sum, Count, Avg
-from decimal import Decimal
 
-from programs.models import HealthRecord, ChildEducation, ResidentialFinancialPlan, ChildInsurance, Child
 from programs.serializers import (
     SpendingReportSerializer,
     CostReportSerializer,
     FinancialReportDataSerializer,
 )
 from accounts.permissions import IsResidentialManager
-from rest_framework import viewsets, status, renderers
-from utils.reports import PDFRenderer, ExcelRenderer
+from utils.reports.residentials.spending_summary import (
+    SpendingSummaryExcelReport,
+    SpendingSummaryPDFReport,
+)
+from utils.reports.ifashe.helpers import safe_filename
+from drf_spectacular.utils import extend_schema, extend_schema_view
 
+logger = logging.getLogger(__name__)
 
+@extend_schema_view(
+    spending_summary=extend_schema(tags=["Residential Care Program - Finance"]),
+    cost_report=extend_schema(tags=["Residential Care Program - Finance"]),
+    download_report=extend_schema(tags=["Residential Care Program - Finance"]),
+)
 class ResidentialFinanceViewSet(viewsets.ViewSet):
-    """
-    ViewSet for managing residential program finances.
-    Handles spending summaries and cost reports.
-    """
     permission_classes = [IsAuthenticated, IsResidentialManager]
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=["get"])
     def spending_summary(self, request):
         """
         Get spending summary for:
@@ -33,72 +40,63 @@ class ResidentialFinanceViewSet(viewsets.ViewSet):
         """
         return Response(
             {
-                'success': True,
-                'data': SpendingReportSerializer({}, context={'request': request}).data
+                "success": True,
+                "data": SpendingReportSerializer({}, context={"request": request}).data,
             },
-            status=status.HTTP_200_OK
+            status=status.HTTP_200_OK,
         )
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=["get"])
     def cost_report(self, request):
         """Generate a detailed cost report"""
         return Response(
             {
-                'success': True,
-                'data': CostReportSerializer({}, context={'request': request}).data
+                "success": True,
+                "data": CostReportSerializer({}, context={"request": request}).data,
             },
-            status=status.HTTP_200_OK
+            status=status.HTTP_200_OK,
         )
 
-    @action(detail=False, methods=['get'], renderer_classes=[renderers.JSONRenderer, PDFRenderer, ExcelRenderer])
-    def download_report(self, request):
-        """
-        Download financial report as PDF or Excel.
-        Query params:
-        - format: 'pdf', 'excel', or 'json' (default: 'json')
-        - report_type: 'spending' or 'cost' (default: 'spending')
-        - date_from, date_to: Date filters
-        """
-        report_type = request.query_params.get('report_type', 'spending')
-        
-        filename = f"financial_report_{report_type}"
-        data = []
-        title = "Financial Report"
-        date_range = {}
 
-        if report_type == 'cost':
-             serializer = CostReportSerializer({}, context={'request': request})
-             report_data = serializer.data
-             title = f"Cost Report ({report_data['date_range']['from']} - {report_data['date_range']['to']})"
-             date_range = report_data['date_range']
-             
-             for item in report_data['cost_by_type']:
-                 data.append({
-                     "Record Type": item['record_type'],
-                     "Count": item['count'],
-                     "Total Cost": f"{item['total_cost']:.2f}",
-                     "Avg Cost": f"{item['average_cost']:.2f}"
-                 })
-                 
-        else: # spending
-             serializer = SpendingReportSerializer({}, context={'request': request})
-             report_data = serializer.data
-             title = "Spending Summary"
-             
-             data = [
-                 {"Category": "Normal Spending", "Amount": f"{report_data['normal_spending']:.2f}"},
-                 {"Category": "Special Diet Spending", "Amount": f"{report_data['special_diet_spending']:.2f}"},
-                 {"Category": "Education Spending", "Amount": f"{report_data['education_spending']:.2f}"},
-                 {"Category": "Total Spending", "Amount": f"{report_data['total_spending']:.2f}"},
-             ]
+@extend_schema(
+    tags=["Residential Care Program - Finance"],
+    description="Generates a PDF report summarizing residential financial data.",
+)
+class ResidentialFinancePDFReportView(APIView):
+    permission_classes = [IsAuthenticated, IsResidentialManager]
 
-        report_context = {
-            "report_type": report_type,
-            "title": title,
-            "filename": filename,
-            "data": data,
-            "date_range": date_range
-        }
-        
-        serializer = FinancialReportDataSerializer(report_context)
-        return Response(serializer.data)
+    def get(self, request):
+        filename = safe_filename("residential_financial_report", "pdf")
+        path = f"/tmp/{filename}"
+
+        report = SpendingSummaryPDFReport(path, request=request)
+        report.generate()
+
+        return FileResponse(
+            open(path, "rb"),
+            as_attachment=True,
+            filename=filename,
+            content_type="application/pdf",
+        )
+
+
+@extend_schema(
+    tags=["Residential Care Program - Finance"],
+    description="Generates an Excel report summarizing residential financial data.",
+)
+class ResidentialFinanceExcelReportView(APIView):
+    permission_classes = [IsAuthenticated, IsResidentialManager]
+
+    def get(self, request):
+        filename = safe_filename("residential_financial_report", "xlsx")
+        path = f"/tmp/{filename}"
+
+        report = SpendingSummaryExcelReport(request=request)
+        report.generate(path)
+
+        return FileResponse(
+            open(path, "rb"),
+            as_attachment=True,
+            filename=filename,
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )

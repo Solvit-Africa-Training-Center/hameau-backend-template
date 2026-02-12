@@ -10,10 +10,14 @@ dbc.sqlite3
 *.pyc
 __pycache__
 *.swp
+*.log
+logs/
 
 
 **/migrations/*
 !**/migrations/__init__.py
+
+hameau-backend-template.code-workspace
 
 
 

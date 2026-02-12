@@ -21,9 +21,9 @@ from ..models import (
 from django.db.models import Sum, Count, Avg, F
 from django.db.models.functions import ExtractMonth, ExtractYear
 from utils.validators import (
-    validate_not_future_date, 
+    validate_not_future_date,
     validate_not_negative,
-    validate_rwanda_phone
+    validate_rwanda_phone,
 )
 
 
@@ -57,7 +57,6 @@ class ChildReadSerializer(serializers.ModelSerializer):
 
 
 class ChildWriteSerializer(serializers.ModelSerializer):
-    
     class Meta:
         model = Child
         fields = [
@@ -78,31 +77,30 @@ class ChildWriteSerializer(serializers.ModelSerializer):
 
     def validate_start_date(self, value):
         if value < timezone.now().date().replace(year=timezone.now().year - 10):
-            raise serializers.ValidationError(
-                "The date seems to be incorrect."
-            )
+            raise serializers.ValidationError("The date seems to be incorrect.")
         return value
 
     def validate(self, attrs):
-        date_of_birth = attrs.get('date_of_birth')
-        start_date = attrs.get('start_date')        
+        date_of_birth = attrs.get("date_of_birth")
+        start_date = attrs.get("start_date")
         if date_of_birth and start_date:
             if start_date < date_of_birth:
-                raise serializers.ValidationError({
-                    'start_date': "The starting date cannot be older that the date of birth"
-                })        
+                raise serializers.ValidationError(
+                    {
+                        "start_date": "The starting date cannot be older that the date of birth"
+                    }
+                )
         return attrs
 
 
 class ProgressMediaWriteSerializer(serializers.ModelSerializer):
-    
     class Meta:
         model = ProgressMedia
         fields = [
             "progress_image",
             "progress_video",
         ]
-    
+
     def validate_progress_video(self, video):
         allowed_extensions = [".mp4", ".mov", ".avi", ".mkv"]
         ext = os.path.splitext(video.name)[1].lower()
@@ -113,15 +111,12 @@ class ProgressMediaWriteSerializer(serializers.ModelSerializer):
         return video
 
     def validate(self, attrs):
-        if not attrs.get('progress_image') and not attrs.get('progress_video'):
-            raise serializers.ValidationError(
-                "Submit at least a video or an image"
-            )
+        if not attrs.get("progress_image") and not attrs.get("progress_video"):
+            raise serializers.ValidationError("Submit at least a video or an image")
         return attrs
 
 
 class ProgressMediaReadSerializer(serializers.ModelSerializer):
-    
     class Meta:
         model = ProgressMedia
         fields = [
@@ -145,12 +140,10 @@ class ChildProgressWriteSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         media_data = validated_data.pop("media", [])
-        
-        child = self.context.get('child')
+
+        child = self.context.get("child")
         if not child:
-            raise serializers.ValidationError(
-                "Child must be specified in context"
-            )
+            raise serializers.ValidationError("Child must be specified in context")
         progress = ChildProgress.objects.create(child=child, **validated_data)
         for media in media_data:
             ProgressMedia.objects.create(progress=progress, **media)
@@ -173,16 +166,15 @@ class ChildProgressReadSerializer(serializers.ModelSerializer):
 
 
 class EducationInstitutionSerializer(serializers.ModelSerializer):
-    
     class Meta:
         model = EducationInstitution
         fields = [
-            "id", 
-            "name", 
-            "address", 
-            "phone", 
-            "email", 
-            "website"]
+            "id",
+            "name",
+            "address",
+            "phone",
+            "email",
+        ]
         read_only_fields = ["id", "created_on", "updated_on"]
 
     def validate_phone(self, value):
@@ -194,18 +186,11 @@ class EducationProgramReadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EducationProgram
-        fields = [
-            "id", 
-            "institution", 
-            "program_name", 
-            "program_level",
-            "cost"
-        ]
+        fields = ["id", "institution", "program_name", "program_level", "cost"]
         read_only_fields = ["id", "created_on", "updated_on"]
 
 
 class EducationProgramWriteSerializer(serializers.ModelSerializer):
-    
     class Meta:
         model = EducationProgram
         fields = [
@@ -220,7 +205,6 @@ class EducationProgramWriteSerializer(serializers.ModelSerializer):
 
 
 class ChildEducationWriteSerializer(serializers.ModelSerializer):
-    
     class Meta:
         model = ChildEducation
         fields = [
@@ -237,15 +221,15 @@ class ChildEducationWriteSerializer(serializers.ModelSerializer):
         return validate_not_negative(value, "Cost")
 
     def validate(self, attrs):
-        start_date = attrs.get('start_date')
-        end_date = attrs.get('end_date')
-        
+        start_date = attrs.get("start_date")
+        end_date = attrs.get("end_date")
+
         if start_date and end_date:
             if end_date < start_date:
-                raise serializers.ValidationError({
-                    'end_date': "End-date cannot come before start date"
-                })
-        
+                raise serializers.ValidationError(
+                    {"end_date": "End-date cannot come before start date"}
+                )
+
         return attrs
 
 
@@ -272,8 +256,9 @@ class ChildEducationReadSerializer(serializers.ModelSerializer):
 
 class CaretakerReadSerializer(serializers.ModelSerializer):
     """Serializer for reading caretaker data"""
+
     full_name = serializers.ReadOnlyField()
-    
+
     class Meta:
         model = Caretaker
         fields = [
@@ -288,53 +273,81 @@ class CaretakerReadSerializer(serializers.ModelSerializer):
             "hire_date",
             "is_active",
         ]
-        read_only_fields = ('id', 'created_on', 'updated_on', 'deleted_on')
+        read_only_fields = ("id", "created_on", "updated_on", "deleted_on")
 
 
 class CaretakerWriteSerializer(serializers.ModelSerializer):
     """Serializer for creating/updating caretaker data"""
-    
+
     class Meta:
         model = Caretaker
         fields = [
-            'first_name', 'last_name', 'date_of_birth', 'gender', 
-            'phone', 'email', 'address', 'role', 'hire_date', 'is_active'
+            "first_name",
+            "last_name",
+            "date_of_birth",
+            "gender",
+            "phone",
+            "email",
+            "address",
+            "role",
+            "hire_date",
+            "is_active",
         ]
-        
+
     def validate_phone(self, value):
         return validate_rwanda_phone(value)
 
 
 class CaretakerListSerializer(serializers.ModelSerializer):
     """Lighter serializer for list views"""
+
     full_name = serializers.ReadOnlyField()
-    
+
     class Meta:
         model = Caretaker
         fields = [
-            'id', 'full_name', 'first_name', 'last_name', 
-            'phone', 'email', 'role', 'is_active', 'hire_date'
+            "id",
+            "full_name",
+            "first_name",
+            "last_name",
+            "phone",
+            "email",
+            "role",
+            "is_active",
+            "hire_date",
         ]
+
 
 class HealthRecordReadSerializer(serializers.ModelSerializer):
     """Serializer for reading health records"""
-    
+
     child_name = serializers.SerializerMethodField()
-    child_details = ChildReadSerializer(source='child', read_only=True)
+    child_details = ChildReadSerializer(source="child", read_only=True)
     cost_formatted = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = HealthRecord
         fields = [
-            'id', 'child', 'child_name', 'child_details', 'record_type',
-            'visit_date', 'hospital_name', 'diagnosis', 'treatment',
-            'description', 'cost', 'cost_formatted', 'created_on', 'updated_on'
+            "id",
+            "child",
+            "child_name",
+            "child_details",
+            "record_type",
+            "visit_date",
+            "hospital_name",
+            "diagnosis",
+            "treatment",
+            "description",
+            "cost",
+            "cost_formatted",
+            "created_on",
+            "updated_on",
         ]
-        read_only_fields = ('id', 'created_on', 'updated_on')
-    
+        read_only_fields = ("id", "created_on", "updated_on")
+
     def get_child_name(self, obj):
         return f"{obj.child.first_name} {obj.child.last_name}"
-    
+
     def get_cost_formatted(self, obj):
         """Format cost with currency"""
         return f"{obj.cost:,.2f} RWF"
@@ -342,135 +355,150 @@ class HealthRecordReadSerializer(serializers.ModelSerializer):
 
 class HealthRecordWriteSerializer(serializers.ModelSerializer):
     """Serializer for creating/updating health records"""
-    
+
     class Meta:
         model = HealthRecord
         fields = [
-            'child', 'record_type', 'visit_date', 'hospital_name',
-            'diagnosis', 'treatment', 'description', 'cost'
+            "child",
+            "record_type",
+            "visit_date",
+            "hospital_name",
+            "diagnosis",
+            "treatment",
+            "description",
+            "cost",
         ]
-    
+
     def validate_visit_date(self, value):
         return validate_not_future_date(value, "Visit date")
-    
+
     def validate_cost(self, value):
         return validate_not_negative(value, "Cost")
-    
+
     def validate(self, attrs):
         """Custom validation"""
-        record_type = attrs.get('record_type')
-        
+        record_type = attrs.get("record_type")
+
         # Require diagnosis for illness records
-        if record_type == 'Illness' and not attrs.get('diagnosis'):
-            raise serializers.ValidationError({
-                'diagnosis': 'Diagnosis is required for illness records'
-            })
-        
+        if record_type == "Illness" and not attrs.get("diagnosis"):
+            raise serializers.ValidationError(
+                {"diagnosis": "Diagnosis is required for illness records"}
+            )
+
         # Require treatment for treatment records
-        if record_type == 'Treatment' and not attrs.get('treatment'):
-            raise serializers.ValidationError({
-                'treatment': 'Treatment details are required for treatment records'
-            })
-        
+        if record_type == "Treatment" and not attrs.get("treatment"):
+            raise serializers.ValidationError(
+                {"treatment": "Treatment details are required for treatment records"}
+            )
+
         return attrs
 
 
 class HealthRecordListSerializer(serializers.ModelSerializer):
     """Lighter serializer for list views"""
-    
+
     child_name = serializers.SerializerMethodField()
     cost_formatted = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = HealthRecord
         fields = [
-            'id', 'child', 'child_name', 'record_type', 'visit_date',
-            'hospital_name', 'diagnosis', 'cost', 'cost_formatted', 'created_on'
+            "id",
+            "child",
+            "child_name",
+            "record_type",
+            "visit_date",
+            "hospital_name",
+            "diagnosis",
+            "cost",
+            "cost_formatted",
+            "created_on",
         ]
-    
+
     def get_child_name(self, obj):
         return f"{obj.child.first_name} {obj.child.last_name}"
-    
-    
+
     def get_cost_formatted(self, obj):
         return f"{obj.cost:,.2f} RWF"
 
 
 class SpendingReportSerializer(serializers.Serializer):
     """Serializer for residential spending report"""
-    
+
     normal_spending = serializers.SerializerMethodField()
     special_diet_spending = serializers.SerializerMethodField()
     education_spending = serializers.SerializerMethodField()
     total_spending = serializers.SerializerMethodField()
     currency = serializers.CharField(default="RWF")
-    
+
     def get_date_filters(self, date_field):
-        request = self.context.get('request')
+        request = self.context.get("request")
         filters = {}
         if request:
-            start_date = request.query_params.get('start_date') or request.query_params.get('date_from')
-            end_date = request.query_params.get('end_date') or request.query_params.get('date_to')
-            
+            start_date = request.query_params.get(
+                "start_date"
+            ) or request.query_params.get("date_from")
+            end_date = request.query_params.get("end_date") or request.query_params.get(
+                "date_to"
+            )
+
             if start_date:
-                filters[f'{date_field}__gte'] = start_date
+                filters[f"{date_field}__gte"] = start_date
             if end_date:
-                filters[f'{date_field}__lte'] = end_date
+                filters[f"{date_field}__lte"] = end_date
         return filters
 
     def _calculate_total_costs(self, children_queryset):
 
-        health_filters = self.get_date_filters('visit_date')
+        health_filters = self.get_date_filters("visit_date")
         health_cost = HealthRecord.objects.filter(
             child__in=children_queryset, **health_filters
-        ).aggregate(total=Sum('cost'))['total'] or Decimal('0.00')
+        ).aggregate(total=Sum("cost"))["total"] or Decimal("0.00")
 
-        
-        edu_filters = self.get_date_filters('start_date')
+        edu_filters = self.get_date_filters("start_date")
         edu_cost = ChildEducation.objects.filter(
             child__in=children_queryset, **edu_filters
-        ).aggregate(total=Sum('cost'))['total'] or Decimal('0.00')
+        ).aggregate(total=Sum("cost"))["total"] or Decimal("0.00")
 
-        
-        ins_filters = self.get_date_filters('start_date')
+        ins_filters = self.get_date_filters("start_date")
         ins_cost = ChildInsurance.objects.filter(
             child__in=children_queryset, **ins_filters
-        ).aggregate(total=Sum('cost'))['total'] or Decimal('0.00')
-        
-        
-        plan_filters = self.get_date_filters('month')
+        ).aggregate(total=Sum("cost"))["total"] or Decimal("0.00")
+
+        plan_filters = self.get_date_filters("month")
         food_cost = ResidentialFinancialPlan.objects.filter(
             child__in=children_queryset, **plan_filters
-        ).aggregate(total=Sum('food_cost'))['total'] or Decimal('0.00')
+        ).aggregate(total=Sum("food_cost"))["total"] or Decimal("0.00")
 
         return health_cost + edu_cost + ins_cost + food_cost
 
     def get_normal_spending(self, obj):
         # Children without special needs
         children = Child.objects.filter(
-            Q(special_needs__isnull=True) | Q(special_needs__exact='')
+            Q(special_needs__isnull=True) | Q(special_needs__exact="")
         )
         return self._calculate_total_costs(children)
 
     def get_special_diet_spending(self, obj):
         # Children with special needs
         children = Child.objects.exclude(
-            Q(special_needs__isnull=True) | Q(special_needs__exact='')
+            Q(special_needs__isnull=True) | Q(special_needs__exact="")
         )
         return self._calculate_total_costs(children)
 
     def get_education_spending(self, obj):
         # Total education spending for ALL children
-        filters = self.get_date_filters('start_date')
-        return ChildEducation.objects.filter(**filters).aggregate(total=Sum('cost'))['total'] or Decimal('0.00')
-
+        filters = self.get_date_filters("start_date")
+        return ChildEducation.objects.filter(**filters).aggregate(total=Sum("cost"))[
+            "total"
+        ] or Decimal("0.00")
 
     def get_total_spending(self, obj):
         return self.get_normal_spending(obj) + self.get_special_diet_spending(obj)
 
 
 class CostReportSerializer(serializers.Serializer):
-    """Serializer for detailed cost report"""
+
     date_range = serializers.SerializerMethodField()
     total_cost = serializers.SerializerMethodField()
     cost_by_type = serializers.SerializerMethodField()
@@ -478,13 +506,13 @@ class CostReportSerializer(serializers.Serializer):
     monthly_breakdown = serializers.SerializerMethodField()
 
     def _get_queryset(self):
-        request = self.context.get('request')
-        queryset = HealthRecord.objects.select_related('child')
-        
+        request = self.context.get("request")
+        queryset = HealthRecord.objects.select_related("child")
+
         if request:
-            date_from = request.query_params.get('date_from')
-            date_to = request.query_params.get('date_to')
-            
+            date_from = request.query_params.get("date_from")
+            date_to = request.query_params.get("date_to")
+
             if date_from:
                 queryset = queryset.filter(visit_date__gte=date_from)
             if date_to:
@@ -492,69 +520,71 @@ class CostReportSerializer(serializers.Serializer):
         return queryset
 
     def get_date_range(self, obj):
-        request = self.context.get('request')
+        request = self.context.get("request")
         return {
-            'from': request.query_params.get('date_from') if request else None,
-            'to': request.query_params.get('date_to') if request else None
+            "from": request.query_params.get("date_from") if request else None,
+            "to": request.query_params.get("date_to") if request else None,
         }
 
     def get_total_cost(self, obj):
         queryset = self._get_queryset()
-        return queryset.aggregate(total=Sum('cost'))['total'] or Decimal('0.00')
+        return queryset.aggregate(total=Sum("cost"))["total"] or Decimal("0.00")
 
     def get_cost_by_type(self, obj):
         queryset = self._get_queryset()
-        data = queryset.values('record_type').annotate(
-            total_cost=Sum('cost'),
-            count=Count('id'),
-            average_cost=Avg('cost')
-        ).order_by('-total_cost')
-        
+        data = (
+            queryset.values("record_type")
+            .annotate(
+                total_cost=Sum("cost"), count=Count("id"), average_cost=Avg("cost")
+            )
+            .order_by("-total_cost")
+        )
+
         return [
             {
-                'record_type': item['record_type'],
-                'total_cost': float(item['total_cost'] or 0),
-                'count': item['count'],
-                'average_cost': float(item['average_cost'] or 0),
+                "record_type": item["record_type"],
+                "total_cost": float(item["total_cost"] or 0),
+                "count": item["count"],
+                "average_cost": float(item["average_cost"] or 0),
             }
             for item in data
         ]
 
     def get_top_10_children_by_cost(self, obj):
         queryset = self._get_queryset()
-        data = queryset.values(
-            'child__id', 'child__first_name', 'child__last_name'
-        ).annotate(
-            total_cost=Sum('cost'),
-            record_count=Count('id')
-        ).order_by('-total_cost')[:10]
-        
+        data = (
+            queryset.values("child__id", "child__first_name", "child__last_name")
+            .annotate(total_cost=Sum("cost"), record_count=Count("id"))
+            .order_by("-total_cost")[:10]
+        )
+
         return [
             {
-                'child_id': str(item['child__id']),
-                'child_name': f"{item['child__first_name']} {item['child__last_name']}",
-                'total_cost': float(item['total_cost'] or 0),
-                'record_count': item['record_count'],
+                "child_id": str(item["child__id"]),
+                "child_name": f"{item['child__first_name']} {item['child__last_name']}",
+                "total_cost": float(item["total_cost"] or 0),
+                "record_count": item["record_count"],
             }
             for item in data
         ]
 
     def get_monthly_breakdown(self, obj):
         queryset = self._get_queryset()
-        data = queryset.annotate(
-            month=ExtractMonth('visit_date'),
-            year=ExtractYear('visit_date')
-        ).values('year', 'month').annotate(
-            total_cost=Sum('cost'),
-            count=Count('id')
-        ).order_by('year', 'month')
-        
+        data = (
+            queryset.annotate(
+                month=ExtractMonth("visit_date"), year=ExtractYear("visit_date")
+            )
+            .values("year", "month")
+            .annotate(total_cost=Sum("cost"), count=Count("id"))
+            .order_by("year", "month")
+        )
+
         return [
             {
-                'year': item['year'],
-                'month': item['month'],
-                'total_cost': float(item['total_cost'] or 0),
-                'count': item['count'],
+                "year": item["year"],
+                "month": item["month"],
+                "total_cost": float(item["total_cost"] or 0),
+                "count": item["count"],
             }
             for item in data
         ]
@@ -567,15 +597,15 @@ class ChildProgressReportSerializer(serializers.Serializer):
     comparison_summary = serializers.SerializerMethodField()
 
     def get_comparison_summary(self, obj):
-        latest = obj.get('latest_progress')
-        previous = obj.get('previous_progress')
-        
+        latest = obj.get("latest_progress")
+        previous = obj.get("previous_progress")
+
         if not latest:
             return "No progress records found."
-        
+
         if not previous:
             return "Initial report. No previous records for comparison."
-            
+
         return f"Comparison between {latest.created_on.date()} and {previous.created_on.date()}."
 
 
@@ -584,4 +614,3 @@ class FinancialReportDataSerializer(serializers.Serializer):
     title = serializers.CharField()
     data = serializers.ListField(child=serializers.DictField())
     date_range = serializers.DictField(required=False)
-
