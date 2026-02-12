@@ -24,7 +24,6 @@ from .serializers import (
 
 logger = logging.getLogger(__name__)
 
-
 @extend_schema_view(
     list=extend_schema(
         tags=["Managers"],
