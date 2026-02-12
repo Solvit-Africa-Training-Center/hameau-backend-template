@@ -13,8 +13,6 @@ from programs.serializers import (
     FinancialReportDataSerializer,
 )
 from accounts.permissions import IsResidentialManager
-from rest_framework import renderers
-from utils.reports.general_reports import PDFRenderer, ExcelRenderer
 from utils.reports.residentials.spending_summary import (
     SpendingSummaryExcelReport,
     SpendingSummaryPDFReport,

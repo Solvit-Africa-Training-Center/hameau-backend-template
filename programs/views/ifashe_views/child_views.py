@@ -30,7 +30,6 @@ class IfasheChildViewSet(viewsets.ModelViewSet):
     ordering_fields = ["created_on", "first_name", "last_name", "date_of_birth"]
     ordering = ["-created_on"]
 
-
 @extend_schema(
     tags=["IfasheTugufashe - Family "],
 )

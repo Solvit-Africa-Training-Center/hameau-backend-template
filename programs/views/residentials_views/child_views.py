@@ -1,5 +1,6 @@
 import logging
 
+from django.http import FileResponse
 from rest_framework import viewsets, status, filters, renderers
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -32,7 +33,6 @@ from programs.serializers import (
     EducationInstitutionSerializer,
     EducationProgramReadSerializer,
     EducationProgramWriteSerializer,
-    ChildProgressReportSerializer,
 )
 from utils.filters.child_filters import (
     ChildFilter,
@@ -45,7 +45,8 @@ from utils.paginators import (
     ProgressCursorPagination,
     SmallResultsSetPagination,
 )
-from utils.reports.general_reports import PDFRenderer
+from utils.reports.general_reports import generate_child_progress_pdf
+from utils.reports.ifashe.helpers import safe_filename
 
 from accounts.permissions import (
     IsResidentialManager,
@@ -229,14 +230,13 @@ class ChildViewSet(viewsets.ModelViewSet):
         summary="Download child progress report",
         description="Generate and download the latest child progress report",
         responses={
-            200: ChildProgressReportSerializer,
+            200: OpenApiResponse(description="PDF file response"),
             404: OpenApiResponse(description="No progress records found"),
         },
     )
     @action(
         detail=True,
         methods=["get"],
-        renderer_classes=[renderers.JSONRenderer, PDFRenderer],
     )
     def download_progress_report(self, request, pk=None):
         child = self.get_object()
@@ -254,14 +254,20 @@ class ChildViewSet(viewsets.ModelViewSet):
         if progress_queryset.count() > 1:
             previous_progress = progress_queryset[1]
 
-        report_data = {
-            "child": child,
-            "latest_progress": latest_progress,
-            "previous_progress": previous_progress,
-        }
+        filename = safe_filename(f"child_progress_report_{child.id}", "pdf")
+        path = f"/tmp/{filename}"
 
-        serializer = ChildProgressReportSerializer(report_data)
-        return Response(serializer.data)
+        buffer = generate_child_progress_pdf(child, latest_progress, previous_progress)
+
+        with open(path, "wb") as f:
+            f.write(buffer.getvalue())
+
+        return FileResponse(
+            open(path, "rb"),
+            as_attachment=True,
+            filename=filename,
+            content_type="application/pdf",
+        )
 
 
 @extend_schema_view(
