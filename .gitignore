@@ -10,7 +10,8 @@ dbc.sqlite3
 *.pyc
 __pycache__
 *.swp
-# *.log
+*.log
+logs/
 
 
 **/migrations/*
