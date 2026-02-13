@@ -1,3 +1,4 @@
+import logging
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -15,6 +16,8 @@ from programs.serializers.ifashe_serializers import (
 )
 from accounts.permissions import IsIfasheManager
 from drf_spectacular.utils import extend_schema
+
+logger = logging.getLogger(__name__)
 
 
 @extend_schema(
@@ -34,6 +37,18 @@ class IfasheParentViewSet(viewsets.ModelViewSet):
     ordering_fields = ["created_on", "first_name", "last_name"]
     ordering = ["-created_on"]
 
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        logger.info(
+            f"User {self.request.user} registered a new parent: {instance.full_name} (ID: {instance.id})"
+        )
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        logger.info(
+            f"User {self.request.user} updated parent: {instance.full_name} (ID: {instance.id})"
+        )
+
 
 @extend_schema(
     tags=["IfasheTugufashe - Work "],
@@ -42,6 +57,12 @@ class ParentWorkContractViewSet(viewsets.ModelViewSet):
     queryset = ParentWorkContract.objects.select_related("parent")
     serializer_class = ParentWorkContractSerializer
     permission_classes = [IsIfasheManager]
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        logger.info(
+            f"User {self.request.user} created a work contract for parent {instance.parent} (ID: {instance.id})"
+        )
 
 
 @extend_schema(
@@ -54,6 +75,12 @@ class ParentAttendanceViewSet(viewsets.ModelViewSet):
     serializer_class = ParentAttendanceSerializer
     permission_classes = [IsIfasheManager]
 
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        logger.info(
+            f"User {self.request.user} recorded attendance ({instance.status}) for parent {instance.work_record.parent} on {instance.attendance_date}"
+        )
+
 
 @extend_schema(
     tags=["IfasheTugufashe - Work "],
@@ -64,3 +91,9 @@ class ParentPerformanceViewSet(viewsets.ModelViewSet):
     )
     serializer_class = ParentPerformanceSerializer
     permission_classes = [IsIfasheManager]
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        logger.info(
+            f"User {self.request.user} submitted a performance evaluation (Rating: {instance.rating}) for parent {instance.work_record.parent}"
+        )
