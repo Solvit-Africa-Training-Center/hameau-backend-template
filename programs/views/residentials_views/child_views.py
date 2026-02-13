@@ -167,6 +167,27 @@ class ChildViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(status="active")
 
         return queryset
+    
+        
+    def perform_create(self, serializer):
+        child = serializer.save()
+        logger.info(
+            f"New child created: ID={child.id}, Name={child.first_name} {child.last_name}, "
+            f"by user {self.request.user.id}"
+        )
+
+    def perform_update(self, serializer):
+        child = serializer.save()
+        logger.info(
+            f"Child updated: ID={child.id}, by user {self.request.user.id}"
+        )
+
+    def perform_destroy(self, instance):
+        logger.warning(
+            f"Child deleted: ID={instance.id}, Name={instance.first_name} {instance.last_name}, "
+            f"by user {self.request.user.id}"
+        )
+        instance.delete()
 
     @extend_schema(
         tags=["Residential Care Program - Children"],
