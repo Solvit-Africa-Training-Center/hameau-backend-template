@@ -1,3 +1,4 @@
+import logging
 from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -8,6 +9,9 @@ from programs.models.ifashe_models import Sponsorship
 from programs.serializers.ifashe_serializers import SponsorshipSerializer
 from accounts.permissions import IsIfasheManager
 from drf_spectacular.utils import extend_schema
+
+logger = logging.getLogger(__name__)
+
 @extend_schema(
     tags=["IfasheTugufashe - Sponsorship "],
 )
@@ -20,6 +24,31 @@ class SponsorshipViewSet(viewsets.ModelViewSet):
     search_fields = ['child__first_name', 'child__last_name']
     ordering_fields = ['start_date', 'end_date', 'created_on']
     ordering = ['-created_on']
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        logger.info(
+            f"User {self.request.user} created a new sponsorship for child {instance.child} (ID: {instance.id})"
+        )
+
+    def perform_update(self, serializer):
+        old_instance = self.get_object()
+        old_status = old_instance.status
+        instance = serializer.save()
+        
+        log_msg = f"User {self.request.user} updated sponsorship for child {instance.child} (ID: {instance.id})"
+        if old_status != instance.status:
+            log_msg += f" | Status changed from {old_status} to {instance.status}"
+        
+        logger.info(log_msg)
+
+    def perform_destroy(self, instance):
+        child_name = str(instance.child)
+        s_id = instance.id
+        instance.delete()
+        logger.warning(
+            f"User {self.request.user} deleted sponsorship for child {child_name} (ID: {s_id})"
+        )
 
     @action(detail=False, methods=['get'])
     def sponsorship_stats(self, request):
