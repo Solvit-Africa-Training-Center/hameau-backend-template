@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from django.contrib.auth.models import (
@@ -146,5 +147,62 @@ class VerificationCode(models.Model):
     def is_valid(self):           
         expire_time = self.created_on + settings.VERIFICATION_CODE_LIFETIME
         return expire_time > timezone.now() and not self.is_used
-    
-    
+
+
+class ActivityLog(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="activity_logs"
+    )
+    action = models.CharField(max_length=255)
+    resource = models.CharField(max_length=255, null=True, blank=True)
+    resource_id = models.CharField(max_length=255, null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    details = models.JSONField(null=True, blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+
+    class Meta:
+        db_table = "activity_logs"
+        ordering = ["-timestamp"]
+        verbose_name = "Activity Log"
+        verbose_name_plural = "Activity Logs"
+
+    def __str__(self):
+        return f"{self.user} - {self.action} - {self.timestamp}"
+
+
+def record_activity(request, action, user=None, resource=None, resource_id=None, details=None):
+    """
+    Utility function to record system activities.
+
+    :param request: The HTTP request object (used to get IP address)
+    :param action: A string describing the action (e.g., 'LOGIN', 'CREATE_CHILD')
+    :param user: The user performing the action (optional, derived from request if not provided)
+    :param resource: The name of the resource being acted upon (e.g., 'Child')
+    :param resource_id: The ID of the resource (optional)
+    :param details: A dictionary containing additional information (optional)
+    """
+    logger = logging.getLogger(__name__)
+    ip_address = None
+
+    if request:
+        if user is None and hasattr(request, "user") and request.user.is_authenticated:
+            user = request.user
+
+        # Get IP Address
+        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+        if x_forwarded_for:
+            ip_address = x_forwarded_for.split(",")[0]
+        else:
+            ip_address = request.META.get("REMOTE_ADDR")
+
+    try:
+        ActivityLog.objects.create(
+            user=user,
+            action=action,
+            resource=resource,
+            resource_id=resource_id,
+            details=details,
+            ip_address=ip_address,
+        )
+    except Exception as e:
+        logger.error(f"Failed to record activity: {str(e)}")

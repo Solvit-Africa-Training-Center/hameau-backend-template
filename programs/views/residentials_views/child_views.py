@@ -48,6 +48,7 @@ from utils.paginators import (
 from utils.reports.general_reports import generate_child_progress_pdf
 from utils.reports.ifashe.helpers import safe_filename
 
+from accounts.models import record_activity
 from accounts.permissions import (
     IsResidentialManager,
 )
@@ -175,17 +176,38 @@ class ChildViewSet(viewsets.ModelViewSet):
             f"New child created: ID={child.id}, Name={child.first_name} {child.last_name}, "
             f"by user {self.request.user.id}"
         )
+        record_activity(
+            self.request,
+            action="CREATE",
+            resource="Child",
+            resource_id=str(child.id),
+            details={"name": f"{child.first_name} {child.last_name}"}
+        )
 
     def perform_update(self, serializer):
         child = serializer.save()
         logger.info(
             f"Child updated: ID={child.id}, by user {self.request.user.id}"
         )
+        record_activity(
+            self.request,
+            action="UPDATE",
+            resource="Child",
+            resource_id=str(child.id),
+            details={"name": f"{child.first_name} {child.last_name}"}
+        )
 
     def perform_destroy(self, instance):
         logger.warning(
             f"Child deleted: ID={instance.id}, Name={instance.first_name} {instance.last_name}, "
             f"by user {self.request.user.id}"
+        )
+        record_activity(
+            self.request,
+            action="DELETE",
+            resource="Child",
+            resource_id=str(instance.id),
+            details={"name": f"{instance.first_name} {instance.last_name}"}
         )
         instance.delete()
 

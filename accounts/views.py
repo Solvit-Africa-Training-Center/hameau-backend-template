@@ -1,14 +1,16 @@
 import logging
+from django.contrib.auth import authenticate
 
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, filters
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from drf_spectacular.utils import extend_schema, OpenApiResponse, extend_schema_view
+from django_filters.rest_framework import DjangoFilterBackend
 
 
-from accounts.models import User
+from .models import User, ActivityLog, record_activity
 from .permissions import (
     CanDestroyManager,
     IsSystemAdmin,
@@ -20,9 +22,41 @@ from .serializers import (
     RequestPasswordResetSerializer,
     ResetPasswordConfirmSerializer,
     ChangePasswordSerializer,
+    ActivityLogSerializer,
 )
 
 logger = logging.getLogger(__name__)
+
+
+@extend_schema_view(
+    list=extend_schema(
+        tags=["Activity Logs"],
+        summary="List activity logs",
+        description="Retrieve a list of all system activities. Accessible only to system administrators.",
+        responses={
+            200: ActivityLogSerializer(many=True),
+            403: OpenApiResponse(description="Permission denied"),
+        },
+    ),
+    retrieve=extend_schema(
+        tags=["Activity Logs"],
+        summary="Retrieve activity log",
+        description="Retrieve a single activity log by ID.",
+        responses={
+            200: ActivityLogSerializer,
+            404: OpenApiResponse(description="Not found"),
+        },
+    ),
+)
+class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = ActivityLog.objects.all().select_related("user")
+    serializer_class = ActivityLogSerializer
+    permission_classes = [IsAuthenticated, IsSystemAdmin]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ["user", "action", "resource"]
+    search_fields = ["action", "resource", "resource_id", "details"]
+    ordering_fields = ["timestamp"]
+    ordering = ["-timestamp"]
 
 @extend_schema_view(
     list=extend_schema(
@@ -167,6 +201,20 @@ class LoginView(APIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
+        # Record activity after successful authentication
+        try:
+            user = User.objects.get(email=request.data.get("email"))
+            record_activity(
+                request, 
+                action="LOGIN", 
+                user=user,
+                resource="User", 
+                resource_id=str(user.id),
+                details={"email": user.email}
+            )
+        except User.DoesNotExist:
+            pass
 
         return Response(
             serializer.validated_data,

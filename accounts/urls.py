@@ -1,9 +1,10 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
-from .views import ManagerViewset, LoginView, RequestPasswordResetView,ResetPasswordConfirmView, LogoutAPIView, ChangePasswordView
+from .views import ManagerViewset, LoginView, RequestPasswordResetView, ResetPasswordConfirmView, LogoutAPIView, ChangePasswordView, ActivityLogViewSet
 
 router = DefaultRouter()
-router.register('managers',ManagerViewset)
+router.register('managers', ManagerViewset)
+router.register('activity-logs', ActivityLogViewSet, basename='activity-logs')
 
 
 urlpatterns = [
