@@ -48,7 +48,8 @@ from utils.paginators import (
 from utils.reports.general_reports import generate_child_progress_pdf
 from utils.reports.ifashe.helpers import safe_filename
 
-from accounts.models import record_activity
+from accounts.models import User
+from utils.activity_log import record_activity
 from accounts.permissions import (
     IsResidentialManager,
 )

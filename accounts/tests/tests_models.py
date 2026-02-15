@@ -10,8 +10,8 @@ from accounts.models import (
     User,
     VerificationCode,
     ActivityLog,
-    record_activity
 )
+from utils.activity_log import record_activity
 from django.test import RequestFactory
 
 

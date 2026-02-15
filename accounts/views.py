@@ -10,7 +10,8 @@ from drf_spectacular.utils import extend_schema, OpenApiResponse, extend_schema_
 from django_filters.rest_framework import DjangoFilterBackend
 
 
-from .models import User, ActivityLog, record_activity
+from .models import User, ActivityLog
+from utils.activity_log import record_activity
 from .permissions import (
     CanDestroyManager,
     IsSystemAdmin,
