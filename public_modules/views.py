@@ -90,9 +90,6 @@ from .gallery_serializers import (
     ),
 )
 class GalleryCategoryViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for GalleryCategory CRUD operations
-    """
     queryset = GalleryCategory.objects.all()
     permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
@@ -262,9 +259,6 @@ class GalleryCategoryViewSet(viewsets.ModelViewSet):
     ),
 )
 class GalleryMediaViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for GalleryMedia CRUD operations
-    """
     queryset = GalleryMedia.objects.select_related('category', 'uploaded_by').all()
     permission_classes = [IsAuthenticatedOrReadOnly]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
@@ -356,7 +350,6 @@ class GalleryMediaViewSet(viewsets.ModelViewSet):
     )
     @action(detail=False, methods=['post'], parser_classes=[MultiPartParser, FormParser])
     def bulk_upload(self, request):
-        """Upload multiple images at once"""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
@@ -389,7 +382,7 @@ class GalleryMediaViewSet(viewsets.ModelViewSet):
     )
     @action(detail=False, methods=['get'])
     def my_uploads(self, request):
-        """Get all media uploaded by the current user"""
+      
         if not request.user.is_authenticated:
             return Response(
                 {'error': 'Authentication required'},
@@ -412,7 +405,7 @@ class GalleryMediaViewSet(viewsets.ModelViewSet):
     )
     @action(detail=False, methods=['get'])
     def public(self, request):
-        """Get all public media items"""
+      
         media_items = self.get_queryset().filter(is_public=True)
         serializer = GalleryMediaListSerializer(media_items, many=True)
         
@@ -446,7 +439,7 @@ class GalleryMediaViewSet(viewsets.ModelViewSet):
     )
     @action(detail=True, methods=['post'])
     def toggle_visibility(self, request, pk=None):
-        """Toggle the is_public status of a media item"""
+        
         media = self.get_object()
         
         # Check if user has permission to modify
@@ -466,7 +459,7 @@ class GalleryMediaViewSet(viewsets.ModelViewSet):
         })
     
     def destroy(self, request, *args, **kwargs):
-        """Override destroy to check permissions"""
+        
         media = self.get_object()
         
         # Only the uploader or staff can delete

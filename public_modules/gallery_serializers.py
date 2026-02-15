@@ -4,8 +4,7 @@ from drf_spectacular.types import OpenApiTypes
 from .models import GalleryCategory, GalleryMedia
 
 
-class GalleryCategorySerializer(serializers.ModelSerializer):
-    """Serializer for GalleryCategory model"""
+class GalleryCategorySerializer(serializers.ModelSerializer):  
     media_count = serializers.SerializerMethodField()
     
     class Meta:
@@ -22,12 +21,10 @@ class GalleryCategorySerializer(serializers.ModelSerializer):
     
     @extend_schema_field(OpenApiTypes.INT)
     def get_media_count(self, obj):
-        """Get count of media items in this category"""
         return obj.media_items.count()
 
 
-class GalleryMediaSerializer(serializers.ModelSerializer):
-    """Serializer for GalleryMedia model"""
+class GalleryMediaSerializer(serializers.ModelSerializer):    
     category_name = serializers.CharField(source='category.name', read_only=True)
     uploaded_by_name = serializers.CharField(source='uploaded_by.get_full_name', read_only=True)
     media_url = serializers.FileField(required=True)
@@ -49,14 +46,12 @@ class GalleryMediaSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'uploaded_by', 'created_on', 'updated_on']
     
-    def create(self, validated_data):
-        """Create media with current user as uploader"""
+    def create(self, validated_data):    
         validated_data['uploaded_by'] = self.context['request'].user
         return super().create(validated_data)
 
 
 class GalleryMediaListSerializer(serializers.ModelSerializer):
-    """Lightweight serializer for listing media"""
     category_name = serializers.CharField(source='category.name', read_only=True)
     
     class Meta:
@@ -73,11 +68,6 @@ class GalleryMediaListSerializer(serializers.ModelSerializer):
 
 
 class BulkGalleryMediaUploadSerializer(serializers.Serializer):
-    """
-    Serializer for bulk uploading multiple images
-    
-    Allows uploading up to 50 images at once to a specific category
-    """
     category = serializers.PrimaryKeyRelatedField(
         queryset=GalleryCategory.objects.all(),
         required=True,
@@ -135,8 +125,7 @@ class BulkGalleryMediaUploadSerializer(serializers.Serializer):
         
         return value
     
-    def create(self, validated_data):
-        """Create multiple GalleryMedia instances"""
+    def create(self, validated_data):    
         category = validated_data['category']
         images = validated_data['images']
         is_public = validated_data.get('is_public', True)
@@ -167,15 +156,13 @@ class BulkGalleryMediaUploadSerializer(serializers.Serializer):
         return created_media
 
 
-class BulkUploadResponseSerializer(serializers.Serializer):
-    """Response serializer for bulk upload"""
+class BulkUploadResponseSerializer(serializers.Serializer):   
     message = serializers.CharField(help_text="Success message")
     count = serializers.IntegerField(help_text="Number of images uploaded")
     media_items = GalleryMediaListSerializer(many=True, help_text="List of uploaded media items")
 
 
 class GalleryCategoryDetailSerializer(serializers.ModelSerializer):
-    """Detailed serializer for GalleryCategory with nested media"""
     media_items = GalleryMediaListSerializer(many=True, read_only=True)
     media_count = serializers.SerializerMethodField()
     
@@ -198,7 +185,6 @@ class GalleryCategoryDetailSerializer(serializers.ModelSerializer):
 
 
 class CategoryStatsSerializer(serializers.Serializer):
-    """Serializer for category statistics"""
     id = serializers.UUIDField()
     name = serializers.CharField()
     media_count = serializers.IntegerField()
@@ -206,6 +192,5 @@ class CategoryStatsSerializer(serializers.Serializer):
 
 
 class CategoryStatsResponseSerializer(serializers.Serializer):
-    """Response serializer for category stats endpoint"""
     total_categories = serializers.IntegerField()
     categories = CategoryStatsSerializer(many=True)
