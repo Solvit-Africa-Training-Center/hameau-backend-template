@@ -188,6 +188,11 @@ class CaretakerViewSet(viewsets.ModelViewSet):
         caretaker.is_active = True
         caretaker.save()
 
+        logger.info(
+        f"Caretaker activated: ID={caretaker.id}, Name={caretaker.first_name} {caretaker.last_name}, "
+        f"by user {request.user.id}"
+        )
+
         serializer = self.get_serializer(caretaker)
         return Response(
             {
@@ -213,6 +218,11 @@ class CaretakerViewSet(viewsets.ModelViewSet):
         caretaker.is_active = False
         caretaker.save()
 
+        logger.warning(
+        f"Caretaker deactivated: ID={caretaker.id}, Name={caretaker.first_name} {caretaker.last_name}, "
+        f"by user {request.user.id}"
+        )
+        
         serializer = self.get_serializer(caretaker)
         return Response(
             {

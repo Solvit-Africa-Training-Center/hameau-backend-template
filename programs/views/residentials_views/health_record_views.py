@@ -90,6 +90,8 @@ class HealthRecordViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(visit_date__lte=date_to)
 
         return queryset
+    
+    
 
     @extend_schema(tags=["Residential Care Program - Health"])
     def create(self, request, *args, **kwargs):
@@ -97,6 +99,11 @@ class HealthRecordViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
 
+        logger.info(
+        f"Health record created: Child ID={serializer.instance.child_id}, "
+        f"Type={serializer.instance.record_type}, Cost={serializer.instance.cost}, "
+        f"by user {request.user.id}"
+        )
         read_serializer = HealthRecordReadSerializer(serializer.instance)
         return Response(
             {
@@ -128,6 +135,12 @@ class HealthRecordViewSet(viewsets.ModelViewSet):
     @extend_schema(tags=["Residential Care Program - Health"])
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
+
+        logger.warning(
+        f"Health record deleted: ID={instance.id}, Child ID={instance.child_id}, "
+        f"by user {request.user.id}"
+        )
+        
         self.perform_destroy(instance)
         return Response(
             {"success": True, "message": "Health record deleted successfully"},

@@ -9,7 +9,28 @@ from utils.general_codes import generate_manager_password, generate_verification
 
 from utils.validators import validate_rwanda_phone
 
-from .models import User, VerificationCode
+from .models import User, VerificationCode, ActivityLog
+
+
+class ActivityLogSerializer(serializers.ModelSerializer):
+    user_email = serializers.EmailField(source="user.email", read_only=True)
+    user_name = serializers.CharField(source="user.full_name", read_only=True)
+
+    class Meta:
+        model = ActivityLog
+        fields = [
+            "id",
+            "user",
+            "user_email",
+            "user_name",
+            "action",
+            "resource",
+            "resource_id",
+            "timestamp",
+            "details",
+            "ip_address",
+        ]
+        read_only_fields = ["timestamp"]
 
 
 class ManagerSerializer(serializers.ModelSerializer):

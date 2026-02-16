@@ -1,3 +1,4 @@
+from datetime import timezone
 from django.http import FileResponse
 from rest_framework.views import APIView
 import logging
@@ -38,6 +39,11 @@ class ResidentialFinanceViewSet(viewsets.ViewSet):
         - Special diet spending (kids with special diets)
         - Education spending
         """
+
+        logger.info(
+        f"Financial report accessed by user {request.user.id} ({request.user.email})"
+        )
+
         return Response(
             {
                 "success": True,
@@ -66,6 +72,9 @@ class ResidentialFinancePDFReportView(APIView):
     permission_classes = [IsAuthenticated, IsResidentialManager]
 
     def get(self, request):
+        logger.info(
+        f"PDF financial report downloaded by user {request.user.id} at {timezone.now()}"
+        )
         filename = safe_filename("residential_financial_report", "pdf")
         path = f"/tmp/{filename}"
 
