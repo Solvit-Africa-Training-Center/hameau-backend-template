@@ -11,7 +11,6 @@ from rest_framework.permissions import IsAuthenticated
 from programs.serializers import (
     SpendingReportSerializer,
     CostReportSerializer,
-    FinancialReportDataSerializer,
 )
 from accounts.permissions import IsResidentialManager
 from utils.reports.residentials.spending_summary import (

@@ -1,27 +1,26 @@
-import logging
-from rest_framework import viewsets, filters
+from rest_framework import viewsets, filters, serializers
+from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import extend_schema, inline_serializer
 
-from programs.models import SponsoredChild
-from programs.models.ifashe_models import DressingDistribution
+from programs.models import SponsoredChild, DressingDistribution
 from programs.serializers.ifashe_serializers import (
-    DressingDistributionSerializer,
     IfasheChildSerializer,
+    DressingDistributionSerializer,
 )
-
 from accounts.permissions import IsIfasheManager
-from drf_spectacular.utils import extend_schema
 
-logger = logging.getLogger(__name__)
+from utils.bulk_operations.mixins import BulkActionMixin
+from utils.bulk_operations.tasks import generic_bulk_task
+from utils.bulk_operations.serializers import BulkActionSerializer
 
 
-@extend_schema(
-    tags=["IfasheTugufashe - Family "],
-)
-class IfasheChildViewSet(viewsets.ModelViewSet):
+@extend_schema(tags=["IfasheTugufashe - Family"])
+class IfasheChildViewSet(BulkActionMixin, viewsets.ModelViewSet):
     queryset = SponsoredChild.objects.all().select_related("family")
     serializer_class = IfasheChildSerializer
     permission_classes = [IsIfasheManager]
+
     filter_backends = [
         DjangoFilterBackend,
         filters.SearchFilter,
@@ -32,36 +31,173 @@ class IfasheChildViewSet(viewsets.ModelViewSet):
     ordering_fields = ["created_on", "first_name", "last_name", "date_of_birth"]
     ordering = ["-created_on"]
 
-    def perform_create(self, serializer):
-        instance = serializer.save()
-        logger.info(
-            f"User {self.request.user} registered a new child: {instance.full_name} (ID: {instance.id})"
+    bulk_max_size = 200
+    bulk_async_threshold = 30
+
+    @extend_schema(
+        description="Bulk delete supported children. by providing a list of IDs.",
+        request=BulkActionSerializer,
+        responses={
+            200: inline_serializer(
+                name="BulkDeleteResponse",
+                fields={
+                    "message": serializers.CharField(),
+                    "action": serializers.CharField(),
+                    "count": serializers.IntegerField(),
+                    "async": serializers.BooleanField(),
+                },
+            ),
+            202: inline_serializer(
+                name="BulkDeleteAsyncResponse",
+                fields={
+                    "message": serializers.CharField(),
+                    "action": serializers.CharField(),
+                    "count": serializers.IntegerField(),
+                    "async": serializers.BooleanField(),
+                },
+            ),
+        },
+    )
+    @action(detail=False, methods=["post"])
+    def bulk_delete(self, request):
+        return self.perform_bulk_action(
+            request,
+            action_type="delete",
+            async_task=generic_bulk_task,
         )
 
-    def perform_update(self, serializer):
-        instance = serializer.save()
-        logger.info(
-            f"User {self.request.user} updated child: {instance.full_name} (ID: {instance.id})"
+    @extend_schema(
+        description="Bulk update fields for a list of supported children.",
+        request=BulkActionSerializer,
+        responses={
+            200: inline_serializer(
+                name="BulkUpdateResponse",
+                fields={
+                    "message": serializers.CharField(),
+                    "action": serializers.CharField(),
+                    "count": serializers.IntegerField(),
+                    "updated_fields": serializers.ListField(
+                        child=serializers.CharField()
+                    ),
+                    "async": serializers.BooleanField(),
+                },
+            ),
+            400: inline_serializer(
+                name="BulkUpdateError", fields={"detail": serializers.CharField()}
+            ),
+        },
+    )
+    @action(detail=False, methods=["post"])
+    def bulk_update(self, request):
+        return self.perform_bulk_action(
+            request,
+            action_type="update",
+            async_task=generic_bulk_task,
         )
 
-    def perform_destroy(self, instance):
-        name = instance.full_name
-        c_id = instance.id
-        instance.delete()
-        logger.warning(
-            f"User {self.request.user} removed child: {name} (ID: {c_id})"
+    @extend_schema(
+        description="Bulk update status of children as exited the program.",
+        request=BulkActionSerializer,
+        responses={
+            200: inline_serializer(
+                name="BulkUpdateResponse",
+                fields={
+                    "message": serializers.CharField(),
+                    "action": serializers.CharField(),
+                    "count": serializers.IntegerField(),
+                    "updated_fields": serializers.ListField(
+                        child=serializers.CharField()
+                    ),
+                    "async": serializers.BooleanField(),
+                },
+            ),
+            400: inline_serializer(
+                name="BulkUpdateError", fields={"detail": serializers.CharField()}
+            ),
+        },
+    )
+    @action(detail=False, methods=["post"])
+    def bulk_exit_program(self, request):
+
+        def exit_program(queryset, payload):
+            count = queryset.update(support_status=SponsoredChild.EXITED)
+            return {
+                "message": "Children marked as exited the program.",
+                "count": count,
+            }
+
+        return self.perform_bulk_action(
+            request,
+            action_type="custom",
+            custom_handler=exit_program,
         )
 
-@extend_schema(
-    tags=["IfasheTugufashe - Family "],
-)
-class DressingDistributionViewSet(viewsets.ModelViewSet):
+
+@extend_schema(tags=["IfasheTugufashe - Family"])
+class DressingDistributionViewSet(BulkActionMixin, viewsets.ModelViewSet):
     queryset = DressingDistribution.objects.select_related("child")
     serializer_class = DressingDistributionSerializer
     permission_classes = [IsIfasheManager]
 
-    def perform_create(self, serializer):
-        instance = serializer.save()
-        logger.info(
-            f"User {self.request.user} recorded dressing distribution ({instance.item_type}) for child {instance.child} (ID: {instance.id})"
+    bulk_async_threshold = 50
+
+    @extend_schema(
+        description="Bulk delete internship applications by providing a list of IDs.",
+        request=BulkActionSerializer,
+        responses={
+            200: inline_serializer(
+                name="BulkDeleteResponse",
+                fields={
+                    "message": serializers.CharField(),
+                    "action": serializers.CharField(),
+                    "count": serializers.IntegerField(),
+                    "async": serializers.BooleanField(),
+                },
+            ),
+            202: inline_serializer(
+                name="BulkDeleteAsyncResponse",
+                fields={
+                    "message": serializers.CharField(),
+                    "action": serializers.CharField(),
+                    "count": serializers.IntegerField(),
+                    "async": serializers.BooleanField(),
+                },
+            ),
+        },
+    )
+    @action(detail=False, methods=["post"])
+    def bulk_delete(self, request):
+        return self.perform_bulk_action(
+            request,
+            action_type="delete",
+            async_task=generic_bulk_task,
+        )
+
+    @extend_schema(
+        description="Bulk update fields for a list of internship applications.",
+        request=BulkActionSerializer,
+        responses={
+            200: inline_serializer(
+                name="BulkUpdateResponse",
+                fields={
+                    "message": serializers.CharField(),
+                    "action": serializers.CharField(),
+                    "count": serializers.IntegerField(),
+                    "updated_fields": serializers.ListField(
+                        child=serializers.CharField()
+                    ),
+                    "async": serializers.BooleanField(),
+                },
+            ),
+            400: inline_serializer(
+                name="BulkUpdateError", fields={"detail": serializers.CharField()}
+            ),
+        },
+    )
+    @action(detail=False, methods=["post"])
+    def bulk_update(self, request):
+        return self.perform_bulk_action(
+            request,
+            action_type="update",
+            async_task=generic_bulk_task,
         )

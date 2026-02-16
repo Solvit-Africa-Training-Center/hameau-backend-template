@@ -1,12 +1,16 @@
 import logging
-from django.contrib.auth import authenticate
 
-from rest_framework import viewsets, status, filters
+from rest_framework import viewsets, status, filters, serializers
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from drf_spectacular.utils import extend_schema, OpenApiResponse, extend_schema_view
+from drf_spectacular.utils import (
+    extend_schema,
+    OpenApiResponse,
+    extend_schema_view,
+    inline_serializer,
+)
 from django_filters.rest_framework import DjangoFilterBackend
 
 
@@ -25,6 +29,11 @@ from .serializers import (
     ChangePasswordSerializer,
     ActivityLogSerializer,
 )
+
+from utils.bulk_operations.mixins import BulkActionMixin
+from utils.bulk_operations.tasks import generic_bulk_task
+from utils.bulk_operations.serializers import BulkActionSerializer
+
 
 logger = logging.getLogger(__name__)
 
@@ -53,11 +62,16 @@ class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = ActivityLog.objects.all().select_related("user")
     serializer_class = ActivityLogSerializer
     permission_classes = [IsAuthenticated, IsSystemAdmin]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,
+    ]
     filterset_fields = ["user", "action", "resource"]
     search_fields = ["action", "resource", "resource_id", "details"]
     ordering_fields = ["timestamp"]
     ordering = ["-timestamp"]
+
 
 @extend_schema_view(
     list=extend_schema(
@@ -121,10 +135,13 @@ class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
         },
     ),
 )
-class ManagerViewset(viewsets.ModelViewSet):
+class ManagerViewset(BulkActionMixin, viewsets.ModelViewSet):
     serializer_class = ManagerSerializer
     queryset = User.objects.order_by("first_name")
     permission_classes = [IsAuthenticated]
+
+    bulk_max_size = 15
+    bulk_async_threshold = 15
 
     def get_permissions(self):
         if self.request.method == "POST":
@@ -162,6 +179,69 @@ class ManagerViewset(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @extend_schema(
+        tags=["Managers"],
+        description="Bulk delete  managers by providing a list of IDs.",
+        request=BulkActionSerializer,
+        responses={
+            200: inline_serializer(
+                name="BulkDeleteResponse",
+                fields={
+                    "message": serializers.CharField(),
+                    "action": serializers.CharField(),
+                    "count": serializers.IntegerField(),
+                    "async": serializers.BooleanField(),
+                },
+            ),
+            202: inline_serializer(
+                name="BulkDeleteAsyncResponse",
+                fields={
+                    "message": serializers.CharField(),
+                    "action": serializers.CharField(),
+                    "count": serializers.IntegerField(),
+                    "async": serializers.BooleanField(),
+                },
+            ),
+        },
+    )
+    @action(detail=False, methods=["post"])
+    def bulk_delete(self, request):
+        return self.perform_bulk_action(
+            request,
+            action_type="delete",
+            async_task=generic_bulk_task,
+        )
+
+    @extend_schema(
+        tags=["Managers"],
+        description="Bulk update fields for a list of IDs of managers.",
+        request=BulkActionSerializer,
+        responses={
+            200: inline_serializer(
+                name="BulkUpdateResponse",
+                fields={
+                    "message": serializers.CharField(),
+                    "action": serializers.CharField(),
+                    "count": serializers.IntegerField(),
+                    "updated_fields": serializers.ListField(
+                        child=serializers.CharField()
+                    ),
+                    "async": serializers.BooleanField(),
+                },
+            ),
+            400: inline_serializer(
+                name="BulkUpdateError", fields={"detail": serializers.CharField()}
+            ),
+        },
+    )
+    @action(detail=False, methods=["post"])
+    def bulk_update(self, request):
+        return self.perform_bulk_action(
+            request,
+            action_type="update",
+            async_task=generic_bulk_task,
+        )
 
 
 class LoginView(APIView):
@@ -207,12 +287,12 @@ class LoginView(APIView):
         try:
             user = User.objects.get(email=request.data.get("email"))
             record_activity(
-                request, 
-                action="LOGIN", 
+                request,
+                action="LOGIN",
                 user=user,
-                resource="User", 
+                resource="User",
                 resource_id=str(user.id),
-                details={"email": user.email}
+                details={"email": user.email},
             )
         except User.DoesNotExist:
             pass
@@ -242,7 +322,7 @@ class RequestPasswordResetView(APIView):
         serializer = RequestPasswordResetSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        logger.success("Succefully sent the code to the user email")
+        logger.log("Succefully sent the code to the user email")
         return Response(
             {"message": "Password reset code sent to your email"},
             status=status.HTTP_200_OK,
@@ -318,7 +398,7 @@ class ChangePasswordView(APIView):
             data=request.data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
-        logger.success("Password changed successfully")
+        logger.info("Password changed successfully")
         serializer.save()
         return Response(
             {"message": "Password changed successfully"}, status=status.HTTP_200_OK

@@ -1,7 +1,10 @@
 import logging
 
 from django.http import FileResponse
-from rest_framework import viewsets, status, filters, renderers
+from rest_framework import viewsets, status, filters, serializers
+from utils.bulk_operations.mixins import BulkActionMixin
+from utils.bulk_operations.serializers import BulkActionSerializer
+from utils.bulk_operations.tasks import generic_bulk_task
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -10,6 +13,7 @@ from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import (
     extend_schema,
     OpenApiResponse,
+    inline_serializer,
     extend_schema_view,
     OpenApiParameter,
 )
@@ -48,13 +52,13 @@ from utils.paginators import (
 from utils.reports.general_reports import generate_child_progress_pdf
 from utils.reports.ifashe.helpers import safe_filename
 
-from accounts.models import User
 from utils.activity_log import record_activity
 from accounts.permissions import (
     IsResidentialManager,
 )
 
 logger = logging.getLogger(__name__)
+
 
 @extend_schema_view(
     list=extend_schema(
@@ -134,7 +138,7 @@ logger = logging.getLogger(__name__)
         },
     ),
 )
-class ChildViewSet(viewsets.ModelViewSet):
+class ChildViewSet(BulkActionMixin, viewsets.ModelViewSet):
     queryset = (
         Child.objects.all()
         .select_related()
@@ -169,8 +173,7 @@ class ChildViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(status="active")
 
         return queryset
-    
-        
+
     def perform_create(self, serializer):
         child = serializer.save()
         logger.info(
@@ -182,20 +185,18 @@ class ChildViewSet(viewsets.ModelViewSet):
             action="CREATE",
             resource="Child",
             resource_id=str(child.id),
-            details={"name": f"{child.first_name} {child.last_name}"}
+            details={"name": f"{child.first_name} {child.last_name}"},
         )
 
     def perform_update(self, serializer):
         child = serializer.save()
-        logger.info(
-            f"Child updated: ID={child.id}, by user {self.request.user.id}"
-        )
+        logger.info(f"Child updated: ID={child.id}, by user {self.request.user.id}")
         record_activity(
             self.request,
             action="UPDATE",
             resource="Child",
             resource_id=str(child.id),
-            details={"name": f"{child.first_name} {child.last_name}"}
+            details={"name": f"{child.first_name} {child.last_name}"},
         )
 
     def perform_destroy(self, instance):
@@ -208,7 +209,7 @@ class ChildViewSet(viewsets.ModelViewSet):
             action="DELETE",
             resource="Child",
             resource_id=str(instance.id),
-            details={"name": f"{instance.first_name} {instance.last_name}"}
+            details={"name": f"{instance.first_name} {instance.last_name}"},
         )
         instance.delete()
 
@@ -313,6 +314,69 @@ class ChildViewSet(viewsets.ModelViewSet):
             content_type="application/pdf",
         )
 
+    @extend_schema(
+        tags=["Residential Care Program - Children"],
+        description="Bulk delete supported children. by providing a list of IDs.",
+        request=BulkActionSerializer,
+        responses={
+            200: inline_serializer(
+                name="BulkDeleteResponse",
+                fields={
+                    "message": serializers.CharField(),
+                    "action": serializers.CharField(),
+                    "count": serializers.IntegerField(),
+                    "async": serializers.BooleanField(),
+                },
+            ),
+            202: inline_serializer(
+                name="BulkDeleteAsyncResponse",
+                fields={
+                    "message": serializers.CharField(),
+                    "action": serializers.CharField(),
+                    "count": serializers.IntegerField(),
+                    "async": serializers.BooleanField(),
+                },
+            ),
+        },
+    )
+    @action(detail=False, methods=["post"])
+    def bulk_delete(self, request):
+        return self.perform_bulk_action(
+            request,
+            action_type="delete",
+            async_task=generic_bulk_task,
+        )
+
+    @extend_schema(
+        tags=["Residential Care Program - Children"],
+        description="Bulk update fields for a list of supported children.",
+        request=BulkActionSerializer,
+        responses={
+            200: inline_serializer(
+                name="BulkUpdateResponse",
+                fields={
+                    "message": serializers.CharField(),
+                    "action": serializers.CharField(),
+                    "count": serializers.IntegerField(),
+                    "updated_fields": serializers.ListField(
+                        child=serializers.CharField()
+                    ),
+                    "async": serializers.BooleanField(),
+                },
+            ),
+            400: inline_serializer(
+                name="BulkUpdateError", fields={"detail": serializers.CharField()}
+            ),
+        },
+    )
+    @action(detail=False, methods=["post"])
+    def bulk_update(self, request):
+        return self.perform_bulk_action(
+            request,
+            action_type="update",
+            async_task=generic_bulk_task,
+        )
+
 
 @extend_schema_view(
     list=extend_schema(
@@ -367,6 +431,9 @@ class ChildProgressViewSet(viewsets.ModelViewSet):
     ordering = ["-created_on"]
     pagination_class = ProgressCursorPagination
 
+    bulk_max_size = 200
+    bulk_async_threshold = 30
+
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
             return ChildProgressWriteSerializer
@@ -417,6 +484,39 @@ class ChildProgressViewSet(viewsets.ModelViewSet):
         serializer = ChildProgressReadSerializer(progress)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    @extend_schema(
+        tags=["Residential Care Program - Children"],
+        description="Bulk delete progresses of child. by providing a list of IDs.",
+        request=BulkActionSerializer,
+        responses={
+            200: inline_serializer(
+                name="BulkDeleteResponse",
+                fields={
+                    "message": serializers.CharField(),
+                    "action": serializers.CharField(),
+                    "count": serializers.IntegerField(),
+                    "async": serializers.BooleanField(),
+                },
+            ),
+            202: inline_serializer(
+                name="BulkDeleteAsyncResponse",
+                fields={
+                    "message": serializers.CharField(),
+                    "action": serializers.CharField(),
+                    "count": serializers.IntegerField(),
+                    "async": serializers.BooleanField(),
+                },
+            ),
+        },
+    )
+    @action(detail=False, methods=["post"])
+    def bulk_delete(self, request):
+        return self.perform_bulk_action(
+            request,
+            action_type="delete",
+            async_task=generic_bulk_task,
+        )
+
 
 @extend_schema_view(
     create=(
@@ -462,9 +562,7 @@ class ChildProgressViewSet(viewsets.ModelViewSet):
     destroy=extend_schema(tags=["Residential Care Program - Education Institutions"]),
     programs=extend_schema(
         tags=["Residential Care Program - Education Institutions"],
-        responses={
-            200: EducationProgramReadSerializer(many=True)
-        },  
+        responses={200: EducationProgramReadSerializer(many=True)},
     ),
 )
 class EducationInstitutionViewSet(viewsets.ModelViewSet):

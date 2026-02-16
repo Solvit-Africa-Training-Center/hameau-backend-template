@@ -1,12 +1,13 @@
 from drf_spectacular.utils import (
     extend_schema,
     extend_schema_view,
+    inline_serializer,
     OpenApiParameter,
     OpenApiResponse,
 )
 import logging
 
-from rest_framework import viewsets, status, filters
+from rest_framework import viewsets, status, filters, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -20,6 +21,11 @@ from programs.serializers import (
 )
 from utils.paginators import StandardResultsSetPagination
 from accounts.permissions import IsResidentialManager
+
+from utils.bulk_operations.mixins import BulkActionMixin
+from utils.bulk_operations.tasks import generic_bulk_task
+from utils.bulk_operations.serializers import BulkActionSerializer
+
 
 logger = logging.getLogger(__name__)
 
@@ -120,7 +126,8 @@ logger = logging.getLogger(__name__)
         },
     ),
 )
-class CaretakerViewSet(viewsets.ModelViewSet):
+
+class CaretakerViewSet(BulkActionMixin, viewsets.ModelViewSet):
     """
     ViewSet for managing caretakers.
     Provides CRUD operations, activation, deactivation, and statistics.
@@ -137,6 +144,10 @@ class CaretakerViewSet(viewsets.ModelViewSet):
     ordering_fields = ["first_name", "last_name", "hire_date", "created_on"]
     ordering = ["-created_on"]
     pagination_class = StandardResultsSetPagination
+
+    bulk_max_size = 200
+    bulk_async_threshold = 30
+
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
@@ -265,4 +276,68 @@ class CaretakerViewSet(viewsets.ModelViewSet):
                 },
             },
             status=status.HTTP_200_OK,
+        )
+
+
+    @extend_schema(
+        tags=["Residential Care Program - Caretakers"],            
+        description="Bulk delete caretakers. by providing a list of IDs.",
+        request=BulkActionSerializer,
+        responses={
+            200: inline_serializer(
+                name="BulkDeleteResponse",
+                fields={
+                    "message": serializers.CharField(),
+                    "action": serializers.CharField(),
+                    "count": serializers.IntegerField(),
+                    "async": serializers.BooleanField(),
+                },
+            ),
+            202: inline_serializer(
+                name="BulkDeleteAsyncResponse",
+                fields={
+                    "message": serializers.CharField(),
+                    "action": serializers.CharField(),
+                    "count": serializers.IntegerField(),
+                    "async": serializers.BooleanField(),
+                },
+            ),
+        },
+    )
+    @action(detail=False, methods=["post"])
+    def bulk_delete(self, request):
+        return self.perform_bulk_action(
+            request,
+            action_type="delete",
+            async_task=generic_bulk_task,
+        )
+
+    @extend_schema(
+        tags=["Residential Care Program - Caretakers"],
+        description="Bulk update fields for a list of caretakers.",
+        request=BulkActionSerializer,
+        responses={
+            200: inline_serializer(
+                name="BulkUpdateResponse",
+                fields={
+                    "message": serializers.CharField(),
+                    "action": serializers.CharField(),
+                    "count": serializers.IntegerField(),
+                    "updated_fields": serializers.ListField(
+                        child=serializers.CharField()
+                    ),
+                    "async": serializers.BooleanField(),
+                },
+            ),
+            400: inline_serializer(
+                name="BulkUpdateError", fields={"detail": serializers.CharField()}
+            ),
+        },
+    )
+    @action(detail=False, methods=["post"])
+    def bulk_update(self, request):
+        return self.perform_bulk_action(
+            request,
+            action_type="update",
+            async_task=generic_bulk_task,
         )
