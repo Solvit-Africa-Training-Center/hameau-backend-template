@@ -32,10 +32,7 @@ logger = logging.getLogger(__name__)
     destroy=extend_schema(tags=["Residential Care Program - Health"]),
 )
 class HealthRecordViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for managing child health records.
-    Only Residential Care Program Managers can access.
-    """
+  
 
     queryset = HealthRecord.objects.select_related("child")
     permission_classes = [IsAuthenticated, IsResidentialManager]
