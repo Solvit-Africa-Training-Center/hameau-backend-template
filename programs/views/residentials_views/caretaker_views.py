@@ -29,9 +29,10 @@ from utils.bulk_operations.serializers import BulkActionSerializer
 
 logger = logging.getLogger(__name__)
 
+
 @extend_schema_view(
     list=extend_schema(
-        tags=["Residential Care Program - Caretakers"],
+        tags=["Residential Care Program"],
         summary="List caretakers",
         description=(
             "Retrieve a paginated list of caretakers. "
@@ -75,7 +76,7 @@ logger = logging.getLogger(__name__)
         },
     ),
     retrieve=extend_schema(
-        tags=["Residential Care Program - Caretakers"],
+        tags=["Residential Care Program"],
         summary="Retrieve caretaker",
         description="Retrieve detailed information about a single caretaker.",
         responses={
@@ -84,7 +85,7 @@ logger = logging.getLogger(__name__)
         },
     ),
     create=extend_schema(
-        tags=["Residential Care Program - Caretakers"],
+        tags=["Residential Care Program"],
         summary="Create caretaker",
         description="Create a new caretaker.",
         request=CaretakerWriteSerializer,
@@ -95,7 +96,7 @@ logger = logging.getLogger(__name__)
         },
     ),
     update=extend_schema(
-        tags=["Residential Care Program - Caretakers"],
+        tags=["Residential Care Program"],
         summary="Update caretaker",
         description="Update an existing caretaker.",
         request=CaretakerWriteSerializer,
@@ -106,7 +107,7 @@ logger = logging.getLogger(__name__)
         },
     ),
     partial_update=extend_schema(
-        tags=["Residential Care Program - Caretakers"],
+        tags=["Residential Care Program"],
         summary="Partially update caretaker",
         description="Partially update an existing caretaker.",
         request=CaretakerWriteSerializer,
@@ -117,7 +118,7 @@ logger = logging.getLogger(__name__)
         },
     ),
     destroy=extend_schema(
-        tags=["Residential Care Program - Caretakers"],
+        tags=["Residential Care Program"],
         summary="Delete caretaker",
         description="Soft delete a caretaker.",
         responses={
@@ -126,7 +127,6 @@ logger = logging.getLogger(__name__)
         },
     ),
 )
-
 class CaretakerViewSet(BulkActionMixin, viewsets.ModelViewSet):
     """
     ViewSet for managing caretakers.
@@ -147,7 +147,6 @@ class CaretakerViewSet(BulkActionMixin, viewsets.ModelViewSet):
 
     bulk_max_size = 200
     bulk_async_threshold = 30
-
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
@@ -184,7 +183,7 @@ class CaretakerViewSet(BulkActionMixin, viewsets.ModelViewSet):
         )
 
     @extend_schema(
-        tags=["Residential Care Program - Caretakers"],
+        tags=["Residential Care Program"],
         summary="Activate caretaker",
         description="Activate a caretaker account.",
         responses={
@@ -199,8 +198,8 @@ class CaretakerViewSet(BulkActionMixin, viewsets.ModelViewSet):
         caretaker.save()
 
         logger.info(
-        f"Caretaker activated: ID={caretaker.id}, Name={caretaker.first_name} {caretaker.last_name}, "
-        f"by user {request.user.id}"
+            f"Caretaker activated: ID={caretaker.id}, Name={caretaker.first_name} {caretaker.last_name}, "
+            f"by user {request.user.id}"
         )
 
         serializer = self.get_serializer(caretaker)
@@ -214,7 +213,7 @@ class CaretakerViewSet(BulkActionMixin, viewsets.ModelViewSet):
         )
 
     @extend_schema(
-        tags=["Residential Care Program - Caretakers"],
+        tags=["Residential Care Program"],
         summary="Deactivate caretaker",
         description="Deactivate a caretaker account.",
         responses={
@@ -229,10 +228,10 @@ class CaretakerViewSet(BulkActionMixin, viewsets.ModelViewSet):
         caretaker.save()
 
         logger.warning(
-        f"Caretaker deactivated: ID={caretaker.id}, Name={caretaker.first_name} {caretaker.last_name}, "
-        f"by user {request.user.id}"
+            f"Caretaker deactivated: ID={caretaker.id}, Name={caretaker.first_name} {caretaker.last_name}, "
+            f"by user {request.user.id}"
         )
-        
+
         serializer = self.get_serializer(caretaker)
         return Response(
             {
@@ -244,7 +243,7 @@ class CaretakerViewSet(BulkActionMixin, viewsets.ModelViewSet):
         )
 
     @extend_schema(
-        tags=["Residential Care Program - Caretakers"],
+        tags=["Residential Care Program"],
         summary="Caretaker statistics",
         description="Retrieve statistics about caretakers (total, active, inactive, gender breakdown).",
         responses={
@@ -278,14 +277,13 @@ class CaretakerViewSet(BulkActionMixin, viewsets.ModelViewSet):
             status=status.HTTP_200_OK,
         )
 
-
     @extend_schema(
-        tags=["Residential Care Program - Caretakers"],            
+        tags=["Residential Care Program"],
         description="Bulk delete caretakers. by providing a list of IDs.",
         request=BulkActionSerializer,
         responses={
             200: inline_serializer(
-                name="BulkDeleteResponse",
+                name="BulkDeleteCaretakerResponse",
                 fields={
                     "message": serializers.CharField(),
                     "action": serializers.CharField(),
@@ -294,7 +292,7 @@ class CaretakerViewSet(BulkActionMixin, viewsets.ModelViewSet):
                 },
             ),
             202: inline_serializer(
-                name="BulkDeleteAsyncResponse",
+                name="BulkDeleteCaretakerAsyncResponse",
                 fields={
                     "message": serializers.CharField(),
                     "action": serializers.CharField(),
@@ -313,12 +311,12 @@ class CaretakerViewSet(BulkActionMixin, viewsets.ModelViewSet):
         )
 
     @extend_schema(
-        tags=["Residential Care Program - Caretakers"],
+        tags=["Residential Care Program"],
         description="Bulk update fields for a list of caretakers.",
         request=BulkActionSerializer,
         responses={
             200: inline_serializer(
-                name="BulkUpdateResponse",
+                name="BulkUpdateCaretakerResponse",
                 fields={
                     "message": serializers.CharField(),
                     "action": serializers.CharField(),
@@ -330,7 +328,8 @@ class CaretakerViewSet(BulkActionMixin, viewsets.ModelViewSet):
                 },
             ),
             400: inline_serializer(
-                name="BulkUpdateError", fields={"detail": serializers.CharField()}
+                name="BulkUpdateCaretakerError",
+                fields={"detail": serializers.CharField()},
             ),
         },
     )

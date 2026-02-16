@@ -15,7 +15,7 @@ from utils.bulk_operations.tasks import generic_bulk_task
 from utils.bulk_operations.serializers import BulkActionSerializer
 
 
-@extend_schema(tags=["IfasheTugufashe - Family"])
+@extend_schema(tags=["IfasheTugufashe Program"])
 class IfasheChildViewSet(BulkActionMixin, viewsets.ModelViewSet):
     queryset = SponsoredChild.objects.all().select_related("family")
     serializer_class = IfasheChildSerializer
@@ -39,7 +39,7 @@ class IfasheChildViewSet(BulkActionMixin, viewsets.ModelViewSet):
         request=BulkActionSerializer,
         responses={
             200: inline_serializer(
-                name="BulkDeleteResponse",
+                name="BulkDeleteIChildResponse",
                 fields={
                     "message": serializers.CharField(),
                     "action": serializers.CharField(),
@@ -48,7 +48,7 @@ class IfasheChildViewSet(BulkActionMixin, viewsets.ModelViewSet):
                 },
             ),
             202: inline_serializer(
-                name="BulkDeleteAsyncResponse",
+                name="BulkDeleteIChildAsyncResponse",
                 fields={
                     "message": serializers.CharField(),
                     "action": serializers.CharField(),
@@ -71,7 +71,7 @@ class IfasheChildViewSet(BulkActionMixin, viewsets.ModelViewSet):
         request=BulkActionSerializer,
         responses={
             200: inline_serializer(
-                name="BulkUpdateResponse",
+                name="BulkUpdateIChildResponse",
                 fields={
                     "message": serializers.CharField(),
                     "action": serializers.CharField(),
@@ -83,7 +83,7 @@ class IfasheChildViewSet(BulkActionMixin, viewsets.ModelViewSet):
                 },
             ),
             400: inline_serializer(
-                name="BulkUpdateError", fields={"detail": serializers.CharField()}
+                name="BulkUpdateIChildError", fields={"detail": serializers.CharField()}
             ),
         },
     )
@@ -100,7 +100,7 @@ class IfasheChildViewSet(BulkActionMixin, viewsets.ModelViewSet):
         request=BulkActionSerializer,
         responses={
             200: inline_serializer(
-                name="BulkUpdateResponse",
+                name="BulkUpdateChildExitResponse",
                 fields={
                     "message": serializers.CharField(),
                     "action": serializers.CharField(),
@@ -112,7 +112,8 @@ class IfasheChildViewSet(BulkActionMixin, viewsets.ModelViewSet):
                 },
             ),
             400: inline_serializer(
-                name="BulkUpdateError", fields={"detail": serializers.CharField()}
+                name="BulkUpdateChildExitError",
+                fields={"detail": serializers.CharField()},
             ),
         },
     )
@@ -133,7 +134,7 @@ class IfasheChildViewSet(BulkActionMixin, viewsets.ModelViewSet):
         )
 
 
-@extend_schema(tags=["IfasheTugufashe - Family"])
+@extend_schema(tags=["IfasheTugufashe Program"])
 class DressingDistributionViewSet(BulkActionMixin, viewsets.ModelViewSet):
     queryset = DressingDistribution.objects.select_related("child")
     serializer_class = DressingDistributionSerializer
@@ -146,7 +147,7 @@ class DressingDistributionViewSet(BulkActionMixin, viewsets.ModelViewSet):
         request=BulkActionSerializer,
         responses={
             200: inline_serializer(
-                name="BulkDeleteResponse",
+                name="BulkDeleteDressingResponse",
                 fields={
                     "message": serializers.CharField(),
                     "action": serializers.CharField(),
@@ -155,7 +156,7 @@ class DressingDistributionViewSet(BulkActionMixin, viewsets.ModelViewSet):
                 },
             ),
             202: inline_serializer(
-                name="BulkDeleteAsyncResponse",
+                name="BulkDeleteDressingAsyncResponse",
                 fields={
                     "message": serializers.CharField(),
                     "action": serializers.CharField(),
@@ -178,7 +179,7 @@ class DressingDistributionViewSet(BulkActionMixin, viewsets.ModelViewSet):
         request=BulkActionSerializer,
         responses={
             200: inline_serializer(
-                name="BulkUpdateResponse",
+                name="BulkUpdateDressingResponse",
                 fields={
                     "message": serializers.CharField(),
                     "action": serializers.CharField(),
@@ -190,7 +191,8 @@ class DressingDistributionViewSet(BulkActionMixin, viewsets.ModelViewSet):
                 },
             ),
             400: inline_serializer(
-                name="BulkUpdateError", fields={"detail": serializers.CharField()}
+                name="BulkUpdateDressingError",
+                fields={"detail": serializers.CharField()},
             ),
         },
     )

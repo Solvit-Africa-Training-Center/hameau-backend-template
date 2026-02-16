@@ -186,7 +186,7 @@ class ManagerViewset(BulkActionMixin, viewsets.ModelViewSet):
         request=BulkActionSerializer,
         responses={
             200: inline_serializer(
-                name="BulkDeleteResponse",
+                name="BulkDeleteManagerResponse",
                 fields={
                     "message": serializers.CharField(),
                     "action": serializers.CharField(),
@@ -195,7 +195,7 @@ class ManagerViewset(BulkActionMixin, viewsets.ModelViewSet):
                 },
             ),
             202: inline_serializer(
-                name="BulkDeleteAsyncResponse",
+                name="BulkDeleteManagerAsyncResponse",
                 fields={
                     "message": serializers.CharField(),
                     "action": serializers.CharField(),
@@ -219,7 +219,7 @@ class ManagerViewset(BulkActionMixin, viewsets.ModelViewSet):
         request=BulkActionSerializer,
         responses={
             200: inline_serializer(
-                name="BulkUpdateResponse",
+                name="BulkUpdateManagerResponse",
                 fields={
                     "message": serializers.CharField(),
                     "action": serializers.CharField(),
@@ -231,7 +231,7 @@ class ManagerViewset(BulkActionMixin, viewsets.ModelViewSet):
                 },
             ),
             400: inline_serializer(
-                name="BulkUpdateError", fields={"detail": serializers.CharField()}
+                name="BulkUpdateManagerError", fields={"detail": serializers.CharField()}
             ),
         },
     )

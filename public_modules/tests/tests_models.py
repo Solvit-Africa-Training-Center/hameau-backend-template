@@ -4,7 +4,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from decimal import Decimal
 
 from accounts.models import User
-from ..models import (
+from ..models.gallery_models import (
     GalleryCategory,
     GalleryMedia,
     Donor,

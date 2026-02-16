@@ -345,10 +345,10 @@ class HealthRecordReadSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ("id", "created_on", "updated_on")
 
-    def get_child_name(self, obj):
+    def get_child_name(self, obj) -> str:
         return f"{obj.child.first_name} {obj.child.last_name}"
 
-    def get_cost_formatted(self, obj):
+    def get_cost_formatted(self, obj) -> str:
         """Format cost with currency"""
         return f"{obj.cost:,.2f} RWF"
 
@@ -415,10 +415,10 @@ class HealthRecordListSerializer(serializers.ModelSerializer):
             "created_on",
         ]
 
-    def get_child_name(self, obj):
+    def get_child_name(self, obj) -> str:
         return f"{obj.child.first_name} {obj.child.last_name}"
 
-    def get_cost_formatted(self, obj):
+    def get_cost_formatted(self, obj) -> str:
         return f"{obj.cost:,.2f} RWF"
 
 
@@ -448,7 +448,7 @@ class SpendingReportSerializer(serializers.Serializer):
                 filters[f"{date_field}__lte"] = end_date
         return filters
 
-    def _calculate_total_costs(self, children_queryset):
+    def _calculate_total_costs(self, children_queryset) -> Decimal:
 
         health_filters = self.get_date_filters("visit_date")
         health_cost = HealthRecord.objects.filter(
@@ -472,33 +472,30 @@ class SpendingReportSerializer(serializers.Serializer):
 
         return health_cost + edu_cost + ins_cost + food_cost
 
-    def get_normal_spending(self, obj):
+    def get_normal_spending(self, obj) -> Decimal:
         # Children without special needs
         children = Child.objects.filter(
             Q(special_needs__isnull=True) | Q(special_needs__exact="")
         )
         return self._calculate_total_costs(children)
 
-    def get_special_diet_spending(self, obj):
-        # Children with special needs
+    def get_special_diet_spending(self, obj) -> Decimal:
         children = Child.objects.exclude(
             Q(special_needs__isnull=True) | Q(special_needs__exact="")
         )
         return self._calculate_total_costs(children)
 
-    def get_education_spending(self, obj):
-        # Total education spending for ALL children
+    def get_education_spending(self, obj) -> Decimal:
         filters = self.get_date_filters("start_date")
         return ChildEducation.objects.filter(**filters).aggregate(total=Sum("cost"))[
             "total"
         ] or Decimal("0.00")
 
-    def get_total_spending(self, obj):
+    def get_total_spending(self, obj) -> Decimal:
         return self.get_normal_spending(obj) + self.get_special_diet_spending(obj)
 
 
 class CostReportSerializer(serializers.Serializer):
-
     date_range = serializers.SerializerMethodField()
     total_cost = serializers.SerializerMethodField()
     cost_by_type = serializers.SerializerMethodField()
@@ -519,18 +516,18 @@ class CostReportSerializer(serializers.Serializer):
                 queryset = queryset.filter(visit_date__lte=date_to)
         return queryset
 
-    def get_date_range(self, obj):
+    def get_date_range(self, obj) -> dict:
         request = self.context.get("request")
         return {
             "from": request.query_params.get("date_from") if request else None,
             "to": request.query_params.get("date_to") if request else None,
         }
 
-    def get_total_cost(self, obj):
+    def get_total_cost(self, obj) -> Decimal:
         queryset = self._get_queryset()
         return queryset.aggregate(total=Sum("cost"))["total"] or Decimal("0.00")
 
-    def get_cost_by_type(self, obj):
+    def get_cost_by_type(self, obj) -> list:
         queryset = self._get_queryset()
         data = (
             queryset.values("record_type")
@@ -550,7 +547,7 @@ class CostReportSerializer(serializers.Serializer):
             for item in data
         ]
 
-    def get_top_10_children_by_cost(self, obj):
+    def get_top_10_children_by_cost(self, obj) -> list:
         queryset = self._get_queryset()
         data = (
             queryset.values("child__id", "child__first_name", "child__last_name")
@@ -568,7 +565,7 @@ class CostReportSerializer(serializers.Serializer):
             for item in data
         ]
 
-    def get_monthly_breakdown(self, obj):
+    def get_monthly_breakdown(self, obj) -> list:
         queryset = self._get_queryset()
         data = (
             queryset.annotate(
@@ -596,7 +593,7 @@ class ChildProgressReportSerializer(serializers.Serializer):
     previous_progress = ChildProgressReadSerializer(read_only=True)
     comparison_summary = serializers.SerializerMethodField()
 
-    def get_comparison_summary(self, obj):
+    def get_comparison_summary(self, obj) -> str:
         latest = obj.get("latest_progress")
         previous = obj.get("previous_progress")
 

@@ -13,7 +13,7 @@ class InternshipApplication(TimeStampedModel):
     APPROVED = "APPROVED"
     REJECTED = "REJECTED"
 
-    STATUS_CHOICES = [
+    STATUS_APPLICATION_CHOICES = [
         (SUBMITTED, "Submitted"),
         (UNDER_REVIEW, "Under Review"),
         (MORE_INFO_NEEDED, "More Info Needed"),
@@ -37,8 +37,10 @@ class InternshipApplication(TimeStampedModel):
     field_of_study = models.CharField(max_length=200)
     cv_url = models.FileField(upload_to="applications_cvs/", null=True, blank=True)
     motivation_letter = models.FileField(upload_to="applications_letters/", blank=True)
-    passport_id_url = models.FileField(upload_to="applications_ids/", null=True, blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=SUBMITTED)
+    passport_id_url = models.FileField(
+        upload_to="applications_ids/", null=True, blank=True
+    )
+    status = models.CharField(max_length=20, choices=STATUS_APPLICATION_CHOICES, default=SUBMITTED)
     admin_notes = models.TextField(blank=True)
     applied_on = models.DateTimeField(auto_now_add=True)
     reviewed_on = models.DateTimeField(null=True, blank=True)
@@ -60,7 +62,7 @@ class InternshipApplication(TimeStampedModel):
         return f"{self.first_name} {self.last_name} - {self.status}"
 
     @property
-    def full_name(self):
+    def full_name(self) -> str:
         return f"{self.first_name} {self.last_name}"
 
 
@@ -92,7 +94,7 @@ class Supervisor(TimeStampedModel, SoftDeleteModel):
 
     class Meta:
         db_table = "supervisors"
-        ordering = ["first_name","last_name"]
+        ordering = ["first_name", "last_name"]
         verbose_name = "Supervisor"
         verbose_name_plural = "Supervisors"
 
@@ -100,7 +102,7 @@ class Supervisor(TimeStampedModel, SoftDeleteModel):
         return f"{self.first_name} {self.last_name}"
 
     @property
-    def full_name(self):
+    def full_name(self) -> str:
         return f"{self.first_name} {self.last_name}"
 
 
@@ -109,7 +111,7 @@ class InternshipProgram(TimeStampedModel):
     COMPLETED = "COMPLETED"
     TERMINATED = "TERMINATED"
 
-    STATUS_CHOICES = [
+    STATUS_PROGRAM_CHOICES = [
         (ACTIVE, "Active"),
         (COMPLETED, "Completed"),
         (TERMINATED, "Terminated"),
@@ -125,11 +127,15 @@ class InternshipProgram(TimeStampedModel):
         Department, on_delete=models.CASCADE, related_name="internship_programs"
     )
     supervisor = models.ForeignKey(
-        Supervisor, on_delete=models.SET_NULL, null=True, blank=True, related_name="internship_programs"
+        Supervisor,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="internship_programs",
     )
     start_date = models.DateField()
     end_date = models.DateField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_PROGRAM_CHOICES, blank=True)
 
     class Meta:
         db_table = "internship_program"
