@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import GalleryCategoryViewSet, GalleryMediaViewSet
+from .views.gallery_views import GalleryCategoryViewSet, GalleryMediaViewSet
 
 router = DefaultRouter()
 router.register(r'gallery-categories', GalleryCategoryViewSet, basename='gallery-category')

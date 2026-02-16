@@ -165,7 +165,7 @@ class InternshipProgramSerializer(serializers.ModelSerializer):
 
             
             if application is not None:
-                application.status = InternshipApplication.ACCEPTED
+                application.status = InternshipApplication.APPROVED
                 application.reviewed_on = timezone.now()
                 request = self.context.get("request")
                 if request and getattr(request, "user", None):

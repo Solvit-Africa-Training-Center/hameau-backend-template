@@ -62,7 +62,7 @@ logger = logging.getLogger(__name__)
 
 @extend_schema_view(
     list=extend_schema(
-        tags=["Residential Care Program - Children"],
+        tags=["Residential Care Program"],
         summary="List children",
         description="Retrieve a paginated list of children with filtering, search, and ordering.",
         parameters=[
@@ -91,7 +91,7 @@ logger = logging.getLogger(__name__)
         },
     ),
     retrieve=extend_schema(
-        tags=["Residential Care Program - Children"],
+        tags=["Residential Care Program"],
         summary="Retrieve child",
         description="Retrieve detailed information about a specific child.",
         responses={
@@ -100,7 +100,7 @@ logger = logging.getLogger(__name__)
         },
     ),
     create=extend_schema(
-        tags=["Residential Care Program - Children"],
+        tags=["Residential Care Program"],
         summary="Create child",
         description="Create a new child record.",
         request=ChildWriteSerializer,
@@ -110,7 +110,7 @@ logger = logging.getLogger(__name__)
         },
     ),
     update=extend_schema(
-        tags=["Residential Care Program - Children"],
+        tags=["Residential Care Program"],
         summary="Update child",
         description="Update an existing child record.",
         request=ChildWriteSerializer,
@@ -120,7 +120,7 @@ logger = logging.getLogger(__name__)
         },
     ),
     partial_update=extend_schema(
-        tags=["Residential Care Program - Children"],
+        tags=["Residential Care Program"],
         summary="Partially update child",
         description="Partially update an existing child record.",
         request=ChildWriteSerializer,
@@ -130,7 +130,7 @@ logger = logging.getLogger(__name__)
         },
     ),
     destroy=extend_schema(
-        tags=["Residential Care Program - Children"],
+        tags=["Residential Care Program"],
         summary="Delete child",
         description="Delete a child record.",
         responses={
@@ -214,7 +214,7 @@ class ChildViewSet(BulkActionMixin, viewsets.ModelViewSet):
         instance.delete()
 
     @extend_schema(
-        tags=["Residential Care Program - Children"],
+        tags=["Residential Care Program"],
         summary="Child progress list",
         description="Retrieve progress history for a specific child.",
         responses={200: ChildProgressReadSerializer(many=True)},
@@ -233,7 +233,7 @@ class ChildViewSet(BulkActionMixin, viewsets.ModelViewSet):
         return Response(serializer.data)
 
     @extend_schema(
-        tags=["Residential Care Program - Children"],
+        tags=["Residential Care Program"],
         summary="Add child progress",
         description="Add a new progress entry for a specific child.",
         request=ChildProgressWriteSerializer,
@@ -258,7 +258,7 @@ class ChildViewSet(BulkActionMixin, viewsets.ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @extend_schema(
-        tags=["Residential Care Program - Children"],
+        tags=["Residential Care Program"],
         summary="Child education records",
         description="Retrieve education records for a specific child.",
         responses={200: ChildEducationReadSerializer(many=True)},
@@ -271,7 +271,7 @@ class ChildViewSet(BulkActionMixin, viewsets.ModelViewSet):
         return Response(serializer.data)
 
     @extend_schema(
-        tags=["Residential Care Program - Children"],
+        tags=["Residential Care Program"],
         summary="Download child progress report",
         description="Generate and download the latest child progress report",
         responses={
@@ -315,12 +315,12 @@ class ChildViewSet(BulkActionMixin, viewsets.ModelViewSet):
         )
 
     @extend_schema(
-        tags=["Residential Care Program - Children"],
+        tags=["Residential Care Program"],
         description="Bulk delete supported children. by providing a list of IDs.",
         request=BulkActionSerializer,
         responses={
             200: inline_serializer(
-                name="BulkDeleteResponse",
+                name="BulkDeleteChildRResponse",
                 fields={
                     "message": serializers.CharField(),
                     "action": serializers.CharField(),
@@ -329,7 +329,7 @@ class ChildViewSet(BulkActionMixin, viewsets.ModelViewSet):
                 },
             ),
             202: inline_serializer(
-                name="BulkDeleteAsyncResponse",
+                name="BulkDeleteChildRAsyncResponse",
                 fields={
                     "message": serializers.CharField(),
                     "action": serializers.CharField(),
@@ -348,12 +348,12 @@ class ChildViewSet(BulkActionMixin, viewsets.ModelViewSet):
         )
 
     @extend_schema(
-        tags=["Residential Care Program - Children"],
+        tags=["Residential Care Program"],
         description="Bulk update fields for a list of supported children.",
         request=BulkActionSerializer,
         responses={
             200: inline_serializer(
-                name="BulkUpdateResponse",
+                name="BulkUpdateChildRResponse",
                 fields={
                     "message": serializers.CharField(),
                     "action": serializers.CharField(),
@@ -365,7 +365,7 @@ class ChildViewSet(BulkActionMixin, viewsets.ModelViewSet):
                 },
             ),
             400: inline_serializer(
-                name="BulkUpdateError", fields={"detail": serializers.CharField()}
+                name="BulkUpdateChildRError", fields={"detail": serializers.CharField()}
             ),
         },
     )
@@ -380,37 +380,38 @@ class ChildViewSet(BulkActionMixin, viewsets.ModelViewSet):
 
 @extend_schema_view(
     list=extend_schema(
-        tags=["Residential Care Program - Children"],
+        tags=["Residential Care Program"],
+        operation_id="child_progress_list",
         summary="List child progress",
         description="Retrieve a paginated list of child progress entries.",
         responses={200: ChildProgressReadSerializer(many=True)},
     ),
     retrieve=extend_schema(
-        tags=["Residential Care Program - Children"],
+        tags=["Residential Care Program"],
         summary="Retrieve child progress",
         responses={200: ChildProgressReadSerializer},
     ),
     create=extend_schema(
-        tags=["Residential Care Program - Children"],
+        tags=["Residential Care Program"],
         summary="Create child progress",
         description="Create a child progress entry (child_id required).",
         request=ChildProgressWriteSerializer,
         responses={201: ChildProgressReadSerializer},
     ),
     update=extend_schema(
-        tags=["Residential Care Program - Children"],
+        tags=["Residential Care Program"],
         summary="Update child progress",
         request=ChildProgressWriteSerializer,
         responses={200: ChildProgressReadSerializer},
     ),
     partial_update=extend_schema(
-        tags=["Residential Care Program - Children"],
+        tags=["Residential Care Program"],
         summary="Partially update child progress",
         request=ChildProgressWriteSerializer,
         responses={200: ChildProgressReadSerializer},
     ),
     destroy=extend_schema(
-        tags=["Residential Care Program - Children"],
+        tags=["Residential Care Program"],
         summary="Delete child progress",
         responses={204: OpenApiResponse(description="Deleted successfully")},
     ),
@@ -450,7 +451,7 @@ class ChildProgressViewSet(viewsets.ModelViewSet):
         serializer.save(context={"child": child})
 
     @extend_schema(
-        tags=["Residential Care Program - Children"],
+        tags=["Residential Care Program"],
         summary="Add child progress media",
         description="Upload image and/or video media for a progress entry.",
         responses={
@@ -485,12 +486,12 @@ class ChildProgressViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @extend_schema(
-        tags=["Residential Care Program - Children"],
+        tags=["Residential Care Program"],
         description="Bulk delete progresses of child. by providing a list of IDs.",
         request=BulkActionSerializer,
         responses={
             200: inline_serializer(
-                name="BulkDeleteResponse",
+                name="BulkDeleteChildProgressResponse",
                 fields={
                     "message": serializers.CharField(),
                     "action": serializers.CharField(),
@@ -499,7 +500,7 @@ class ChildProgressViewSet(viewsets.ModelViewSet):
                 },
             ),
             202: inline_serializer(
-                name="BulkDeleteAsyncResponse",
+                name="BulkDeleteChildProgressAsyncResponse",
                 fields={
                     "message": serializers.CharField(),
                     "action": serializers.CharField(),
@@ -521,7 +522,7 @@ class ChildProgressViewSet(viewsets.ModelViewSet):
 @extend_schema_view(
     create=(
         extend_schema(
-            tags=["Residential Care Program - Education Institutions"],
+            tags=["Residential Care Program"],
             summary="Create education institution",
             request=EducationInstitutionSerializer,
             responses={201: EducationInstitutionSerializer},
@@ -529,7 +530,7 @@ class ChildProgressViewSet(viewsets.ModelViewSet):
     ),
     update=(
         extend_schema(
-            tags=["Residential Care Program - Education Institutions"],
+            tags=["Residential Care Program"],
             summary="Update education institution",
             request=EducationInstitutionSerializer,
             responses={200: EducationInstitutionSerializer},
@@ -537,7 +538,7 @@ class ChildProgressViewSet(viewsets.ModelViewSet):
     ),
     partial_update=(
         extend_schema(
-            tags=["Residential Care Program - Education Institutions"],
+            tags=["Residential Care Program"],
             summary="Partially update education institution",
             request=EducationInstitutionSerializer,
             responses={200: EducationInstitutionSerializer},
@@ -545,23 +546,21 @@ class ChildProgressViewSet(viewsets.ModelViewSet):
     ),
     destroy=(
         extend_schema(
-            tags=["Residential Care Program - Education Institutions"],
+            tags=["Residential Care Program"],
             summary="Delete education institution",
             responses={204: OpenApiResponse(description="Deleted successfully")},
         ),
     ),
 )
 @extend_schema_view(
-    list=extend_schema(tags=["Residential Care Program - Education Institutions"]),
-    retrieve=extend_schema(tags=["Residential Care Program - Education Institutions"]),
-    create=extend_schema(tags=["Residential Care Program - Education Institutions"]),
-    update=extend_schema(tags=["Residential Care Program - Education Institutions"]),
-    partial_update=extend_schema(
-        tags=["Residential Care Program - Education Institutions"]
-    ),
-    destroy=extend_schema(tags=["Residential Care Program - Education Institutions"]),
+    list=extend_schema(tags=["Residential Care Program"]),
+    retrieve=extend_schema(tags=["Residential Care Program"]),
+    create=extend_schema(tags=["Residential Care Program"]),
+    update=extend_schema(tags=["Residential Care Program"]),
+    partial_update=extend_schema(tags=["Residential Care Program"]),
+    destroy=extend_schema(tags=["Residential Care Program"]),
     programs=extend_schema(
-        tags=["Residential Care Program - Education Institutions"],
+        tags=["Residential Care Program"],
         responses={200: EducationProgramReadSerializer(many=True)},
     ),
 )
@@ -589,7 +588,7 @@ class EducationInstitutionViewSet(viewsets.ModelViewSet):
 
 
 @extend_schema(
-    tags=["Residential Care Program - Education "],
+    tags=["Residential Care Program"],
 )
 class EducationProgramViewSet(viewsets.ModelViewSet):
     queryset = EducationProgram.objects.all().select_related("institution")
@@ -622,7 +621,7 @@ class EducationProgramViewSet(viewsets.ModelViewSet):
 
 
 @extend_schema(
-    tags=["Residential Care Program - Education "],
+    tags=["Residential Care Program"],
 )
 class ChildEducationViewSet(viewsets.ModelViewSet):
     queryset = ChildEducation.objects.all().select_related(

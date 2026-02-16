@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.utils import timezone
 from django.db import transaction
 
@@ -148,13 +149,13 @@ class SchoolSupportSerializer(serializers.ModelSerializer):
             "is_overdue",
         ]
 
-    def get_total_paid(self, obj):
+    def get_total_paid(self, obj) -> Decimal :
         return sum(payment.amount for payment in obj.payments.all())
 
-    def get_balance_due(self, obj):
+    def get_balance_due(self, obj) -> Decimal :
         return obj.total_cost - self.get_total_paid(obj)
 
-    def get_is_overdue(self, obj):
+    def get_is_overdue(self, obj) -> bool:
         return (
             obj.payment_status == SchoolSupport.PENDING
             or obj.payment_status == SchoolSupport.OVERDUE
@@ -250,7 +251,7 @@ class IfasheFamilySerializer(serializers.ModelSerializer):
             )
         return value
 
-    def get_children_count(self, obj):
+    def get_children_count(self, obj) -> int :
         return obj.children.count()
 
     def create(self, validated_data):
@@ -348,7 +349,7 @@ class ParentAttendanceSerializer(serializers.ModelSerializer):
 
 
 class ParentPerformanceSerializer(serializers.ModelSerializer):
-    evaluator_name = serializers.ReadOnlyField(source="evaluated_by.get_full_name")
+    evaluator_name = serializers.ReadOnlyField(source="evaluated_by.full_name")
 
     class Meta:
         model = ParentPerformance

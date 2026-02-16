@@ -17,7 +17,7 @@ from utils.bulk_operations.tasks import generic_bulk_task
 from utils.bulk_operations.serializers import BulkActionSerializer
 
 
-@extend_schema(tags=["IfasheTugufashe - Child School"])
+@extend_schema(tags=["IfasheTugufashe Program"])
 class SchoolSupportViewSet(BulkActionMixin, viewsets.ModelViewSet):
     queryset = SchoolSupport.objects.all().prefetch_related("payments")
     serializer_class = SchoolSupportSerializer
@@ -61,7 +61,7 @@ class SchoolSupportViewSet(BulkActionMixin, viewsets.ModelViewSet):
         request=BulkActionSerializer,
         responses={
             200: inline_serializer(
-                name="BulkDeleteResponse",
+                name="BulkDeleteSupportResponse",
                 fields={
                     "message": serializers.CharField(),
                     "action": serializers.CharField(),
@@ -70,7 +70,7 @@ class SchoolSupportViewSet(BulkActionMixin, viewsets.ModelViewSet):
                 },
             ),
             202: inline_serializer(
-                name="BulkDeleteAsyncResponse",
+                name="BulkDeleteSupportAsyncResponse",
                 fields={
                     "message": serializers.CharField(),
                     "action": serializers.CharField(),
@@ -93,7 +93,7 @@ class SchoolSupportViewSet(BulkActionMixin, viewsets.ModelViewSet):
         request=BulkActionSerializer,
         responses={
             200: inline_serializer(
-                name="BulkUpdateResponse",
+                name="BulkUpdateSupportResponse",
                 fields={
                     "message": serializers.CharField(),
                     "action": serializers.CharField(),
@@ -105,7 +105,8 @@ class SchoolSupportViewSet(BulkActionMixin, viewsets.ModelViewSet):
                 },
             ),
             400: inline_serializer(
-                name="BulkUpdateError", fields={"detail": serializers.CharField()}
+                name="BulkUpdateSupportError",
+                fields={"detail": serializers.CharField()},
             ),
         },
     )
@@ -122,7 +123,7 @@ class SchoolSupportViewSet(BulkActionMixin, viewsets.ModelViewSet):
         request=BulkActionSerializer,
         responses={
             200: inline_serializer(
-                name="BulkUpdateResponse",
+                name="BulkUpdateSupportPaidResponse",
                 fields={
                     "message": serializers.CharField(),
                     "action": serializers.CharField(),
@@ -134,7 +135,8 @@ class SchoolSupportViewSet(BulkActionMixin, viewsets.ModelViewSet):
                 },
             ),
             400: inline_serializer(
-                name="BulkUpdateError", fields={"detail": serializers.CharField()}
+                name="BulkUpdateSupportPaidError",
+                fields={"detail": serializers.CharField()},
             ),
         },
     )

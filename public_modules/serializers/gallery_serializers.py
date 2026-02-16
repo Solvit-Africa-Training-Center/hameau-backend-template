@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_field, OpenApiExample
 from drf_spectacular.types import OpenApiTypes
-from .models import GalleryCategory, GalleryMedia
+from ..models.gallery_models import GalleryCategory, GalleryMedia
 
 
 class GalleryCategorySerializer(serializers.ModelSerializer):  
@@ -26,7 +26,7 @@ class GalleryCategorySerializer(serializers.ModelSerializer):
 
 class GalleryMediaSerializer(serializers.ModelSerializer):    
     category_name = serializers.CharField(source='category.name', read_only=True)
-    uploaded_by_name = serializers.CharField(source='uploaded_by.get_full_name', read_only=True)
+    uploaded_by_name = serializers.CharField(source='uploaded_by.full_name', read_only=True)
     media_url = serializers.FileField(required=True)
     
     class Meta:
