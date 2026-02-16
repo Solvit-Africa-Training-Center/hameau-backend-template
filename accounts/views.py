@@ -193,7 +193,7 @@ class RequestPasswordResetView(APIView):
         serializer = RequestPasswordResetSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        logger.success("Succefully sent the code to the user email")
+        logger.log("Succefully sent the code to the user email")
         return Response(
             {"message": "Password reset code sent to your email"},
             status=status.HTTP_200_OK,
@@ -269,7 +269,7 @@ class ChangePasswordView(APIView):
             data=request.data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
-        logger.success("Password changed successfully")
+        logger.info("Password changed successfully")
         serializer.save()
         return Response(
             {"message": "Password changed successfully"}, status=status.HTTP_200_OK

@@ -120,6 +120,7 @@ logger = logging.getLogger(__name__)
         },
     ),
 )
+
 class CaretakerViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing caretakers.
