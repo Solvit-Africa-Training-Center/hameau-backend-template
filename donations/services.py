@@ -1,24 +1,35 @@
 import logging
 import openai
 from django.conf import settings
-from .models.residentials_models import ChildProgress
+from programs.models.residentials_models import ChildProgress
+from .models import ChildMonthlySummary
 
 logger = logging.getLogger(__name__)
 
-def get_ai_summary(child, year, month):
+def get_ai_summary(child, year, month, force_refresh=False):
     """
     Generates a natural language summary of a child's progress for a given month using OpenAI.
+    Caches the results in ChildMonthlySummary to avoid redundant API calls.
     
     Args:
         child (Child): The child instance.
         year (int): The year of the progress notes.
         month (int): The month of the progress notes (1-12).
+        force_refresh (bool): If True, regenerates the summary even if cached.
         
     Returns:
         str: The generated summary or an error message if the API call fails.
     """
+    # 1. Check Cache
+    if not force_refresh:
+        cached = ChildMonthlySummary.objects.filter(
+            child=child, month=month, year=year
+        ).first()
+        if cached:
+            return cached.summary_text
+
     try:
-        # 1. Query ChildProgress data
+        # 2. Query ChildProgress data
         progress_records = ChildProgress.objects.filter(
             child=child,
             created_on__year=year,
@@ -28,7 +39,7 @@ def get_ai_summary(child, year, month):
         if not progress_records.exists():
             return f"No progress records found for {child.first_name} in {month}/{year}."
 
-        # 2. Aggregate data
+        # 3. Aggregate data
         notes_list = []
         total_images = 0
         total_videos = 0
@@ -47,7 +58,7 @@ def get_ai_summary(child, year, month):
 
         formatted_notes = "\n".join(notes_list)
 
-        # 3. Construct Prompt
+        # 4. Construct Prompt
         prompt = (
             f"Write a short, warm, and encouraging summary of the child's progress based on the following monthly updates. "
             f"The child's name is {child.first_name}. "
@@ -58,11 +69,11 @@ def get_ai_summary(child, year, month):
             f"Updates:\n{formatted_notes}"
         )
 
-        # 4. Call OpenAI API
+        # 5. Call OpenAI API
         client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
         
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo", # or gpt-4o if available/preferred
+            model="gpt-3.5-turbo", 
             messages=[
                 {"role": "system", "content": "You are a helpful assistant writing progress summaries for child sponsorship reports."},
                 {"role": "user", "content": prompt}
@@ -72,6 +83,15 @@ def get_ai_summary(child, year, month):
         )
 
         summary = response.choices[0].message.content.strip()
+
+        # 6. Save to Cache
+        ChildMonthlySummary.objects.update_or_create(
+            child=child,
+            month=month,
+            year=year,
+            defaults={"summary_text": summary}
+        )
+
         return summary
 
     except Exception as e:

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Monthly Progress Update</title>
+    <style>
+        body {
+            font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            margin: 0;
+            padding: 0;
+            background-color: #f8fafc;
+        }
+
+        .wrapper {
+            width: 100%;
+            table-layout: fixed;
+            background-color: #f8fafc;
+            padding: 40px 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            padding: 40px 20px;
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .child-profile {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .child-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 60px;
+            object-fit: cover;
+            border: 4px solid #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 16px;
+        }
+
+        .child-subtitle {
+            font-size: 14px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 4px;
+        }
+
+        .child-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #15803d;
+            margin: 0;
+        }
+
+        .summary-card {
+            background-color: #f0fdf4;
+            border-radius: 12px;
+            padding: 24px;
+            border-left: 4px solid #16a34a;
+            margin-bottom: 30px;
+        }
+
+        .summary-title {
+            font-weight: 700;
+            color: #166534;
+            margin-bottom: 12px;
+            display: block;
+            font-size: 16px;
+        }
+
+        .summary-text {
+            color: #1e293b;
+            font-size: 16px;
+            margin: 0;
+            white-space: pre-line;
+        }
+
+        .footer {
+            padding: 30px;
+            text-align: center;
+            background-color: #f1f5f9;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .cta-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .button {
+            display: inline-block;
+            background-color: #16a34a;
+            color: #ffffff !important;
+            padding: 14px 28px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 20px;
+            color: #15803d;
+            margin-bottom: 10px;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <h1>Monthly Progress Update</h1>
+            </div>
+
+            <div class="content">
+                <div class="child-profile">
+                    {% if child_photo %}
+                    <img src="{{ child_photo }}" alt="{{ child_name }}" class="child-image">
+                    {% endif %}
+                    <div class="child-subtitle">Update For</div>
+                    <p class="child-name">{{ child_name }}</p>
+                    <p style="color: #64748b; font-size: 14px; margin-top: 5px;">{{ report_month }} {{ report_year }}
+                    </p>
+                </div>
+
+                <div class="summary-card">
+                    <span class="summary-title">Highlights & Progress</span>
+                    <div class="summary-text">{{ ai_summary }}</div>
+                </div>
+
+                <p style="color: #475569; text-align: center;">
+                    Your generosity is creating a lasting impact. Thank you for being part of {{ child_name }}'s
+                    journey.
+                </p>
+
+                <div class="cta-container">
+                    <a href="{{ dashboard_url }}" class="button">View Full Dashboard</a>
+                </div>
+            </div>
+
+            <div class="footer">
+                <span class="logo">HAMEAU</span>
+                <p>Support | Transformation | Hope</p>
+                <p style="margin-top: 20px; font-size: 12px;">
+                    &copy; {{ report_year }} Hameau. All rights reserved.<br>
+                    You are receiving this update because of your active donation/sponsorship.
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

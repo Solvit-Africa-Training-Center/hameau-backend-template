@@ -32,4 +32,5 @@ urlpatterns = [
     ),
     path("", homeDocs, name="home"),
     path("api/", include("public_modules.urls")),
+    path("api/donations/", include("donations.urls")),
 ]

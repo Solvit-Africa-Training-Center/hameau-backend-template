@@ -13,8 +13,8 @@ from drf_spectacular.utils import (
 )
 from drf_spectacular.types import OpenApiTypes
 
-from .models import GalleryCategory, GalleryMedia
-from .gallery_serializers import (
+from ..models import GalleryCategory, GalleryMedia
+from ..serializers import (
     GalleryCategorySerializer,
     GalleryCategoryDetailSerializer,
     GalleryMediaSerializer,
