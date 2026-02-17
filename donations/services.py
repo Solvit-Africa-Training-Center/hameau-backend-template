@@ -62,7 +62,7 @@ def get_ai_summary(child, year, month):
         client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
         
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo", # or gpt-4o if available/preferred
+            model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant writing progress summaries for child sponsorship reports."},
                 {"role": "user", "content": prompt}
