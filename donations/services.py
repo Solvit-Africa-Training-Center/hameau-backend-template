@@ -97,3 +97,20 @@ def get_ai_summary(child, year, month, force_refresh=False):
     except Exception as e:
         logger.error(f"Error generating AI summary for child {child.id}: {e}")
         return "An error occurred while generating the summary. Please check the logs."
+
+def calculate_next_deduction_date(start_date, interval):
+    """
+    Calculates the next deduction date based on the interval.
+    """
+    if interval == "MONTHLY":
+        # Add a month
+        next_date = start_date + datetime.timedelta(days=31)
+        return next_date.replace(day=start_date.day)
+    elif interval == "YEARLY":
+        # Add a year
+        try:
+            return start_date.replace(year=start_date.year + 1)
+        except ValueError:
+            # Handle leap year Feb 29
+            return start_date + datetime.timedelta(days=365)
+    return None
