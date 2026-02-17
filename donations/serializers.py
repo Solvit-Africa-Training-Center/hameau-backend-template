@@ -1,12 +1,10 @@
 from rest_framework import serializers
 from .models import Donor, Donation, SponsorEmailLog
 from programs.serializers.residentials_serializers import ChildReadSerializer
+from utils.services import create_irembopay_invoice
 
 class DonorSerializer(serializers.ModelSerializer):
-    """
-    Serializer for Donor management. 
-    Handles basic contact info and type classification.
-    """
+    """Serializer for Donor management."""
     class Meta:
         model = Donor
         fields = ["id", "fullname", "email", "phone", "address", "donor_type", "created_on"]
@@ -14,11 +12,7 @@ class DonorSerializer(serializers.ModelSerializer):
 
 
 class DonationSerializer(serializers.ModelSerializer):
-    """
-    Serializer for Contributions. 
-    Includes business logic for three donation types (General, Child, Family)
-    and validates requirements for recurring payments.
-    """
+    """Serializer for Contributions (General, Child, Family)."""
     child_info = ChildReadSerializer(source="child", read_only=True)
     donor_name = serializers.CharField(source="donor.fullname", read_only=True)
     family_name = serializers.CharField(source="family.name", read_only=True)
@@ -49,26 +43,19 @@ class DonationSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "donation_date", "created_on", "next_deduction_date"]
 
     def validate(self, attrs):
-        """
-        Business Logic:
-        1. Ensure child is selected for RESIDENTIAL_CHILD donation.
-        2. Ensure family is selected for IFASHE_FAMILY donation.
-        3. Clear inappropriate foreign keys based on donation_type.
-        4. Validate recurring interval for periodic payments.
-        """
         donation_type = attrs.get("donation_type")
         child = attrs.get("child")
         family = attrs.get("family")
         is_recurring = attrs.get("is_recurring", False)
         recurring_interval = attrs.get("recurring_interval")
 
-        # 1. Periodic Payment Validation
+        # Validate recurring interval
         if is_recurring and not recurring_interval:
             raise serializers.ValidationError(
                 {"recurring_interval": "Recurring interval is required if is_recurring is set."}
             )
 
-        # 2. Donation Type Specific Logic
+        # Donation type validation
         if donation_type == Donation.RESIDENTIAL_CHILD:
             if not child:
                 raise serializers.ValidationError(
@@ -90,25 +77,19 @@ class DonationSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        """
-        Handles creation of donation record.
-        Integration with IremboPay occurs here to generate a payment session if selected.
-        Also calculates the next deduction date for recurring payments.
-        """
         is_recurring = validated_data.get("is_recurring", False)
         payment_method = validated_data.get("payment_method")
         
-        # 1. Handle Recurring Logic
+        # Recurring logic
         if is_recurring:
-            from .tasks import calculate_next_deduction_date
+            from utils.services import calculate_next_deduction_date
             from django.utils import timezone
             now = timezone.now().date()
             interval = validated_data.get("recurring_interval")
             validated_data["next_deduction_date"] = calculate_next_deduction_date(now, interval)
 
-        # 2. IremboPay Integration Pattern
+        # IremboPay integration
         if payment_method == Donation.IREMBOPAY:
-            from .tasks import create_irembopay_invoice
             
             donor = validated_data.get('donor')
             donor_name = donor.fullname if donor else "Anonymous"
@@ -128,22 +109,19 @@ class DonationSerializer(serializers.ModelSerializer):
                 invoice_number = irembo_data.get('invoiceNumber')
                 payment_url = irembo_data.get('paymentLinkUrl')
                 
-                # Prepend the payment link to the notes for the user to find it easily
+                # Prepend the payment link to the notes
                 existing_notes = validated_data.get('notes', '')
                 irembo_info = f"Irembo Invoice: {invoice_number}\nPayment Link: {payment_url}"
                 validated_data['notes'] = f"{irembo_info}\n\n{existing_notes}" if existing_notes else irembo_info
             else:
-                # If IremboPay fails, we might want to log it or raise a validation error
-                # For now, we'll let it proceed but note it in the notes.
+                # Let it proceed but note it in the notes.
                 validated_data['notes'] = "WARNING: IremboPay Invoice Creation Failed. Please check logs."
 
         return super().create(validated_data)
 
 
 class SponsorEmailLogSerializer(serializers.ModelSerializer):
-    """
-    Read-only serializer for tracking report delivery history.
-    """
+    """Read-only serializer for tracking report delivery history."""
     donor_name = serializers.CharField(source="donor.fullname", read_only=True)
     child_name = serializers.CharField(source="child.full_name", read_only=True)
 

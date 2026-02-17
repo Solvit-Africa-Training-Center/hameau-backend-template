@@ -15,7 +15,7 @@ class TestIremboPayIntegration:
             phone="0780000000"
         )
         
-    @patch('donations.tasks.requests.post')
+    @patch('utils.services.requests.post')
     def test_irembopay_invoice_creation_success(self, mock_post):
         # Mock successful response from IremboPay
         mock_response = MagicMock()
@@ -50,7 +50,7 @@ class TestIremboPayIntegration:
         assert "Irembo Invoice: 880419623157" in donation.notes
         assert "Payment Link: https://irembo.gov/pay/880419623157" in donation.notes
         
-    @patch('donations.tasks.requests.post')
+    @patch('utils.services.requests.post')
     def test_irembopay_invoice_creation_failure(self, mock_post):
         # Mock failed response
         mock_response = MagicMock()

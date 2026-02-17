@@ -2,7 +2,8 @@ import pytest
 import datetime
 from django.utils import timezone
 from programs.models import Child, ChildProgress
-from ..tasks import get_ai_summary
+from utils.services import get_ai_summary
+from django.conf import settings
 
 @pytest.mark.django_db
 def test_ai_summary_generation():
@@ -26,7 +27,6 @@ def test_ai_summary_generation():
         created_on=timezone.now()
     )
     
-    from django.conf import settings
     if not settings.OPENAI_API_KEY:
         pytest.skip("Skipping AI summary test because OPENAI_API_KEY is not set.")
 
