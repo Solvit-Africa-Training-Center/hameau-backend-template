@@ -10,4 +10,5 @@ from .celery import *
 from .logging import *
 
 
-DEBUG = False
+from .base import env
+DEBUG = env("DEBUG")

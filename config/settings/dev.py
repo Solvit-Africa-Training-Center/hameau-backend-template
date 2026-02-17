@@ -9,4 +9,5 @@ from .third_party import *
 from .celery import *
 from .logging import *
 
-DEBUG = True
+from .base import env
+DEBUG = env("DEBUG")
