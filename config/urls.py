@@ -9,7 +9,7 @@ from drf_spectacular.views import (
 )
 
 def homeDocs(request):
-    return render(request, "home1.html")
+    return render(request, "home1.html") 
 
 urlpatterns = [
     path("admin/", admin.site.urls),

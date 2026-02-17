@@ -12,7 +12,8 @@ __pycache__
 *.swp
 *.log
 logs/
-
+gitignore
+.gitignore
 
 **/migrations/*
 !**/migrations/__init__.py
