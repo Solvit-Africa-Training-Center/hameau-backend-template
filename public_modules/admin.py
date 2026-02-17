@@ -132,14 +132,14 @@ class ContactInfoAdmin(admin.ModelAdmin):
 
 @admin.register(TeamMember)
 class TeamMemberAdmin(admin.ModelAdmin):
-    """Admin interface for Team Members"""
+   
     list_display = ("first_name", "last_name", "role", "is_active", "created_on")
     list_filter = ("is_active", "created_on")
     search_fields = ("first_name", "last_name", "role")
     readonly_fields = ("created_on", "updated_on")
     fieldsets = (
         ("Basic Information", {
-            "fields": ("first_name", "last_name", "role", "bio")
+            "fields": ("first_name", "last_name", "role")
         }),
         ("Photo", {
             "fields": ("photo",)

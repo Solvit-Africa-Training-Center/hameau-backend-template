@@ -33,7 +33,7 @@ class TestImpactStatisticViews(APITestCase):
             is_active=False
         )
         
-        # Create admin user
+        
         self.admin = User.objects.create_user(
             username='admin',
             password='admin123',
@@ -41,7 +41,7 @@ class TestImpactStatisticViews(APITestCase):
         )
     
     def test_get_impact_statistics_public(self):
-        """Test public endpoint returns only active impact statistics"""
+        
         response = self.client.get('/api/impact-statistics/public/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
@@ -53,16 +53,15 @@ class TestImpactStatisticViews(APITestCase):
         self.assertNotIn("Inactive", titles)
     
     def test_impact_statistics_ordered(self):
-        """Test impact statistics are ordered by order field"""
+       
         response = self.client.get('/api/impact-statistics/public/')
         data = response.json()
         
-        # Should be ordered by the 'order' field
         self.assertEqual(data[0]['title'], "Children Supported")
         self.assertEqual(data[1]['title'], "Programs")
     
     def test_create_impact_statistic_unauthenticated(self):
-        """Test unauthenticated user cannot create impact statistics"""
+       
         data = {
             'title': 'New Stat',
             'value': '100',
@@ -73,7 +72,7 @@ class TestImpactStatisticViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
     
     def test_create_impact_statistic_authenticated(self):
-        """Test authenticated admin can create impact statistics"""
+     
         self.client.force_authenticate(user=self.admin)
         data = {
             'title': 'New Stat',
@@ -86,7 +85,7 @@ class TestImpactStatisticViews(APITestCase):
         self.assertEqual(response.data['title'], 'New Stat')
     
     def test_update_impact_statistic(self):
-        """Test updating impact statistic"""
+       
         self.client.force_authenticate(user=self.admin)
         data = {'value': '600+'}
         response = self.client.patch(
@@ -101,7 +100,7 @@ class TestImpactStatisticViews(APITestCase):
         self.assertEqual(self.impact1.value, '600+')
     
     def test_delete_impact_statistic(self):
-        """Test deleting impact statistic"""
+        
         self.client.force_authenticate(user=self.admin)
         response = self.client.delete(f'/api/impact-statistics/{self.impact1.id}/')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -113,10 +112,9 @@ class TestImpactStatisticViews(APITestCase):
 
 @pytest.mark.django_db
 class TestContactMessageViews(APITestCase):
-    """Test ContactMessage API endpoints"""
-    
+   
     def setUp(self):
-        """Set up test data"""
+       
         self.client = APIClient()
         self.message = ContactMessage.objects.create(
             first_name="John",
@@ -128,7 +126,7 @@ class TestContactMessageViews(APITestCase):
             status=ContactMessage.PENDING
         )
         
-        # Create admin user
+      
         self.admin = User.objects.create_user(
             username='admin',
             password='admin123',
@@ -136,7 +134,7 @@ class TestContactMessageViews(APITestCase):
         )
     
     def test_create_contact_message_public(self):
-        """Test public can submit contact message"""
+       
         data = {
             'first_name': 'Jane',
             'last_name': 'Smith',
@@ -153,7 +151,7 @@ class TestContactMessageViews(APITestCase):
         self.assertEqual(message.status, ContactMessage.PENDING)
     
     def test_create_contact_message_invalid_email(self):
-        """Test contact message creation fails with invalid email"""
+    
         data = {
             'first_name': 'Test',
             'last_name': 'User',
@@ -165,7 +163,7 @@ class TestContactMessageViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
     
     def test_get_contact_messages_admin_only(self):
-        """Test contact messages list is admin-only"""
+       
         response = self.client.get('/api/contact-messages/')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         
@@ -175,7 +173,7 @@ class TestContactMessageViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
     
     def test_contact_message_list_includes_fullname(self):
-        """Test that contact messages list includes fullname"""
+        
         self.client.force_authenticate(user=self.admin)
         response = self.client.get('/api/contact-messages/')
         data = response.json()
@@ -185,7 +183,7 @@ class TestContactMessageViews(APITestCase):
         self.assertEqual(data[0]['fullname'], 'John Doe')
     
     def test_update_contact_message_status(self):
-        """Test updating contact message status"""
+       
         self.client.force_authenticate(user=self.admin)
         data = {'status': ContactMessage.VIEWED}
         response = self.client.patch(
@@ -199,7 +197,7 @@ class TestContactMessageViews(APITestCase):
         self.assertEqual(self.message.status, ContactMessage.VIEWED)
     
     def test_update_contact_message_notes(self):
-        """Test updating contact message admin notes"""
+       
         self.client.force_authenticate(user=self.admin)
         data = {'admin_notes': 'Follow up next week'}
         response = self.client.patch(
@@ -213,7 +211,7 @@ class TestContactMessageViews(APITestCase):
         self.assertEqual(self.message.admin_notes, 'Follow up next week')
     
     def test_mark_as_viewed_action(self):
-        """Test custom mark_as_viewed action"""
+       
         self.client.force_authenticate(user=self.admin)
         response = self.client.post(f'/api/contact-messages/{self.message.id}/mark_as_viewed/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -222,7 +220,7 @@ class TestContactMessageViews(APITestCase):
         self.assertEqual(self.message.status, ContactMessage.VIEWED)
     
     def test_mark_as_responded_action(self):
-        """Test custom mark_as_responded action"""
+       
         self.client.force_authenticate(user=self.admin)
         response = self.client.post(f'/api/contact-messages/{self.message.id}/mark_as_responded/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -231,7 +229,7 @@ class TestContactMessageViews(APITestCase):
         self.assertEqual(self.message.status, ContactMessage.RESPONDED)
     
     def test_delete_contact_message(self):
-        """Test deleting contact message"""
+       
         self.client.force_authenticate(user=self.admin)
         response = self.client.delete(f'/api/contact-messages/{self.message.id}/')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -242,7 +240,7 @@ class TestContactMessageViews(APITestCase):
 
 @pytest.mark.django_db
 class TestContactInfoViews(APITestCase):
-    """Test ContactInfo API endpoints"""
+   
     
     def setUp(self):
         """Set up test data"""
@@ -262,7 +260,7 @@ class TestContactInfoViews(APITestCase):
         )
     
     def test_get_contact_info_public(self):
-        """Test public endpoint returns contact info"""
+       
         response = self.client.get('/api/contact-info/public/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
@@ -271,7 +269,7 @@ class TestContactInfoViews(APITestCase):
         self.assertEqual(data['phone'], "+1 555-1234")
     
     def test_contact_info_filters_inactive(self):
-        """Test that public endpoint gets active contact info"""
+      
         # Make existing one inactive
         self.contact.is_active = False
         self.contact.save()
@@ -290,7 +288,7 @@ class TestContactInfoViews(APITestCase):
         self.assertEqual(data['email'], "new@example.com")
     
     def test_create_contact_info_unauthenticated(self):
-        """Test unauthenticated user cannot create contact info"""
+       
         data = {
             'email': 'new@example.com',
             'phone': '555-5678',
@@ -301,7 +299,7 @@ class TestContactInfoViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
     
     def test_create_contact_info_authenticated(self):
-        """Test admin can create contact info"""
+       
         self.client.force_authenticate(user=self.admin)
         data = {
             'email': 'new@example.com',
@@ -313,7 +311,7 @@ class TestContactInfoViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
     
     def test_update_contact_info(self):
-        """Test updating contact info"""
+       
         self.client.force_authenticate(user=self.admin)
         data = {'phone': '+1 555-9999'}
         response = self.client.patch(
@@ -329,7 +327,7 @@ class TestContactInfoViews(APITestCase):
 
 @pytest.mark.django_db
 class TestTeamMemberViews(APITestCase):
-    """Test TeamMember API endpoints"""
+  
     
     def setUp(self):
         """Set up test data"""
@@ -363,7 +361,7 @@ class TestTeamMemberViews(APITestCase):
         )
     
     def test_get_team_members_public(self):
-        """Test public endpoint returns only active team members"""
+      
         response = self.client.get('/api/team-members/public/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
@@ -374,7 +372,7 @@ class TestTeamMemberViews(APITestCase):
         self.assertNotIn("Carol Brown", names)
     
     def test_team_members_ordered(self):
-        """Test team members are ordered by order field"""
+       
         response = self.client.get('/api/team-members/public/')
         data = response.json()
         
@@ -382,7 +380,7 @@ class TestTeamMemberViews(APITestCase):
         self.assertEqual(data[1]['full_name'], "Bob Smith")
     
     def test_public_team_member_includes_role(self):
-        """Test public endpoint includes role field"""
+       
         response = self.client.get('/api/team-members/public/')
         data = response.json()
         
@@ -390,7 +388,7 @@ class TestTeamMemberViews(APITestCase):
         self.assertEqual(data[0]['role'], "Director")
     
     def test_create_team_member_unauthenticated(self):
-        """Test unauthenticated user cannot create team member"""
+       
         data = {
             'first_name': 'David',
             'last_name': 'Lee',
@@ -401,7 +399,7 @@ class TestTeamMemberViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
     
     def test_create_team_member_authenticated(self):
-        """Test admin can create team member"""
+        
         self.client.force_authenticate(user=self.admin)
         data = {
             'first_name': 'David',
@@ -415,7 +413,7 @@ class TestTeamMemberViews(APITestCase):
         self.assertEqual(response.data['full_name'], "David Lee")
     
     def test_update_team_member(self):
-        """Test updating team member"""
+       
         self.client.force_authenticate(user=self.admin)
         data = {'role': 'Senior Director'}
         response = self.client.patch(
@@ -429,7 +427,7 @@ class TestTeamMemberViews(APITestCase):
         self.assertEqual(self.member1.role, 'Senior Director')
     
     def test_deactivate_team_member(self):
-        """Test deactivating team member"""
+       
         self.client.force_authenticate(user=self.admin)
         data = {'is_active': False}
         response = self.client.patch(
@@ -456,10 +454,10 @@ class TestTeamMemberViews(APITestCase):
 
 @pytest.mark.django_db
 class TestAPIPermissions(APITestCase):
-    """Test API endpoint permissions"""
+    
     
     def setUp(self):
-        """Set up test users"""
+        
         self.client = APIClient()
         self.admin = User.objects.create_user(
             username='admin',
@@ -473,7 +471,7 @@ class TestAPIPermissions(APITestCase):
         )
     
     def test_public_endpoints_allow_any(self):
-        """Test public endpoints allow any access"""
+        
         endpoints = [
             '/api/impact-statistics/public/',
             '/api/contact-info/public/',
@@ -489,7 +487,7 @@ class TestAPIPermissions(APITestCase):
             )
     
     def test_contact_create_allows_any(self):
-        """Test contact message creation allows any"""
+        
         data = {
             'first_name': 'Test',
             'last_name': 'User',
@@ -501,7 +499,7 @@ class TestAPIPermissions(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
     
     def test_admin_endpoints_require_staff(self):
-        """Test admin endpoints require is_staff=True"""
+        
         endpoints = [
             '/api/impact-statistics/',
             '/api/contact-messages/',
@@ -509,7 +507,7 @@ class TestAPIPermissions(APITestCase):
             '/api/team-members/',
         ]
         
-        # Regular user should be denied
+       
         self.client.force_authenticate(user=self.user)
         for endpoint in endpoints:
             response = self.client.get(endpoint)

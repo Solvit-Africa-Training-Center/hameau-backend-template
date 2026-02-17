@@ -21,10 +21,6 @@ class ImpactStatsService:
     @staticmethod
     def get_total_families_supported():
         from programs.models.ifashe_models import Family, Sponsorship
-        
-        # Assuming families with at least one active sponsored child are considered supported
-        # Or simply count all families registered in Ifashe if that's the program definition
-        # Let's count families with active sponsorships contentiously
         return Family.objects.filter(children__sponsorships__status=Sponsorship.ACTIVE).distinct().count()
 
     @staticmethod
@@ -35,10 +31,7 @@ class ImpactStatsService:
 
     @classmethod
     def update_statistics(cls):
-        """
-        Updates the values of existing ImpactStatistic records based on calculations.
-        Only updates records with specific titles to avoid overwriting custom stats.
-        """
+    
         stats_map = {
             "Children Supported": cls.get_total_children_supported(),
             "Families Impacted": cls.get_total_families_supported(),
