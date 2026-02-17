@@ -23,3 +23,8 @@ STORAGES = {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
+
+IREMBOPAY_SECRET_KEY = env("IREMBOPAY_SECRET_KEY", default="secreKey")
+IREMBOPAY_BASE_URL = env("IREMBOPAY_BASE_URL", default="https://api.sandbox.irembopay.com")
+IREMBOPAY_ACCOUNT_ID = env("IREMBOPAY_ACCOUNT_ID", default="TST-RWF")
+IREMBOPAY_API_VERSION = env("IREMBOPAY_API_VERSION", default="3")
