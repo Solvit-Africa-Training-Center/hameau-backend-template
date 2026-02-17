@@ -23,6 +23,6 @@ CELERY_BEAT_SCHEDULE = {
     },
     "process-recurring-donations": {
         "task": "donations.tasks.process_recurring_donations_task",
-        "schedule": crontab(hour=0, minute=0),  # Daily at midnight
+        "schedule": crontab(hour=0, minute=0),
     },
 }
