@@ -23,17 +23,16 @@ from accounts.permissions import IsResidentialManager
 
 logger = logging.getLogger(__name__)
 
+
 @extend_schema_view(
-    list=extend_schema(tags=["Residential Care Program - Health"]),
-    retrieve=extend_schema(tags=["Residential Care Program - Health"]),
-    create=extend_schema(tags=["Residential Care Program - Health"]),
-    update=extend_schema(tags=["Residential Care Program - Health"]),
-    partial_update=extend_schema(tags=["Residential Care Program - Health"]),
-    destroy=extend_schema(tags=["Residential Care Program - Health"]),
+    list=extend_schema(tags=["Residential Care Program"]),
+    retrieve=extend_schema(tags=["Residential Care Program"]),
+    create=extend_schema(tags=["Residential Care Program"]),
+    update=extend_schema(tags=["Residential Care Program"]),
+    partial_update=extend_schema(tags=["Residential Care Program"]),
+    destroy=extend_schema(tags=["Residential Care Program"]),
 )
 class HealthRecordViewSet(viewsets.ModelViewSet):
-  
-
     queryset = HealthRecord.objects.select_related("child")
     permission_classes = [IsAuthenticated, IsResidentialManager]
     filter_backends = [
@@ -87,19 +86,17 @@ class HealthRecordViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(visit_date__lte=date_to)
 
         return queryset
-    
-    
 
-    @extend_schema(tags=["Residential Care Program - Health"])
+    @extend_schema(tags=["Residential Care Program"])
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
 
         logger.info(
-        f"Health record created: Child ID={serializer.instance.child_id}, "
-        f"Type={serializer.instance.record_type}, Cost={serializer.instance.cost}, "
-        f"by user {request.user.id}"
+            f"Health record created: Child ID={serializer.instance.child_id}, "
+            f"Type={serializer.instance.record_type}, Cost={serializer.instance.cost}, "
+            f"by user {request.user.id}"
         )
         read_serializer = HealthRecordReadSerializer(serializer.instance)
         return Response(
@@ -111,7 +108,7 @@ class HealthRecordViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED,
         )
 
-    @extend_schema(tags=["Residential Care Program - Health"])
+    @extend_schema(tags=["Residential Care Program"])
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop("partial", False)
         instance = self.get_object()
@@ -129,22 +126,22 @@ class HealthRecordViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK,
         )
 
-    @extend_schema(tags=["Residential Care Program - Health"])
+    @extend_schema(tags=["Residential Care Program"])
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
 
         logger.warning(
-        f"Health record deleted: ID={instance.id}, Child ID={instance.child_id}, "
-        f"by user {request.user.id}"
+            f"Health record deleted: ID={instance.id}, Child ID={instance.child_id}, "
+            f"by user {request.user.id}"
         )
-        
+
         self.perform_destroy(instance)
         return Response(
             {"success": True, "message": "Health record deleted successfully"},
             status=status.HTTP_204_NO_CONTENT,
         )
 
-    @extend_schema(tags=["Residential Care Program - Health"])
+    @extend_schema(tags=["Residential Care Program"])
     @action(detail=False, methods=["get"])
     def statistics(self, request):
         queryset = self.get_queryset()
@@ -210,7 +207,7 @@ class HealthRecordViewSet(viewsets.ModelViewSet):
         )
 
     @extend_schema(
-        tags=["Residential Care Program - Health"],
+        tags=["Residential Care Program"],
         parameters=[
             OpenApiParameter(
                 name="child_id", description="ID of the child", required=True, type=int
@@ -253,7 +250,7 @@ class HealthRecordViewSet(viewsets.ModelViewSet):
         )
 
     @extend_schema(
-        tags=["Residential Care Program - Health"],
+        tags=["Residential Care Program"],
         parameters=[
             OpenApiParameter(
                 name="condition",

@@ -24,8 +24,19 @@ SIMPLE_JWT = {
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Hameau des Jeunes',
-    'DESCRIPTION': 'Hameau des Jeunes API Documentations',
-    'VERSION': 'v1',
-    'SERVE_INCLUDE_SCHEMA': False,
+    "TITLE": "Hameau des Jeunes",
+    "DESCRIPTION": "Hameau des Jeunes API Documentations",
+    "VERSION": "v1",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SORT_OPERATIONS": True,
+    "SORT_OPERATION_PARAMETERS": True,
+    "TAGS": [
+        {"name": "Activity Logs"},
+        {"name": "Authentication of Managers"},
+        {"name": "IfasheTugufashe Program"},
+        {"name": "Internship - Applications"},
+        {"name": "Managers"},
+        {"name": "Public Modules"},
+        {"name": "Residential Care Program"},
+    ],
 }

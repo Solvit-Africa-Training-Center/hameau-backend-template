@@ -19,9 +19,9 @@ logger = logging.getLogger(__name__)
 
 
 @extend_schema(
-    tags=["IfasheTugufashe - Family "],
+    tags=["IfasheTugufashe Program"],
 )
-class IfasheFamilyViewSet(BulkActionMixin,viewsets.ModelViewSet):
+class IfasheFamilyViewSet(BulkActionMixin, viewsets.ModelViewSet):
     queryset = Family.objects.all().prefetch_related("parents", "children")
     serializer_class = IfasheFamilySerializer
     permission_classes = [IsIfasheManager]
@@ -51,11 +51,11 @@ class IfasheFamilyViewSet(BulkActionMixin,viewsets.ModelViewSet):
         old_instance = self.get_object()
         old_vulnerability = old_instance.vulnerability_level
         instance = serializer.save()
-        
+
         log_msg = f"User {self.request.user} updated family: {instance.family_name} (ID: {instance.id})"
         if old_vulnerability != instance.vulnerability_level:
             log_msg += f" | Vulnerability changed from {old_vulnerability} to {instance.vulnerability_level}"
-        
+
         logger.info(log_msg)
 
     def perform_destroy(self, instance):
@@ -66,33 +66,30 @@ class IfasheFamilyViewSet(BulkActionMixin,viewsets.ModelViewSet):
             f"User {self.request.user} deleted family: {family_name} (ID: {family_id})"
         )
 
-
-
     @extend_schema(
-    description="Bulk delete supported families. by providing a list of IDs.",
-    request=BulkActionSerializer,
-    responses={
-        200: inline_serializer(
-            name='BulkDeleteResponse',
-            fields={
-                'message': serializers.CharField(),
-                'action': serializers.CharField(),
-                'count': serializers.IntegerField(),
-                'async': serializers.BooleanField(),
-            }
-        ),
-        202: inline_serializer(
-            name='BulkDeleteAsyncResponse',
-            fields={
-                'message': serializers.CharField(),
-                'action': serializers.CharField(),
-                'count': serializers.IntegerField(),
-                'async': serializers.BooleanField(),
-            }
-        )
-    }
-)
-    
+        description="Bulk delete supported families. by providing a list of IDs.",
+        request=BulkActionSerializer,
+        responses={
+            200: inline_serializer(
+                name="BulkDeleteFamilyResponse",
+                fields={
+                    "message": serializers.CharField(),
+                    "action": serializers.CharField(),
+                    "count": serializers.IntegerField(),
+                    "async": serializers.BooleanField(),
+                },
+            ),
+            202: inline_serializer(
+                name="BulkDeleteFamilyAsyncResponse",
+                fields={
+                    "message": serializers.CharField(),
+                    "action": serializers.CharField(),
+                    "count": serializers.IntegerField(),
+                    "async": serializers.BooleanField(),
+                },
+            ),
+        },
+    )
     @action(detail=False, methods=["post"])
     def bulk_delete(self, request):
         return self.perform_bulk_action(
@@ -101,28 +98,27 @@ class IfasheFamilyViewSet(BulkActionMixin,viewsets.ModelViewSet):
             async_task=generic_bulk_task,
         )
 
-
     @extend_schema(
-    description="Bulk update fields for a list of supported families.",
-    request=BulkActionSerializer,
-    responses={
-        200: inline_serializer(
-            name='BulkUpdateResponse',
-            fields={
-                'message': serializers.CharField(),
-                'action': serializers.CharField(),
-                'count': serializers.IntegerField(),
-                'updated_fields': serializers.ListField(child=serializers.CharField()),
-                'async': serializers.BooleanField(),
-            }
-        ),
-        400: inline_serializer(
-            name='BulkUpdateError',
-            fields={'detail': serializers.CharField()}
-        )
-    }
-)
-    
+        description="Bulk update fields for a list of supported families.",
+        request=BulkActionSerializer,
+        responses={
+            200: inline_serializer(
+                name="BulkUpdateFamilyResponse",
+                fields={
+                    "message": serializers.CharField(),
+                    "action": serializers.CharField(),
+                    "count": serializers.IntegerField(),
+                    "updated_fields": serializers.ListField(
+                        child=serializers.CharField()
+                    ),
+                    "async": serializers.BooleanField(),
+                },
+            ),
+            400: inline_serializer(
+                name="BulkUpdateFamilyError", fields={"detail": serializers.CharField()}
+            ),
+        },
+    )
     @action(detail=False, methods=["post"])
     def bulk_update(self, request):
         return self.perform_bulk_action(
@@ -130,5 +126,3 @@ class IfasheFamilyViewSet(BulkActionMixin,viewsets.ModelViewSet):
             action_type="update",
             async_task=generic_bulk_task,
         )
-    
-    
