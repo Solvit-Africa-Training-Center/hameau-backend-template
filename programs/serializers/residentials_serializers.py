@@ -80,6 +80,9 @@ class ChildWriteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("The date seems to be incorrect.")
         return value
 
+    def validate_vigilant_contact_phone(self, value):
+        return validate_rwanda_phone(value)
+
     def validate(self, attrs):
         date_of_birth = attrs.get("date_of_birth")
         start_date = attrs.get("start_date")

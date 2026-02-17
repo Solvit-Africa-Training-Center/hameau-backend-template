@@ -13,7 +13,7 @@ __pycache__
 *.log
 logs/
 
-
+staticfiles/
 **/migrations/*
 !**/migrations/__init__.py
 
