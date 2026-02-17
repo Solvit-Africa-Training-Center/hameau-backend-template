@@ -1,0 +1,17 @@
+HAMEAU - MONTHLY PROGRESS UPDATE
+{{ report_month }} {{ report_year }}
+
+Dear Supporter,
+
+Here is the progress highlights for {{ child_name }} for the month of {{ report_month }}:
+
+--------------------------------------------------
+{{ ai_summary }}
+--------------------------------------------------
+
+Your generosity is creating a lasting impact. Thank you for being part of {{ child_name }}'s journey.
+
+View more details on your dashboard: {{ dashboard_url }}
+
+Best regards,
+The Hameau Team
