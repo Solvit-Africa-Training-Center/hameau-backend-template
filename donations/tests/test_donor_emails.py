@@ -22,16 +22,16 @@ class TestDonorEmails:
         
         # 2. Create a donor
         self.donor = Donor.objects.create(
-            fullname="John Donor",
-            email="john@example.com"
+            fullname="Sandrine Kwizera",
+            email="sandra@gmail.com"
         )
         
         # 3. Create a donation linked to the child
         self.donation = Donation.objects.create(
             donor=self.donor,
             child=self.child,
-            amount=50.00,
-            currency="USD",
+            amount=20000.00,
+            currency="RWF",
             donation_purpose="Monthly Support"
         )
         
@@ -53,7 +53,7 @@ class TestDonorEmails:
 
     @patch("donations.services.get_ai_summary")
     def test_send_monthly_donor_emails_command(self, mock_get_summary, setup_data):
-        mock_get_summary.return_value = "AI summary for Alice: She is doing well."
+        mock_get_summary.return_value = "Summary for Alice: She is doing well."
         
         # Run command
         call_command("send_monthly_donor_emails")
@@ -62,7 +62,7 @@ class TestDonorEmails:
         assert len(mail.outbox) == 1
         assert mail.outbox[0].to == [self.donor.email]
         assert "Monthly Progress Update" in mail.outbox[0].subject
-        assert "AI summary for Alice" in mail.outbox[0].body
+        assert "Summary for Alice" in mail.outbox[0].body
         
         # Check if log was created
         assert SponsorEmailLog.objects.filter(
@@ -73,7 +73,7 @@ class TestDonorEmails:
 
     @patch("donations.services.get_ai_summary")
     def test_duplicate_prevention(self, mock_get_summary, setup_data):
-        mock_get_summary.return_value = "AI summary content."
+        mock_get_summary.return_value = "Summary content."
         
         # Run command twice
         call_command("send_monthly_donor_emails")
@@ -81,11 +81,11 @@ class TestDonorEmails:
         
         # Second run should not send again
         call_command("send_monthly_donor_emails")
-        assert len(mail.outbox) == 1 # Still 1
+        assert len(mail.outbox) == 1 
 
     @patch("donations.services.get_ai_summary")
     def test_force_flag(self, mock_get_summary, setup_data):
-        mock_get_summary.return_value = "AI summary content."
+        mock_get_summary.return_value = "Summary content."
         
         call_command("send_monthly_donor_emails")
         assert len(mail.outbox) == 1

@@ -1,7 +1,8 @@
 import logging
 import openai
 from django.conf import settings
-from ..programs.models.residentials_models import ChildProgress
+from .models import ChildMonthlySummary
+from programs.models.residentials_models import ChildProgress
 
 logger = logging.getLogger(__name__)
 
