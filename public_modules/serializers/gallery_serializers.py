@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_field, OpenApiExample
 from drf_spectacular.types import OpenApiTypes
-from ..models.gallery_models import GalleryCategory, GalleryMedia
+from public_modules.models.gallery_models import GalleryCategory, GalleryMedia
 
 
 class GalleryCategorySerializer(serializers.ModelSerializer):  
