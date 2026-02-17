@@ -157,7 +157,6 @@ class SponsorEmailLog(TimeStampedModel):
     def __str__(self):
         return f"{self.donor.fullname} - {self.child.full_name} - {self.month}/{self.year}"
 
-
 class ChildMonthlySummary(TimeStampedModel):
     """
     AI-generated text summary of a child's progress for a specific month.

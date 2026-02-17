@@ -100,7 +100,7 @@ class DonationSerializer(serializers.ModelSerializer):
         
         # 1. Handle Recurring Logic
         if is_recurring:
-            from .services import calculate_next_deduction_date
+            from .tasks import calculate_next_deduction_date
             from django.utils import timezone
             now = timezone.now().date()
             interval = validated_data.get("recurring_interval")
@@ -108,16 +108,34 @@ class DonationSerializer(serializers.ModelSerializer):
 
         # 2. IremboPay Integration Pattern
         if payment_method == Donation.IREMBOPAY:
-            # Here we would typically call the IremboPay API to initiate a transaction
-            # and get a redirect URL or session token.
-            # Example Placeholder:
-            # irembo_session = irembo_service.create_session(
-            #     amount=validated_data['amount'],
-            #     donor_email=validated_data['donor'].email if validated_data.get('donor') else None,
-            #     is_recurring=is_recurring
-            # )
-            # validated_data['notes'] = f"Irembo Session ID: {irembo_session.id}"
-            pass
+            from .tasks import create_irembopay_invoice
+            
+            donor = validated_data.get('donor')
+            donor_name = donor.fullname if donor else "Anonymous"
+            donor_email = donor.email if donor else None
+            donor_phone = donor.phone if donor else None
+            
+            # Initiate IremboPay invoice
+            irembo_data = create_irembopay_invoice(
+                amount=validated_data['amount'],
+                donor_name=donor_name,
+                donor_email=donor_email,
+                donor_phone=donor_phone,
+                description=validated_data.get('donation_purpose', 'Donation')
+            )
+            
+            if irembo_data:
+                invoice_number = irembo_data.get('invoiceNumber')
+                payment_url = irembo_data.get('paymentLinkUrl')
+                
+                # Prepend the payment link to the notes for the user to find it easily
+                existing_notes = validated_data.get('notes', '')
+                irembo_info = f"Irembo Invoice: {invoice_number}\nPayment Link: {payment_url}"
+                validated_data['notes'] = f"{irembo_info}\n\n{existing_notes}" if existing_notes else irembo_info
+            else:
+                # If IremboPay fails, we might want to log it or raise a validation error
+                # For now, we'll let it proceed but note it in the notes.
+                validated_data['notes'] = "WARNING: IremboPay Invoice Creation Failed. Please check logs."
 
         return super().create(validated_data)
 

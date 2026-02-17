@@ -5,6 +5,7 @@ from django.core import mail
 from django.utils import timezone
 from unittest.mock import patch
 from donations.models import Donor, Donation, SponsorEmailLog
+from donations.tasks import send_monthly_donor_emails_task
 from programs.models.residentials_models import Child, ChildProgress
 
 @pytest.mark.django_db
@@ -40,9 +41,12 @@ class TestDonorEmails:
         first_day_current = today.replace(day=1)
         prev_month_date = first_day_current - datetime.timedelta(days=15)
         
-        ChildProgress.objects.create(
+        progress = ChildProgress.objects.create(
             child=self.child,
             notes="Alice is showing great enthusiasm in art class.",
+        )
+        # Update created_on to bypass auto_now_add
+        ChildProgress.objects.filter(id=progress.id).update(
             created_on=timezone.make_aware(datetime.datetime.combine(prev_month_date, datetime.time()))
         )
 
@@ -51,12 +55,12 @@ class TestDonorEmails:
         assert self.donation.donor == self.donor
         assert self.child.donations.count() == 1
 
-    @patch("donations.services.get_ai_summary")
+    @patch("donations.tasks.get_ai_summary")
     def test_send_monthly_donor_emails_command(self, mock_get_summary, setup_data):
         mock_get_summary.return_value = "Summary for Alice: She is doing well."
         
-        # Run command
-        call_command("send_monthly_donor_emails")
+        # Run task
+        send_monthly_donor_emails_task()
         
         # Check if email was sent
         assert len(mail.outbox) == 1
@@ -71,25 +75,25 @@ class TestDonorEmails:
             status="SUCCESS"
         ).exists()
 
-    @patch("donations.services.get_ai_summary")
+    @patch("donations.tasks.get_ai_summary")
     def test_duplicate_prevention(self, mock_get_summary, setup_data):
         mock_get_summary.return_value = "Summary content."
         
-        # Run command twice
-        call_command("send_monthly_donor_emails")
+        # Run task twice
+        send_monthly_donor_emails_task()
         assert len(mail.outbox) == 1
         
         # Second run should not send again
-        call_command("send_monthly_donor_emails")
+        send_monthly_donor_emails_task()
         assert len(mail.outbox) == 1 
 
-    @patch("donations.services.get_ai_summary")
+    @patch("donations.tasks.get_ai_summary")
     def test_force_flag(self, mock_get_summary, setup_data):
         mock_get_summary.return_value = "Summary content."
         
-        call_command("send_monthly_donor_emails")
+        send_monthly_donor_emails_task()
         assert len(mail.outbox) == 1
         
         # Should send again with force
-        call_command("send_monthly_donor_emails", force=True)
+        send_monthly_donor_emails_task(force=True)
         assert len(mail.outbox) == 2

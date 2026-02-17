@@ -1,9 +1,8 @@
-
 import pytest
 import datetime
 from django.utils import timezone
 from programs.models import Child, ChildProgress
-from ..services import get_ai_summary
+from ..tasks import get_ai_summary
 
 @pytest.mark.django_db
 def test_ai_summary_generation():
