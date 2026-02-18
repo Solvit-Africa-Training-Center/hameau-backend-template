@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from drf_spectacular.utils import extend_schema_field, OpenApiExample
+from drf_spectacular.utils import extend_schema_field
 from drf_spectacular.types import OpenApiTypes
 from public_modules.models.gallery_models import GalleryCategory, GalleryMedia
 

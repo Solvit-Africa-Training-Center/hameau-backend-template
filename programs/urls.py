@@ -31,6 +31,7 @@ from .views import (
     ResidentialFinanceExcelReportView,
     ResidentialFinancePDFReportView,
     InternshipApplicationViewSet,
+    ChildCaretakerAssignmentViewSet
 )
 
 router = DefaultRouter()
@@ -42,6 +43,7 @@ router.register(
     EducationInstitutionViewSet,
     basename="-residential-care-institution",
 )
+router.register("children-caretaker",ChildCaretakerAssignmentViewSet, basename="children_caretaker")
 router.register(
     "children_educational_programs", EducationProgramViewSet, basename="program"
 )
