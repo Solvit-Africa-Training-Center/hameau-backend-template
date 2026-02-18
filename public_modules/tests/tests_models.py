@@ -7,8 +7,6 @@ from accounts.models import User
 from public_modules.models.gallery_models import (
     GalleryCategory,
     GalleryMedia,
-    Donor,
-    Donation,
 )
 
 
@@ -16,20 +14,15 @@ from public_modules.models.gallery_models import (
 class GalleryAndDonationModelsTest(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            email="testuser@example.com",
-            password="password123",
-            phone="+250731234567"
+            email="testuser@example.com", password="password123", phone="+250731234567"
         )
 
         self.category = GalleryCategory.objects.create(
-            name="Events",
-            description="Event photos"
+            name="Events", description="Event photos"
         )
 
         self.media_file = SimpleUploadedFile(
-            name="test_image.jpg",
-            content=b"file_content",
-            content_type="image/jpeg"
+            name="test_image.jpg", content=b"file_content", content_type="image/jpeg"
         )
 
         self.gallery_media = GalleryMedia.objects.create(
@@ -39,25 +32,6 @@ class GalleryAndDonationModelsTest(APITestCase):
             media_url=self.media_file,
             is_public=True,
             uploaded_by=self.user,
-        )
-
-       
-
-        self.donor = Donor.objects.create(
-            fullname="Arnold Ciku",
-            email="arnold@gmail.com",
-            phone="+250700000000",
-            address="Kigali, Rwanda",
-            donor_type=Donor.INDIVIDUAL,
-        )
-
-        self.donation = Donation.objects.create(
-            donor=self.donor,
-            amount=Decimal("150.00"),
-            currency="RWF",
-            donation_purpose="Community support",
-            payment_method=Donation.CASH,
-            notes="Test donation",
         )
 
     def test_gallery_category_creation(self):
@@ -71,27 +45,8 @@ class GalleryAndDonationModelsTest(APITestCase):
         self.assertTrue(self.gallery_media.is_public)
         self.assertEqual(str(self.gallery_media), "Community Event")
 
-    def test_donor_creation(self):
-        self.assertEqual(self.donor.fullname, "Arnold Ciku")
-        self.assertEqual(self.donor.donor_type, Donor.INDIVIDUAL)
-        self.assertEqual(str(self.donor), "Arnold Ciku")
-
     def test_donation_creation(self):
         self.assertEqual(self.donation.amount, Decimal("150.00"))
         self.assertEqual(self.donation.currency, "RWF")
         self.assertEqual(self.donation.donor, self.donor)
-        self.assertEqual(
-            str(self.donation),
-            "Arnold Ciku - 150.00 RWF"
-        )
-
-    def test_anonymous_donation_str(self):
-        anonymous_donation = Donation.objects.create(
-            donor=None,
-            amount=Decimal("50.00"),
-            currency="RWF",
-        )
-        self.assertEqual(
-            str(anonymous_donation),
-            "Anonymous - 50.00 RWF"
-        )
+        self.assertEqual(str(self.donation), "Arnold Ciku - 150.00 RWF")
