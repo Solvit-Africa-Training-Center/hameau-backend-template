@@ -10,8 +10,10 @@ dbc.sqlite3
 *.pyc
 __pycache__
 *.swp
+*.log
+logs/
 
-
+staticfiles/
 **/migrations/*
 !**/migrations/__init__.py
 

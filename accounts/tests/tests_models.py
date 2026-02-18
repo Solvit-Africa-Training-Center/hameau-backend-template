@@ -9,7 +9,10 @@ from rest_framework.test import APITestCase
 from accounts.models import (
     User,
     VerificationCode,
+    ActivityLog,
 )
+from utils.activity_log import record_activity
+from django.test import RequestFactory
 
 
 class UserManagerTests(APITestCase):
@@ -125,7 +128,6 @@ class VerificationCodeModelTests(APITestCase):
             user=self.user,
             code="123456",
             purpose=VerificationCode.EMAIL_VERIFICATION,
-            expires_on=timezone.now() + timedelta(minutes=10),
         )
 
     def test_verification_code_uuid_generated(self):
@@ -141,18 +143,72 @@ class VerificationCodeModelTests(APITestCase):
         expected = f"{self.user.email} - {self.code.purpose} - {self.code.code}"
         self.assertEqual(str(self.code), expected)
 
-    def test_verification_code_expiry_in_future(self):
-        self.assertGreater(self.code.expires_on, timezone.now())
+    def test_verification_code_is_valid(self):
+        self.assertTrue(self.code.is_valid)
 
     def test_user_can_have_multiple_verification_codes(self):
         VerificationCode.objects.create(
             user=self.user,
             code="654321",
             purpose=VerificationCode.PASSWORD_RESET,
-            expires_on=timezone.now() + timedelta(minutes=5),
         )
         self.assertEqual(self.user.verification_codes.count(), 2)
 
     def test_verification_code_index_fields_exist(self):
         indexes = [index.fields for index in VerificationCode._meta.indexes]
         self.assertIn(["code", "purpose"], indexes)
+
+class ActivityLogTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="admin@hameau.com",
+            password="adminpassword",
+            first_name="Admin",
+            last_name="System",
+            phone="0788888888",
+            role=User.ADMIN,
+        )
+        self.factory = RequestFactory()
+
+    def test_activity_log_creation(self):
+        log = ActivityLog.objects.create(
+            user=self.user,
+            action="TEST_ACTION",
+            resource="TestResource",
+            resource_id="123",
+            details={"key": "value"},
+            ip_address="127.0.0.1",
+        )
+        self.assertEqual(log.user, self.user)
+        self.assertEqual(log.action, "TEST_ACTION")
+        self.assertEqual(log.details["key"], "value")
+
+    def test_record_activity_helper(self):
+        request = self.factory.get("/")
+        request.user = self.user
+        
+        record_activity(
+            request,
+            action="HELPER_TEST",
+            resource="HelperResource",
+            resource_id="456",
+            details={"foo": "bar"}
+        )
+        
+        log = ActivityLog.objects.get(action="HELPER_TEST")
+        self.assertEqual(log.user, self.user)
+        self.assertEqual(log.resource, "HelperResource")
+        self.assertEqual(log.details["foo"], "bar")
+
+    def test_record_activity_unauthenticated(self):
+        from django.contrib.auth.models import AnonymousUser
+        request = self.factory.get("/")
+        request.user = AnonymousUser()
+        
+        record_activity(
+            request,
+            action="ANONYMOUS_ACTION"
+        )
+        
+        log = ActivityLog.objects.get(action="ANONYMOUS_ACTION")
+        self.assertIsNone(log.user)

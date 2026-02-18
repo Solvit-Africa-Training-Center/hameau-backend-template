@@ -110,7 +110,7 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
         return f"{self.first_name} {self.last_name} ({self.email})"
 
     @property
-    def full_name(self):
+    def full_name(self) -> str:
         return f"{self.first_name} {self.last_name}".strip()
 
 
@@ -141,10 +141,33 @@ class VerificationCode(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.purpose} - {self.code}"
-    
+
     @property
-    def is_valid(self):           
+    def is_valid(self):
         expire_time = self.created_on + settings.VERIFICATION_CODE_LIFETIME
         return expire_time > timezone.now() and not self.is_used
-    
-    
+
+
+class ActivityLog(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="activity_logs",
+    )
+    action = models.CharField(max_length=255)
+    resource = models.CharField(max_length=255, null=True, blank=True)
+    resource_id = models.CharField(max_length=255, null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    details = models.JSONField(null=True, blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+
+    class Meta:
+        db_table = "activity_logs"
+        ordering = ["-timestamp"]
+        verbose_name = "Activity Log"
+        verbose_name_plural = "Activity Logs"
+
+    def __str__(self):
+        return f"{self.user} - {self.action} - {self.timestamp}"

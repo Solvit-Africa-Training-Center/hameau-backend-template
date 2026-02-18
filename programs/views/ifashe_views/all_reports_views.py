@@ -21,14 +21,16 @@ from utils.reports.ifashe.supports_reports import (
     SupportExcelReport,
 )
 from drf_spectacular.utils import extend_schema
+from drf_spectacular.types import OpenApiTypes
 
 
 class IfasheSummaryPDFReportView(APIView):
     permission_classes = [IsAuthenticated, IsIfasheManager]
 
     @extend_schema(
-        tags=["Ifashe Export"],
+        tags=["IfasheTugufashe Program"],
         description="Generates the IFASHE Global Summary Report in PDF format.",
+        responses={200: OpenApiTypes.BINARY},
     )
     def get(self, request):
         filename = safe_filename("ifashe_summary_report", "pdf")
@@ -49,8 +51,9 @@ class IfasheSummaryExcelReportView(APIView):
     permission_classes = [IsAuthenticated, IsIfasheManager]
 
     @extend_schema(
-        tags=["Ifashe Export"],
+        tags=["IfasheTugufashe Program"],
         description="Generates the IFASHE TUGUFASHE Global Summary Report in Excel format.",
+        responses={200: OpenApiTypes.BINARY},
     )
     def get(self, request):
         filename = safe_filename("ifashe_summary_report", "xlsx")
@@ -72,7 +75,8 @@ class IfasheSupportPDFReportView(APIView):
 
     @extend_schema(
         description="Generates the IFASHE Support Report (School + Clothes) in PDF format.",
-        tags=["Ifashe Export"],
+        tags=["IfasheTugufashe Program"],
+        responses={200: OpenApiTypes.BINARY},
     )
     def get(self, request):
         filename = safe_filename("ifashe_support_report", "pdf")
@@ -89,12 +93,13 @@ class IfasheSupportPDFReportView(APIView):
         )
 
 
-class IfasheSupportExcelReportView(APIView): 
+class IfasheSupportExcelReportView(APIView):
     permission_classes = [IsAuthenticated, IsIfasheManager]
 
     @extend_schema(
         description="Generates the IFASHE Support Report (School + Clothes) in Excel format.",
-        tags=["Ifashe Export"],
+        tags=["IfasheTugufashe Program"],
+        responses={200: OpenApiTypes.BINARY},
     )
     def get(self, request):
         filename = safe_filename("ifashe_support_report", "xlsx")
@@ -116,7 +121,8 @@ class ParentWorkPDFReportView(APIView):
 
     @extend_schema(
         description="Generates the Parent Work Requirement Report in PDF format.",
-        tags=["Ifashe Export"],
+        tags=["IfasheTugufashe Program"],
+        responses={200: OpenApiTypes.BINARY},
     )
     def get(self, request):
         filename = safe_filename("ifashe_parent_work_report", "pdf")
@@ -138,7 +144,8 @@ class ParentWorkExcelReportView(APIView):
 
     @extend_schema(
         description="Generates the Parent Work Requirement Report in Excel format.",
-        tags=["Ifashe Export"],
+        tags=["IfasheTugufashe Program"],
+        responses={200: OpenApiTypes.BINARY},
     )
     def get(self, request):
         filename = safe_filename("ifashe_parent_work_report", "xlsx")
@@ -160,7 +167,8 @@ class FamilyOverviewPDFReportView(APIView):
 
     @extend_schema(
         description="Generates the Family Overview Report in PDF format.",
-        tags=["Ifashe Export"],
+        tags=["IfasheTugufashe Program"],
+        responses={200: OpenApiTypes.BINARY},
     )
     def get(self, request):
         filename = safe_filename("ifashe_family_overview", "pdf")
@@ -182,7 +190,8 @@ class FamilyOverviewExcelReportView(APIView):
 
     @extend_schema(
         description="Generates the Family Overview Report in Excel format.",
-        tags=["Ifashe Export"],
+        tags=["IfasheTugufashe Program"],
+        responses={200: OpenApiTypes.BINARY},
     )
     def get(self, request):
         filename = safe_filename("ifashe_family_overview", "xlsx")

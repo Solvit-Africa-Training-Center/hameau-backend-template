@@ -21,7 +21,7 @@ class Child(TimeStampedModel, SoftDeleteModel):
     ACTIVE = "ACTIVE"
     COMPLETED = "COMPLETED"
     LEFT = "LEFT"
-    STATUS_CHOICES = [
+    STATUS_CHILD_CHOICES = [
         (ACTIVE, "Active"),
         (COMPLETED, "Completed"),
         (LEFT, "Left"),
@@ -34,7 +34,7 @@ class Child(TimeStampedModel, SoftDeleteModel):
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
     profile_image = models.ImageField(upload_to="profile_images_children/", blank=True)
     start_date = models.DateField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=ACTIVE)
+    status = models.CharField(max_length=20, choices=STATUS_CHILD_CHOICES, default=ACTIVE)
     special_needs = models.TextField(blank=True)
     vigilant_contact_name = models.CharField(max_length=100, blank=True)
     vigilant_contact_phone = models.CharField(max_length=20, blank=True)
@@ -49,7 +49,7 @@ class Child(TimeStampedModel, SoftDeleteModel):
         return f"{self.first_name} {self.last_name}"
 
     @property
-    def full_name(self):
+    def full_name(self) -> str:
         return f"{self.first_name} {self.last_name}"
 
     @property
@@ -133,7 +133,7 @@ class Caretaker(TimeStampedModel, SoftDeleteModel):
         return f"{self.first_name} {self.last_name}"
 
     @property
-    def full_name(self):
+    def full_name(self) -> str:
         return f"{self.first_name} {self.last_name}"
 
 
@@ -222,7 +222,7 @@ class ChildEducation(TimeStampedModel):
     COMPLETED = "COMPLETED"
     DISCONTINUED = "DISCONTINUED"
 
-    STATUS_CHOICES = [
+    STATUS_EDUCATION_CHOICES = [
         (ACTIVE, "Active"),
         (COMPLETED, "Completed"),
         (DISCONTINUED, "Discontinued"),
@@ -237,7 +237,7 @@ class ChildEducation(TimeStampedModel):
     )
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_EDUCATION_CHOICES, blank=True)
     cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     notes = models.TextField(blank=True)
 
@@ -324,7 +324,7 @@ class FoodItem(TimeStampedModel):
         return f"{self.item_description[:50]} - {self.supplier.name}"
 
     @property
-    def total_cost(self):
+    def total_cost(self) -> str:
         if self.quantity and self.unit_cost:
             return self.quantity * self.unit_cost
         return 0
@@ -383,7 +383,7 @@ class ResidentialFinancialPlan(TimeStampedModel):
         return f"{self.child} - {self.month}/{self.year}"
 
     @property
-    def total_cost(self):
+    def total_cost(self) -> str:
         return (
             self.education_cost
             + self.food_cost
@@ -420,7 +420,7 @@ class HealthRecord(TimeStampedModel, SoftDeleteModel):
         validators=[MinValueValidator(Decimal("0.00"))],
         help_text="Cost in RWF (Rwandan Francs)",
     )
-    
+
     class Meta:
         db_table = "health_records"
         ordering = ["-visit_date", "-created_on"]

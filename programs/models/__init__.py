@@ -17,7 +17,7 @@ from .ifashe_models import (
     ParentAttendance,
     ParentPerformance,
 )
-from . residentials_models import (
+from .residentials_models import (
     Child,
     ChildProgress,
     ProgressMedia,
