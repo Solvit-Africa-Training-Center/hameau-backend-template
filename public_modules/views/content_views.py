@@ -1,11 +1,16 @@
 from rest_framework import viewsets, mixins
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 
 from utils.permissions import IsAdminUserOrReadOnly
-from utils.paginators import StandardResultsSetPagination
 
 from public_modules.models.content_models import PublicContent, TeamMember, ContactMessage
 from public_modules.serializers.content_serializers import PublicContentSerializer, TeamMemberSerializer, ContactMessageSerializer
+
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 9
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 class BasePublicContentViewSet(viewsets.ReadOnlyModelViewSet):
    

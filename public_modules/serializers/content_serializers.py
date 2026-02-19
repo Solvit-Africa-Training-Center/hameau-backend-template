@@ -68,6 +68,7 @@ class PublicContentSerializer(serializers.ModelSerializer):
                 
         except Exception as e:
             
+            print(f"Error calculating dynamic stats: {e}")
             pass
 
 

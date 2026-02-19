@@ -322,7 +322,7 @@ class RequestPasswordResetView(APIView):
         serializer = RequestPasswordResetSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        logger.info("Succefully sent the code to the user email")
+        logger.log("Succefully sent the code to the user email")
         return Response(
             {"message": "Password reset code sent to your email"},
             status=status.HTTP_200_OK,
