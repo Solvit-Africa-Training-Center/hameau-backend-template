@@ -1,13 +1,10 @@
 from .gallery_models import GalleryCategory, GalleryMedia
-from .impact_models import ImpactStatistic, ContactMessage, ContactInfo
-from .team_models import TeamMember
+from .content_models import PublicContent, ContactMessage, TeamMember
 
 __all__ = [
     'GalleryCategory',
     'GalleryMedia',
-    'ImpactStatistic',
+    'PublicContent',
     'ContactMessage',
-    'ContactInfo',
     'TeamMember',
-]
-
+] 

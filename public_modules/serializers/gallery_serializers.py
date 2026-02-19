@@ -101,7 +101,7 @@ class BulkGalleryMediaUploadSerializer(serializers.Serializer):
         valid_mime_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
         
         for image in value:
-            # Check file extension
+            
             file_ext = image.name.lower().split('.')[-1]
             if f'.{file_ext}' not in valid_extensions:
                 raise serializers.ValidationError(
@@ -109,14 +109,14 @@ class BulkGalleryMediaUploadSerializer(serializers.Serializer):
                     f"Allowed: {', '.join(valid_extensions)}"
                 )
             
-            # Check MIME type if available
+            
             if hasattr(image, 'content_type') and image.content_type:
                 if image.content_type not in valid_mime_types:
                     raise serializers.ValidationError(
                         f"File {image.name} has invalid MIME type: {image.content_type}"
                     )
             
-            # Check file size (max 10MB per image)
+            
             max_size = 10 * 1024 * 1024  # 10MB
             if image.size > max_size:
                 raise serializers.ValidationError(
@@ -136,7 +136,7 @@ class BulkGalleryMediaUploadSerializer(serializers.Serializer):
         created_media = []
         
         for index, image in enumerate(images, start=1):
-            # Generate title from filename if no prefix provided
+         
             if title_prefix:
                 title = f"{title_prefix} {index}"
             else:

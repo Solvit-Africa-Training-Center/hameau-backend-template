@@ -2,109 +2,9 @@ import pytest
 from django.test import TestCase
 from django.utils import timezone
 from uuid import UUID
-from public_modules.models.impact_models import ImpactStatistic, ContactMessage, ContactInfo
-from public_modules.models.team_models import TeamMember
 
+from public_modules.models.content_models import ContactMessage, TeamMember, PublicContent
 
-@pytest.mark.django_db
-class TestImpactStatistic(TestCase):
-    """Test cases for ImpactStatistic model"""
-    
-    def setUp(self):
-        """Set up test data"""
-        self.impact = ImpactStatistic.objects.create(
-            title="Children Supported",
-            value="500+",
-            description="Total children supported by our programs",
-            order=1,
-            is_active=True
-        )
-    
-    def test_impact_statistic_creation(self):
-        """Test creating an impact statistic"""
-        self.assertEqual(self.impact.title, "Children Supported")
-        self.assertEqual(self.impact.value, "500+")
-        self.assertIsInstance(self.impact.id, UUID)
-        self.assertTrue(self.impact.is_active)
-    
-    def test_impact_statistic_str(self):
-        """Test string representation"""
-        expected_str = "Children Supported: 500+"
-        self.assertEqual(str(self.impact), expected_str)
-    
-    def test_impact_statistic_ordering(self):
-        """Test impact statistics are ordered by 'order' field"""
-        impact2 = ImpactStatistic.objects.create(
-            title="Communities Reached",
-            value="25",
-            order=2,
-            is_active=True
-        )
-        impact3 = ImpactStatistic.objects.create(
-            title="Staff Members",
-            value="40",
-            order=0,
-            is_active=True
-        )
-        
-        impacts = list(ImpactStatistic.objects.all())
-        self.assertEqual(impacts[0].order, 0)
-        self.assertEqual(impacts[1].order, 1)
-        self.assertEqual(impacts[2].order, 2)
-    
-    def test_impact_statistic_inactive(self):
-        """Test inactive impact statistics"""
-        inactive = ImpactStatistic.objects.create(
-            title="Inactive Stat",
-            value="0",
-            is_active=False
-        )
-        active_count = ImpactStatistic.objects.filter(is_active=True).count()
-        self.assertEqual(active_count, 1)  # Only self.impact is active
-
-
-@pytest.mark.django_db
-class TestContactInfo(TestCase):
-    """Test cases for ContactInfo model"""
-    
-    def setUp(self):
-        """Set up test data"""
-        self.contact_info = ContactInfo.objects.create(
-            email="info@example.com",
-            phone="+1 (555) 123-4567",
-            address="123 Main St, City, State 12345",
-            is_active=True
-        )
-    
-    def test_contact_info_creation(self):
-        """Test creating contact information"""
-        self.assertEqual(self.contact_info.email, "info@example.com")
-        self.assertEqual(self.contact_info.phone, "+1 (555) 123-4567")
-        self.assertIn("Main St", self.contact_info.address)
-        self.assertTrue(self.contact_info.is_active)
-    
-    def test_contact_info_str(self):
-        """Test string representation"""
-        expected_str = "Contact Info - info@example.com"
-        self.assertEqual(str(self.contact_info), expected_str)
-    
-    def test_contact_info_timestamps(self):
-        """Test created_on and updated_on timestamps"""
-        self.assertIsNotNone(self.contact_info.created_on)
-        self.assertIsNotNone(self.contact_info.updated_on)
-        self.assertLessEqual(self.contact_info.created_on, self.contact_info.updated_on)
-    
-    def test_contact_info_single_active(self):
-        """Test retrieving single active contact info"""
-        inactive = ContactInfo.objects.create(
-            email="old@example.com",
-            phone="555",
-            address="Old Address",
-            office_hours="N/A",
-            is_active=False
-        )
-        active = ContactInfo.objects.filter(is_active=True).first()
-        self.assertEqual(active.email, "info@example.com")
 
 
 @pytest.mark.django_db
@@ -182,37 +82,33 @@ class TestTeamMember(TestCase):
     def setUp(self):
         """Set up test data"""
         self.member = TeamMember.objects.create(
-            first_name="Alice",
-            last_name="Johnson",
-            role="Program Director",
+            name="Alice Johnson",
+            title="Program Director",
             order=1,
             is_active=True
         )
     
     def test_team_member_creation(self):
         """Test creating a team member"""
-        self.assertEqual(self.member.first_name, "Alice")
-        self.assertEqual(self.member.last_name, "Johnson")
-        self.assertEqual(self.member.role, "Program Director")
+        self.assertEqual(self.member.name, "Alice Johnson")
+        self.assertEqual(self.member.title, "Program Director")
         self.assertTrue(self.member.is_active)
     
     def test_team_member_str(self):
         """Test string representation"""
-        expected_str = "Alice Johnson"
+        expected_str = "Alice Johnson - Program Director"
         self.assertEqual(str(self.member), expected_str)
     
     def test_team_member_ordering(self):
         """Test team members ordered by 'order' field"""
         member2 = TeamMember.objects.create(
-            first_name="Bob",
-            last_name="Williams",
-            role="Finance Manager",
+            name="Bob Williams",
+            title="Finance Manager",
             order=2
         )
         member3 = TeamMember.objects.create(
-            first_name="Carol",
-            last_name="Brown",
-            role="Executive Director",
+            name="Carol Brown",
+            title="Executive Director",
             order=0
         )
         
@@ -224,9 +120,8 @@ class TestTeamMember(TestCase):
     def test_team_member_active_filter(self):
         """Test filtering active team members"""
         inactive_member = TeamMember.objects.create(
-            first_name="David",
-            last_name="Lee",
-            role="Consultant",
+            name="David Lee",
+            title="Consultant",
             is_active=False
         )
         
@@ -237,26 +132,20 @@ class TestTeamMember(TestCase):
     def test_team_member_without_photo(self):
         """Test creating team member without optional photo"""
         member = TeamMember.objects.create(
-            first_name="Eve",
-            last_name="Davis",
-            role="Intern"
+            name="Eve Davis",
+            title="Intern"
         )
-        # photo should be blank if not provided
-        self.assertTrue(member.photo == "" or member.photo is None)
+        # image should be blank if not provided
+        self.assertTrue(member.image == "" or member.image is None)
 
 
 @pytest.mark.django_db
 class TestDynamicDataIntegration(TestCase):
-    """Integration tests for all dynamic data models"""
+    """Integration tests for remaining public modules models"""
     
     def test_all_models_have_uuid_id(self):
         """Test all models use UUID primary key"""
-        impact = ImpactStatistic.objects.create(title="Test", value="100")
-        contact_info = ContactInfo.objects.create(
-            email="test@test.com",
-            phone="555",
-            address="Test"
-        )
+        content = PublicContent.objects.create(category=PublicContent.CATEGORY_TEAM, title="Test", is_active=True)
         message = ContactMessage.objects.create(
             first_name="Test",
             last_name="User",
@@ -265,30 +154,25 @@ class TestDynamicDataIntegration(TestCase):
             message="Test message"
         )
         member = TeamMember.objects.create(
-            first_name="Test",
-            last_name="Member",
-            role="Test Role"
+            name="Test Member",
+            title="Test Role"
         )
         
-        self.assertIsInstance(impact.id, UUID)
-        self.assertIsInstance(contact_info.id, UUID)
+        self.assertIsInstance(content.id, UUID)
         self.assertIsInstance(message.id, UUID)
         self.assertIsInstance(member.id, UUID)
     
     def test_all_models_have_timestamps(self):
         """Test all models have created_on and updated_on"""
-        impact = ImpactStatistic.objects.create(title="Test", value="100")
-        contact_info = ContactInfo.objects.create(
-            email="test@test.com", phone="555", address="Test"
-        )
+        content = PublicContent.objects.create(category=PublicContent.CATEGORY_TEAM, title="Test", is_active=True)
         message = ContactMessage.objects.create(
             first_name="Test", last_name="User", email="test@test.com",
             subject="Test", message="Test"
         )
         member = TeamMember.objects.create(
-            first_name="Test", last_name="Member", role="Test"
+            name="Test Member", title="Test Role"
         )
         
-        for obj in [impact, contact_info, message, member]:
+        for obj in [content, message, member]:
             self.assertIsNotNone(obj.created_on)
             self.assertIsNotNone(obj.updated_on)

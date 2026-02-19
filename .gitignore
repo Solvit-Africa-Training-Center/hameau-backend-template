@@ -17,8 +17,6 @@ gitignore
 
 **/migrations/*
 !**/migrations/__init__.py
-
 hameau-backend-template.code-workspace
-
-
+scripts/
 
