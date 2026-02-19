@@ -96,7 +96,7 @@ class BulkGalleryMediaUploadSerializer(serializers.Serializer):
     )
     
     def validate_images(self, value):
-        """Validate that all files are valid images"""
+        
         valid_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
         valid_mime_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
         

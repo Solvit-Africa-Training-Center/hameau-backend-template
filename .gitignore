@@ -3,7 +3,6 @@ __pycache__/
 .vscode/
 venv/
 env/
-.pytest_cache/
 
 dbc.sqlite3
 .env
@@ -19,7 +18,3 @@ gitignore
 !**/migrations/__init__.py
 hameau-backend-template.code-workspace
 scripts/
-*.log
-logs/
-
-

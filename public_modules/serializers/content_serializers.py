@@ -68,7 +68,6 @@ class PublicContentSerializer(serializers.ModelSerializer):
                 
         except Exception as e:
             
-            print(f"Error calculating dynamic stats: {e}")
             pass
 
 
@@ -105,3 +104,12 @@ class ContactMessageSerializer(serializers.ModelSerializer):
             "created_on",
         ]
         read_only_fields = ["id", "created_on"]
+
+    def create(self, validated_data):
+        instance = super().create(validated_data)
+        try:
+            from utils.emails import send_contact_message_email
+            send_contact_message_email(instance)
+        except Exception as e:
+            print(f"Failed to send email: {e}")
+        return instance

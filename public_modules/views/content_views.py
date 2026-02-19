@@ -1,15 +1,11 @@
-from rest_framework import viewsets, mixins, status
-from rest_framework.pagination import PageNumberPagination
+from rest_framework import viewsets, mixins
 from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
 
-from ..models.content_models import PublicContent, TeamMember, ContactMessage
-from ..serializers.content_serializers import PublicContentSerializer, TeamMemberSerializer, ContactMessageSerializer
+from utils.permissions import IsAdminUserOrReadOnly
+from utils.paginators import StandardResultsSetPagination
 
-class StandardResultsSetPagination(PageNumberPagination):
-    page_size = 9
-    page_size_query_param = 'page_size'
-    max_page_size = 100
+from public_modules.models.content_models import PublicContent, TeamMember, ContactMessage
+from public_modules.serializers.content_serializers import PublicContentSerializer, TeamMemberSerializer, ContactMessageSerializer
 
 class BasePublicContentViewSet(viewsets.ReadOnlyModelViewSet):
    
@@ -35,11 +31,6 @@ class TeamViewSet(BasePublicContentViewSet):
     def get_queryset(self):
         return TeamMember.objects.filter(is_active=True).order_by('order', 'name')
 
-class IsAdminUserOrReadOnly(AllowAny):
-    def has_permission(self, request, view):
-        if request.method in ['GET', 'HEAD', 'OPTIONS']:
-            return True
-        return request.user and request.user.is_staff
 
 class StoryViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminUserOrReadOnly]
@@ -55,18 +46,3 @@ class ContactMessageViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     serializer_class = ContactMessageSerializer
     permission_classes = [AllowAny]
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        instance = serializer.save()
-
-        try:
-            from utils.emails import send_contact_message_email
-           
-            send_contact_message_email(instance)
-        except Exception as e:
-           
-            print(f"Failed to send email: {e}")
-
-        headers = self.get_success_headers(serializer.data)
-        return Response("Message submitted successfully", status=status.HTTP_201_CREATED, headers=headers)
