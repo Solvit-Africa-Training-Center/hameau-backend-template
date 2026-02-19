@@ -81,20 +81,12 @@ class PublicContent(TimeStampedModel):
 class ContactMessage(TimeStampedModel):
 
 
-    PENDING = "PENDING"
-    RESOLVED = "RESOLVED"
-    IN_PROGRESS = "IN_PROGRESS"
-    STATUS_CHOICES = [
-        (PENDING, "Pending"),
-        (RESOLVED, "Resolved"),
-        (IN_PROGRESS, "In Progress"),
-    ]
-
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     first_name = models.CharField(max_length=100, help_text="First name of the sender")
     last_name = models.CharField(max_length=100, help_text="Last name of the sender")
     email = models.EmailField(max_length=255)
     phone = models.CharField(max_length=20, blank=True, null=True)
+    
     REASON_QUESTION = "QUESTION"
     REASON_PARTNERSHIP = "PARTNERSHIP"
     REASON_SUPPORT = "SUPPORT"
@@ -106,7 +98,7 @@ class ContactMessage(TimeStampedModel):
 
     reason = models.CharField(max_length=50, choices=REASON_CHOICES, default=REASON_QUESTION, help_text="Reason to contact")
     message = models.TextField(default="")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
+    
     admin_notes = models.TextField(blank=True, null=True)
 
     class Meta:
