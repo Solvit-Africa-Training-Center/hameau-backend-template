@@ -125,7 +125,6 @@ class TeamMember(TimeStampedModel):
     def __str__(self):
         return f"{self.name} - {self.title}"
 
-
 class SuccessStory(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=200, help_text="Story Title")

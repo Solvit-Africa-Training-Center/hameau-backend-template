@@ -1,0 +1,16 @@
+New Contact Message Received
+============================
+
+A new message has been received through the public website contact form.
+
+Name: {{ fullname }}
+Email: {{ email }}
+Phone: {{ phone|default:"Not provided" }}
+Reason: {{ reason }}
+
+Message:
+--------
+{{ message }}
+
+--
+This automated email was sent by the Hameau Backend API.
