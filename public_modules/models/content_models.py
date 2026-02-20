@@ -6,11 +6,17 @@ from accounts.models import TimeStampedModel
 
 class PublicContent(TimeStampedModel):
     CATEGORY_IMPACT = "IMPACT"
+    CATEGORY_TEAM = "TEAM"
+    CATEGORY_SUCCESS_STORY = "SUCCESS_STORY"
     CATEGORY_CONTACT_INFO = "CONTACT_INFO"
+    CATEGORY_CONTACT_MESSAGE = "CONTACT_MESSAGE"
 
     CATEGORY_CHOICES = [
         (CATEGORY_IMPACT, "Impact Statistic"),
+        (CATEGORY_TEAM, "Team Member"),
+        (CATEGORY_SUCCESS_STORY, "Success Story"),
         (CATEGORY_CONTACT_INFO, "Contact Info"),
+        (CATEGORY_CONTACT_MESSAGE, "Contact Message"),
     ]
 
     IMPACT_CHILDREN = "CHILDREN"
@@ -52,7 +58,8 @@ class PublicContent(TimeStampedModel):
     is_active = models.BooleanField(default=True)
     email = models.EmailField(max_length=255, blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
-    full_name = models.CharField(max_length=200, blank=True, null=True)
+    first_name = models.CharField(max_length=100, blank=True, null=True)
+    last_name = models.CharField(max_length=100, blank=True, null=True)
     admin_notes = models.TextField(blank=True, null=True)
 
     class Meta:
@@ -66,8 +73,8 @@ class PublicContent(TimeStampedModel):
 
     @property
     def fullname(self):
-        if self.full_name:
-            return self.full_name.strip()
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}".strip()
         return self.title
 
 
@@ -124,6 +131,7 @@ class TeamMember(TimeStampedModel):
 
     def __str__(self):
         return f"{self.name} - {self.title}"
+
 
 class SuccessStory(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
