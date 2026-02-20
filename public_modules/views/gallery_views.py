@@ -23,6 +23,7 @@ from ..serializers.gallery_serializers import (
     BulkUploadResponseSerializer,
     CategoryStatsResponseSerializer,
 )
+from ..pagination import PublicModulePagination
 
 
 @extend_schema_view(
@@ -96,6 +97,7 @@ class GalleryCategoryViewSet(viewsets.ModelViewSet):
     search_fields = ["name", "description"]
     ordering_fields = ["name", "created_on", "updated_on"]
     ordering = ["name"]
+    pagination_class = PublicModulePagination
 
     def get_serializer_class(self):
         """Use detailed serializer for retrieve action"""
@@ -272,6 +274,7 @@ class GalleryMediaViewSet(viewsets.ModelViewSet):
     search_fields = ["title", "description"]
     ordering_fields = ["title", "created_on", "updated_on"]
     ordering = ["-created_on"]
+    pagination_class = PublicModulePagination
 
     def get_serializer_class(self):
         """Use appropriate serializer based on action"""
