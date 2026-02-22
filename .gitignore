@@ -11,14 +11,9 @@ __pycache__
 *.swp
 *.log
 logs/
-<<<<<<< HEAD
-
 staticfiles/
-=======
 gitignore
 .gitignore
-
->>>>>>> cfe19b0ec02c92b4fe0f0faf3029d5635f0e4d98
 **/migrations/*
 !**/migrations/__init__.py
 hameau-backend-template.code-workspace

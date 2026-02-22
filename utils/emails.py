@@ -67,7 +67,8 @@ def send_contact_message_notification(message):
         subject=subject,
         template_name="emails/new_contact_message",
         context=context,
-        recipient_list=[settings.DEFAULT_FROM_EMAIL]
+        recipient_list=[settings.DEFAULT_FROM_EMAIL],
+        from_email=message.email
     )
 
 def send_contact_message_email(instance):
@@ -98,9 +99,8 @@ def send_contact_message_email(instance):
     email_message = EmailMultiAlternatives(
         subject=subject,
         body=text_content,
-        from_email=settings.DEFAULT_FROM_EMAIL, # Sender
+        from_email=instance.email,              # Sender
         to=[settings.DEFAULT_FROM_EMAIL],       # Receiver (Admin)
-        reply_to=[instance.email],              # Allow replying to the sender
     )
 
     email_message.attach_alternative(html_content, "text/html")
