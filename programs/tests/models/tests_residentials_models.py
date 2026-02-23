@@ -32,7 +32,6 @@ class ChildrenModelsTest(APITestCase):
             date_of_birth=date(today.year - 10, today.month, today.day),
             gender=Child.FEMALE,
             start_date=today,
-            end_date=today,
             status=Child.ACTIVE,
         )
 

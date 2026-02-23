@@ -1,5 +1,4 @@
-from .base import env
-# from .base import BASE_DIR
+from .base import env, BASE_DIR
 
 DATABASES = {
     "default": {
@@ -9,13 +8,6 @@ DATABASES = {
         "PASSWORD": env("DB_PASSWORD"),
         "HOST": env("DB_HOST"),
         "PORT": env("DB_PORT"),
-        "OPTIONS": {"sslmode": "require"},
+        # "OPTIONS": {"sslmode": "require"},
     }
 }
-
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": BASE_DIR / "dbc.sqlite3",
-#     }
-# }
