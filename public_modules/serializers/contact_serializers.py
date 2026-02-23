@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from public_modules.models import ContactMessage
-from utils.emails import send_contact_message_email
+from public_modules.tasks import send_contact_message_email_task
 
 
 class ContactMessageSerializer(serializers.ModelSerializer):
@@ -19,5 +19,5 @@ class ContactMessageSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         contact_message = ContactMessage.objects.create(**validated_data)
-        send_contact_message_email(contact_message)
+        send_contact_message_email_task.delay(str(contact_message.id))
         return contact_message

@@ -1,4 +1,5 @@
-from django.db.models import Min, Q
+from django.conf import settings
+from django.db.models import Q
 from django.utils import timezone
 from rest_framework import serializers
 
@@ -9,7 +10,6 @@ from programs.models import (
     InternshipApplication,
     SchoolSupport,
     SponsoredChild,
-    Sponsorship,
 )
 
 
@@ -37,17 +37,11 @@ class ImpactStatsSerializer(serializers.Serializer):
             )
         ).count()
 
-        ifashe_start = Sponsorship.objects.aggregate(start=Min("start_date"))["start"]
-        residential_start = Child.objects.aggregate(start=Min("start_date"))["start"]
-        start_dates = [date for date in [ifashe_start, residential_start] if date]
-        earliest_start = min(start_dates) if start_dates else None
-
-        years_of_service = 0
-        if earliest_start:
-            today = timezone.now().date()
-            years_of_service = today.year - earliest_start.year - (
-                (today.month, today.day) < (earliest_start.month, earliest_start.day)
-            )
+        earliest_start = settings.START_SINCE
+        today = timezone.now().date()
+        years_of_service = today.year - earliest_start.year - (
+            (today.month, today.day) < (earliest_start.month, earliest_start.day)
+        )
 
         families_empowered = Family.objects.count()
         youth_trained = InternshipApplication.objects.filter(
