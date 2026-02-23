@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status, serializers
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from programs.models import ChildCaretakerAssignment, House
+from programs.models import ChildCaretakerAssignment, House, Caretaker
 from programs.serializers import (
     ChildCaretakerAssignmentReadSerializer,
     ChildCaretakerAssignmentWriteSerializer,
@@ -102,9 +102,9 @@ Rules:
                         .get(caretaker_id=caretaker_id)
                     )
                 except House.DoesNotExist:
-                    raise serializers.ValidationError(
-                        {"caretaker_id": "No house found for this caretaker."}
-                    )
+                    caretaker =  Caretaker.objects.get(id=caretaker_id)
+                    house = House.objects.create(caretaker = caretaker)
+
                 assignment, created = ChildCaretakerAssignment.objects.get_or_create(
                     child_id=child_id,
                     house=house,
