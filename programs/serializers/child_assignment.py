@@ -29,9 +29,8 @@ class ChildCaretakerAssignmentWriteSerializer(serializers.ModelSerializer):
                 .get(caretaker_id=caretaker_id)
             )
         except House.DoesNotExist:
-            raise serializers.ValidationError(
-                {"caretaker_id": "No house found for this caretaker."}
-            )
+            caretaker =  Caretaker.objects.get(id=caretaker_id)
+            house = House.objects.create(caretaker = caretaker)
 
         attrs["house"] = house
         child = attrs.get("child")
