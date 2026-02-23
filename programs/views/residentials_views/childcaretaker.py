@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status, serializers
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from programs.models import ChildCaretakerAssignment, House
+from programs.models import ChildCaretakerAssignment, House, Caretaker, Child
 from programs.serializers import (
     ChildCaretakerAssignmentReadSerializer,
     ChildCaretakerAssignmentWriteSerializer,
@@ -90,11 +90,13 @@ Rules:
 
         caretaker_id = request.data.get("caretaker_id")
         children_ids = request.data.get("children_ids", [])        
+        caretaker =  Caretaker.objects.get(id=caretaker_id)
 
         results = []
 
         with transaction.atomic():
             for child_id in children_ids:
+                child = Child.objects.get(id=child_id)
                 try:
                     house = (
                         House.objects
@@ -102,9 +104,14 @@ Rules:
                         .get(caretaker_id=caretaker_id)
                     )
                 except House.DoesNotExist:
-                    raise serializers.ValidationError(
-                        {"caretaker_id": "No house found for this caretaker."}
-                    )
+                    house = House.objects.create(caretaker = caretaker)
+
+                if ChildCaretakerAssignment.objects.filter(
+                    child=child,
+                    is_active=True,
+                ).exists():
+                    raise serializers.ValidationError("This child already has an active assignment.")
+
                 assignment, created = ChildCaretakerAssignment.objects.get_or_create(
                     child_id=child_id,
                     house=house,
