@@ -9,6 +9,8 @@ from .gallery_serializers import (
 )
 from .impact_serializers import ImpactStatsSerializer
 from .team_serializers import TeamMemberSerializer
+from .contact_serializers import ContactMessageSerializer
+from .story_serializers import SuccessStorySerializer
 
 __all__ = [
     "GalleryCategorySerializer",
@@ -20,4 +22,6 @@ __all__ = [
     "CategoryStatsResponseSerializer",
     "ImpactStatsSerializer",
     "TeamMemberSerializer",
+    "ContactMessageSerializer",
+    "SuccessStorySerializer",
 ]
