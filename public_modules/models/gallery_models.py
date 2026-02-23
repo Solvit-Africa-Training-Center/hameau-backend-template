@@ -42,3 +42,20 @@ class GalleryMedia(TimeStampedModel):
 
     def __str__(self):
         return self.title
+
+
+class TeamMember(TimeStampedModel, SoftDeleteModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=200)
+    job_title = models.CharField(max_length=200)
+    image = models.ImageField(upload_to="team_members/")
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "team_members"
+        ordering = ["name", "created_on"]
+        verbose_name = "Team Member"
+        verbose_name_plural = "Team Members"
+
+    def __str__(self):
+        return self.name

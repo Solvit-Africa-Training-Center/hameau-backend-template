@@ -7,6 +7,8 @@ from .gallery_serializers import (
     BulkUploadResponseSerializer,
     CategoryStatsResponseSerializer,
 )
+from .impact_serializers import ImpactStatsSerializer
+from .team_serializers import TeamMemberSerializer
 
 __all__ = [
     "GalleryCategorySerializer",
@@ -16,4 +18,6 @@ __all__ = [
     "BulkGalleryMediaUploadSerializer",
     "BulkUploadResponseSerializer",
     "CategoryStatsResponseSerializer",
+    "ImpactStatsSerializer",
+    "TeamMemberSerializer",
 ]
