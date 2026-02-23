@@ -95,6 +95,7 @@ Rules:
 
         with transaction.atomic():
             for child_id in children_ids:
+                child = Child.objects.get(id=child_id)
                 try:
                     house = (
                         House.objects
@@ -110,7 +111,7 @@ Rules:
                     is_active=True,
                 ).exists():
                     raise serializers.ValidationError("This child already has an active assignment.")
-                    
+
                 assignment, created = ChildCaretakerAssignment.objects.get_or_create(
                     child_id=child_id,
                     house=house,
