@@ -105,6 +105,12 @@ Rules:
                     caretaker =  Caretaker.objects.get(id=caretaker_id)
                     house = House.objects.create(caretaker = caretaker)
 
+                if ChildCaretakerAssignment.objects.filter(
+                    child=child,
+                    is_active=True,
+                ).exists():
+                    raise serializers.ValidationError("This child already has an active assignment.")
+                    
                 assignment, created = ChildCaretakerAssignment.objects.get_or_create(
                     child_id=child_id,
                     house=house,
