@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status, serializers
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from programs.models import ChildCaretakerAssignment, House, Caretaker
+from programs.models import ChildCaretakerAssignment, House, Caretaker, Child
 from programs.serializers import (
     ChildCaretakerAssignmentReadSerializer,
     ChildCaretakerAssignmentWriteSerializer,
@@ -90,6 +90,7 @@ Rules:
 
         caretaker_id = request.data.get("caretaker_id")
         children_ids = request.data.get("children_ids", [])        
+        caretaker =  Caretaker.objects.get(id=caretaker_id)
 
         results = []
 
@@ -103,7 +104,6 @@ Rules:
                         .get(caretaker_id=caretaker_id)
                     )
                 except House.DoesNotExist:
-                    caretaker =  Caretaker.objects.get(id=caretaker_id)
                     house = House.objects.create(caretaker = caretaker)
 
                 if ChildCaretakerAssignment.objects.filter(
