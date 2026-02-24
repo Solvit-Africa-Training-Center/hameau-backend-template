@@ -21,10 +21,6 @@ class InternshipApplicationViewSetTest(APITestCase):
             "last_name": "Doe",
             "email": "john@example.com",
             "phone": "0788111222",
-            "country": "Rwanda",
-            "education_level": "Bachelor",
-            "program": "Software Engineering",
-            "availability_hours": "Full-time",
             "date_of_birth": "1995-10-10",
             "nationality": "Rwandan",
             "is_in_rwanda": True,
@@ -49,16 +45,37 @@ class InternshipApplicationViewSetTest(APITestCase):
         self.assertEqual(len(response.data['results']), 1)
 
     def test_filter_applications(self):
-        InternshipApplication.objects.create(**self.application_data)
-        data2 = self.application_data.copy()
-        data2['email'] = "jane@example.com"
-        data2['country'] = "Kenya"
-        InternshipApplication.objects.create(**data2)
+        InternshipApplication.objects.all().delete()
+        # Create an application that should be found by the filter
+        application_to_find = InternshipApplication.objects.create(
+            first_name="Test",
+            last_name="One",
+            email="test1@example.com",
+            phone="0788111001",
+            date_of_birth="1990-01-01",
+            nationality="Rwandan",
+            is_in_rwanda=True,
+            school_university="University X",
+            field_of_study="Math"
+        )
 
-        url = "/api/internship-applications/?country=Rwanda"
+        # Create another application that should NOT be found by the filter
+        InternshipApplication.objects.create(
+            first_name="Test",
+            last_name="Two",
+            email="test2@example.com",
+            phone="0788111002",
+            date_of_birth="1991-02-02",
+            nationality="Rwandan",
+            is_in_rwanda=True,
+            school_university="University Y",
+            field_of_study="Physics"
+        )
+
+        url = "/api/internship-applications/?search=test1@example.com"
         response = self.client.get(url)
         self.assertEqual(len(response.data['results']), 1)
-        self.assertEqual(response.data['results'][0]['country'], "Rwanda")
+        self.assertEqual(response.data['results'][0]['email'], "test1@example.com")
 
     def test_update_status_and_email_trigger(self):
         app = InternshipApplication.objects.create(**self.application_data)

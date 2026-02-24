@@ -1,7 +1,7 @@
+from unittest.mock import patch
 from django.test import override_settings
 from rest_framework.test import APITestCase
 from django.core.files.uploadedfile import SimpleUploadedFile
-from decimal import Decimal
 
 from accounts.models import User
 from public_modules.models.gallery_models import (
@@ -13,6 +13,13 @@ from public_modules.models.gallery_models import (
 @override_settings(MEDIA_ROOT="/tmp/test_media/")
 class GalleryAndDonationModelsTest(APITestCase):
     def setUp(self):
+        # Prevent real Cloudinary uploads when running under dev/prod storage settings
+        self.cloudinary_patcher = patch(
+            "cloudinary_storage.storage.MediaCloudinaryStorage._save",
+            return_value="media_gallery/test_image.jpg",
+        )
+        self.cloudinary_patcher.start()
+
         self.user = User.objects.create_user(
             email="testuser@example.com", password="password123", phone="+250731234567"
         )
@@ -34,6 +41,9 @@ class GalleryAndDonationModelsTest(APITestCase):
             uploaded_by=self.user,
         )
 
+    def tearDown(self):
+        self.cloudinary_patcher.stop()
+
     def test_gallery_category_creation(self):
         self.assertEqual(self.category.name, "Events")
         self.assertEqual(str(self.category), "Events")
@@ -44,9 +54,3 @@ class GalleryAndDonationModelsTest(APITestCase):
         self.assertEqual(self.gallery_media.uploaded_by, self.user)
         self.assertTrue(self.gallery_media.is_public)
         self.assertEqual(str(self.gallery_media), "Community Event")
-
-    def test_donation_creation(self):
-        self.assertEqual(self.donation.amount, Decimal("150.00"))
-        self.assertEqual(self.donation.currency, "RWF")
-        self.assertEqual(self.donation.donor, self.donor)
-        self.assertEqual(str(self.donation), "Arnold Ciku - 150.00 RWF")

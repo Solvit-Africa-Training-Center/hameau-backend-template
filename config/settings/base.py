@@ -1,7 +1,8 @@
 from pathlib import Path
 import environ 
 import os
-from datetime import timedelta
+from datetime import timedelta, date
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -86,5 +87,17 @@ USE_I18N = True
 USE_TZ = True
 
 VERIFICATION_CODE_LIFETIME = timedelta(minutes=15)
+
+start_since_raw = env("START_SINCE", default="").strip()
+if not start_since_raw:
+    raise ImproperlyConfigured(
+        "START_SINCE must be set in environment as a valid date (YYYY-MM-DD)."
+    )
+try:
+    START_SINCE = date.fromisoformat(start_since_raw)
+except ValueError as exc:
+    raise ImproperlyConfigured(
+        "START_SINCE must be a valid date in YYYY-MM-DD format."
+    ) from exc
 
 
