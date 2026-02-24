@@ -1,6 +1,7 @@
 import os
 from rest_framework import serializers
 from django.utils import timezone
+from django.contrib.postgres.search import TrigramSimilarity
 from rest_framework.response import Response
 from rest_framework import status
 from decimal import Decimal
@@ -190,6 +191,36 @@ class EducationInstitutionSerializer(serializers.ModelSerializer):
 
     def validate_phone(self, value):
         return validate_rwanda_phone(value)
+    
+    def validate_programs(self, value):
+        
+        if not value:
+            return value
+
+        incoming_names = [p['program_name'].strip() for p in value]
+        normalized_names = [n.lower() for n in incoming_names]
+        
+        if len(normalized_names) != len(set(normalized_names)):
+            raise serializers.ValidationError(
+                "You cannot have duplicate program names in the same request."
+            )
+
+        if self.instance:
+            for name in incoming_names:
+                similar = EducationProgram.objects.filter(
+                    institution=self.instance
+                ).annotate(
+                    similarity=TrigramSimilarity('program_name', name)
+                ).filter(similarity__gt=0.7).exclude(program_name=name)
+
+                if similar.exists():
+                    match = similar.first()
+                    raise serializers.ValidationError(
+                        f"The program name '{name}' is too similar to an existing "
+                        f"program: '{match.program_name}'."
+                    )
+        
+        return value
 
 class EducationProgramReadSerializer(serializers.ModelSerializer):
     institution = EducationInstitutionSerializer(read_only=True)
@@ -202,6 +233,24 @@ class EducationProgramWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = EducationProgram
         fields = ["institution", "program_name"]
+
+    def validate(self, attrs):
+        name = attrs.get('program_name')
+        institution = attrs.get('institution')
+        
+        similar_programs = EducationProgram.objects.filter(
+            institution=institution
+        ).annotate(
+            similarity=TrigramSimilarity('program_name', name)
+        ).filter(similarity__gt=0.7).order_by('-similarity')
+
+        if similar_programs.exists():
+            match = similar_programs.first()
+            raise serializers.ValidationError({
+                "program_name": f"A very similar program ('{match.program_name}') already exists in this institution."
+            })
+
+        return attrs
 
 class ChildEducationWriteSerializer(serializers.ModelSerializer):
     class Meta:

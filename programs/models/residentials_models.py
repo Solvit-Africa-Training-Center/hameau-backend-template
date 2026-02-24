@@ -2,6 +2,8 @@ import uuid
 from decimal import Decimal
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models import UniqueConstraint
+from django.db.models.functions import Lower
 from django.utils import timezone
 
 from dateutil.relativedelta import relativedelta
@@ -200,12 +202,19 @@ class EducationProgram(TimeStampedModel):
     institution = models.ForeignKey(
         EducationInstitution, on_delete=models.CASCADE, related_name="programs"
     )
-    program_name = models.CharField(max_length=200)
+    program_name = models.CharField(max_length=200)      
 
     class Meta:
         db_table = "education_programs"
         verbose_name = "Education Program"
         verbose_name_plural = "Education Programs"
+        constraints = [
+            UniqueConstraint(
+                Lower('program_name'), 
+                'institution', 
+                name='unique_program_name_per_institution'
+            )
+        ]
 
     def __str__(self):
         return f"{self.program_name} - {self.institution.name}"

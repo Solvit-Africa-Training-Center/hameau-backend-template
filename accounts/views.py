@@ -406,7 +406,16 @@ class ChangePasswordView(APIView):
             {"message": "Password changed successfully"}, status=status.HTTP_200_OK
         )
 
+@extend_schema(
+    tags=["Authentication of Managers"],
+    summary="Refresh access token",
+    description="Takes a refresh token and returns a new access token. If rotation is enabled, a new refresh token is also returned.",
+    request=CustomTokenRefreshSerializer,
+    responses={
+        200: CustomTokenRefreshSerializer,
+        401: OpenApiResponse(description="Token is invalid or expired"),
+        400: OpenApiResponse(description="Missing refresh token"),
+    },
+)
 class RefreshTokenView(TokenRefreshView):
-    """
-    """
     serializer_class = CustomTokenRefreshSerializer
