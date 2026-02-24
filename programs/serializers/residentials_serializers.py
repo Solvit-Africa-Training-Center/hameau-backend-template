@@ -253,6 +253,7 @@ class EducationProgramWriteSerializer(serializers.ModelSerializer):
         return attrs
 
 class ChildEducationWriteSerializer(serializers.ModelSerializer):
+    child =  ChildReadSerializer(read_only=True)
     class Meta:
         model = ChildEducation
         fields = [
