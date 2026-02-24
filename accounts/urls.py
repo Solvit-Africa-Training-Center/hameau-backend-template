@@ -8,7 +8,7 @@ router.register('activity-logs', ActivityLogViewSet, basename='activity-logs')
 
 
 urlpatterns = [
-    path('auth/login/', LoginView.as_view(), name='token_obtain_pair'),
+    path('managers/login/', LoginView.as_view(), name='token_obtain_pair'),
     path('auth/refresh/', RefreshTokenView.as_view(), name='token_refresh'),
     path("managers/logout/", LogoutAPIView.as_view()),
     path("managers/password-reset/request/", RequestPasswordResetView.as_view()),
