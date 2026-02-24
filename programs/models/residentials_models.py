@@ -201,12 +201,6 @@ class EducationProgram(TimeStampedModel):
         EducationInstitution, on_delete=models.CASCADE, related_name="programs"
     )
     program_name = models.CharField(max_length=200)
-    program_level = models.CharField(
-        max_length=100, blank=True, help_text="Primary, Secondary, Vocational, etc."
-    )
-    cost = models.DecimalField(
-        max_digits=10, decimal_places=2, default=0, help_text="Free for Saint Kizito"
-    )
 
     class Meta:
         db_table = "education_programs"
@@ -232,14 +226,18 @@ class ChildEducation(TimeStampedModel):
     child = models.ForeignKey(
         Child, on_delete=models.CASCADE, related_name="education_records"
     )
+    institution = models.ForeignKey(
+        EducationInstitution, on_delete=models.CASCADE, related_name="enrolled_children", null=True
+    )
     program = models.ForeignKey(
         EducationProgram, on_delete=models.CASCADE, related_name="enrolled_children"
     )
+
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_EDUCATION_CHOICES, blank=True)
     cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    notes = models.TextField(blank=True)
+    level = models.CharField(max_length= 40,blank=True)
 
     class Meta:
         db_table = "child_education"

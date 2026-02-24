@@ -168,73 +168,60 @@ class ChildProgressReadSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_on"]
 
 
+class EducationProgramNestedSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EducationProgram
+        fields = ["id", "program_name"]
+
 class EducationInstitutionSerializer(serializers.ModelSerializer):
+    programs = EducationProgramNestedSerializer(many=True, required=False)
+
     class Meta:
         model = EducationInstitution
-        fields = [
-            "id",
-            "name",
-            "address",
-            "phone",
-            "email",
-        ]
-        read_only_fields = ["id", "created_on", "updated_on"]
+        fields = ["id", "name", "address", "phone", "email", "programs"]
+        read_only_fields = ["id"]
+
+    def create(self, validated_data):
+        programs_data = validated_data.pop('programs', [])
+        institution = EducationInstitution.objects.create(**validated_data)
+        for program_data in programs_data:
+            EducationProgram.objects.create(institution=institution, **program_data)
+        return institution
 
     def validate_phone(self, value):
         return validate_rwanda_phone(value)
-
 
 class EducationProgramReadSerializer(serializers.ModelSerializer):
     institution = EducationInstitutionSerializer(read_only=True)
 
     class Meta:
         model = EducationProgram
-        fields = ["id", "institution", "program_name", "program_level", "cost"]
-        read_only_fields = ["id", "created_on", "updated_on"]
-
+        fields = ["id", "institution", "program_name"]
 
 class EducationProgramWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = EducationProgram
-        fields = [
-            "institution",
-            "program_name",
-            "program_level",
-            "cost",
-        ]
-
-    def validate_cost(self, value):
-        return validate_not_negative(value, "Cost")
-
+        fields = ["institution", "program_name"]
 
 class ChildEducationWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChildEducation
         fields = [
-            "child",
-            "program",
-            "start_date",
-            "end_date",
-            "status",
-            "cost",
-            "notes",
+            "child", "institution", "program", "start_date", 
+            "end_date", "status", "cost", "level"
         ]
 
-    def validate_cost(self, value):
-        return validate_not_negative(value, "Cost")
-
     def validate(self, attrs):
-        start_date = attrs.get("start_date")
-        end_date = attrs.get("end_date")
-
-        if start_date and end_date:
-            if end_date < start_date:
-                raise serializers.ValidationError(
-                    {"end_date": "End-date cannot come before start date"}
-                )
-
+        institution = attrs.get("institution")
+        program = attrs.get("program")
+        if program and institution and program.institution != institution:
+            raise serializers.ValidationError(
+                {"program": f"This program does not belong to {institution.name}."}
+            )
+        if attrs.get("start_date") and attrs.get("end_date"):
+            if attrs["end_date"] < attrs["start_date"]:
+                raise serializers.ValidationError({"end_date": "End-date error."})
         return attrs
-
 
 class ChildEducationReadSerializer(serializers.ModelSerializer):
     program = EducationProgramReadSerializer(read_only=True)
@@ -243,18 +230,9 @@ class ChildEducationReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChildEducation
         fields = [
-            "id",
-            "child",
-            "program",
-            "start_date",
-            "end_date",
-            "status",
-            "cost",
-            "notes",
-            "created_on",
-            "updated_on",
+            "id", "child", "institution", "program", "start_date", 
+            "end_date", "status", "cost", "level", "created_on", "updated_on"
         ]
-        read_only_fields = ["id", "created_on", "updated_on"]
 
 
 class CaretakerReadSerializer(serializers.ModelSerializer):

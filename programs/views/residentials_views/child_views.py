@@ -37,6 +37,7 @@ from programs.serializers import (
     EducationInstitutionSerializer,
     EducationProgramReadSerializer,
     EducationProgramWriteSerializer,
+    EducationProgramNestedSerializer,
 )
 from utils.filters.child_filters import (
     ChildFilter,
@@ -579,11 +580,10 @@ class EducationInstitutionViewSet(viewsets.ModelViewSet):
     pagination_class = SmallResultsSetPagination
 
     @action(detail=True, methods=["get"])
-    def programs(self, request, pk=None):
+    def programs(self, request, pk=None):      
         institution = self.get_object()
         programs = institution.programs.all()
-
-        serializer = EducationProgramReadSerializer(programs, many=True)
+        serializer = EducationProgramNestedSerializer(programs, many=True) 
         return Response(serializer.data)
 
 
@@ -599,8 +599,8 @@ class EducationProgramViewSet(viewsets.ModelViewSet):
         filters.OrderingFilter,
     ]
     filterset_class = EducationProgramFilter
-    search_fields = ["program_name", "program_level"]
-    ordering_fields = ["program_name", "cost", "created_on"]
+    search_fields = ["program_name"]
+    ordering_fields = ["program_name", "created_on"]
     ordering = ["program_name"]
     pagination_class = StandardResultsSetPagination
 
@@ -630,7 +630,7 @@ class ChildEducationViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsResidentialManager]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_class = ChildEducationFilter
-    ordering_fields = ["start_date", "end_date", "cost", "created_on"]
+    ordering_fields = ["start_date", "end_date", "cost", "created_on","level"]
     ordering = ["-start_date"]
     pagination_class = StandardResultsSetPagination
 

@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework_simplejwt.views import TokenRefreshView, TokenObtainPairView
 from drf_spectacular.utils import (
     extend_schema,
     OpenApiResponse,
@@ -28,6 +29,7 @@ from .serializers import (
     ResetPasswordConfirmSerializer,
     ChangePasswordSerializer,
     ActivityLogSerializer,
+    CustomTokenRefreshSerializer
 )
 
 from utils.bulk_operations.mixins import BulkActionMixin
@@ -403,3 +405,8 @@ class ChangePasswordView(APIView):
         return Response(
             {"message": "Password changed successfully"}, status=status.HTTP_200_OK
         )
+
+class RefreshTokenView(TokenRefreshView):
+    """
+    """
+    serializer_class = CustomTokenRefreshSerializer
