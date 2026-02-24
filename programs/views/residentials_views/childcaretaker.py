@@ -17,7 +17,8 @@ from drf_spectacular.utils import (
     inline_serializer,
 )
 
-
+@extend_schema(
+        tags=["Residential Care Program"],)
 @extend_schema_view(
     list=extend_schema(
         tags=["Residential Care Program"],

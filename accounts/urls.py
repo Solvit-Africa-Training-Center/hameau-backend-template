@@ -1,6 +1,6 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
-from .views import ManagerViewset, LoginView, RequestPasswordResetView, ResetPasswordConfirmView, LogoutAPIView, ChangePasswordView, ActivityLogViewSet
+from .views import ManagerViewset, LoginView, RequestPasswordResetView, ResetPasswordConfirmView, LogoutAPIView, ChangePasswordView, ActivityLogViewSet,RefreshTokenView
 
 router = DefaultRouter()
 router.register('managers', ManagerViewset)
@@ -8,7 +8,8 @@ router.register('activity-logs', ActivityLogViewSet, basename='activity-logs')
 
 
 urlpatterns = [
-    path("managers/login/", LoginView.as_view()),
+    path('auth/login/', LoginView.as_view(), name='token_obtain_pair'),
+    path('auth/refresh/', RefreshTokenView.as_view(), name='token_refresh'),
     path("managers/logout/", LogoutAPIView.as_view()),
     path("managers/password-reset/request/", RequestPasswordResetView.as_view()),
     path("managers/password-reset/confirm/", ResetPasswordConfirmView.as_view()),

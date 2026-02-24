@@ -1,6 +1,7 @@
 import os
 from rest_framework import serializers
 from django.utils import timezone
+from django.contrib.postgres.search import TrigramSimilarity
 from rest_framework.response import Response
 from rest_framework import status
 from decimal import Decimal
@@ -168,73 +169,108 @@ class ChildProgressReadSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_on"]
 
 
+class EducationProgramNestedSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EducationProgram
+        fields = ["id", "program_name"]
+
 class EducationInstitutionSerializer(serializers.ModelSerializer):
+    programs = EducationProgramNestedSerializer(many=True, required=False)
+
     class Meta:
         model = EducationInstitution
-        fields = [
-            "id",
-            "name",
-            "address",
-            "phone",
-            "email",
-        ]
-        read_only_fields = ["id", "created_on", "updated_on"]
+        fields = ["id", "name", "address", "phone", "email", "programs"]
+        read_only_fields = ["id"]
+
+    def create(self, validated_data):
+        programs_data = validated_data.pop('programs', [])
+        institution = EducationInstitution.objects.create(**validated_data)
+        for program_data in programs_data:
+            EducationProgram.objects.create(institution=institution, **program_data)
+        return institution
 
     def validate_phone(self, value):
         return validate_rwanda_phone(value)
+    
+    def validate_programs(self, value):
+        
+        if not value:
+            return value
 
+        incoming_names = [p['program_name'].strip() for p in value]
+        normalized_names = [n.lower() for n in incoming_names]
+        
+        if len(normalized_names) != len(set(normalized_names)):
+            raise serializers.ValidationError(
+                "You cannot have duplicate program names in the same request."
+            )
+
+        if self.instance:
+            for name in incoming_names:
+                similar = EducationProgram.objects.filter(
+                    institution=self.instance
+                ).annotate(
+                    similarity=TrigramSimilarity('program_name', name)
+                ).filter(similarity__gt=0.7).exclude(program_name=name)
+
+                if similar.exists():
+                    match = similar.first()
+                    raise serializers.ValidationError(
+                        f"The program name '{name}' is too similar to an existing "
+                        f"program: '{match.program_name}'."
+                    )
+        
+        return value
 
 class EducationProgramReadSerializer(serializers.ModelSerializer):
     institution = EducationInstitutionSerializer(read_only=True)
 
     class Meta:
         model = EducationProgram
-        fields = ["id", "institution", "program_name", "program_level", "cost"]
-        read_only_fields = ["id", "created_on", "updated_on"]
-
+        fields = ["id", "institution", "program_name"]
 
 class EducationProgramWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = EducationProgram
-        fields = [
-            "institution",
-            "program_name",
-            "program_level",
-            "cost",
-        ]
+        fields = ["institution", "program_name"]
 
-    def validate_cost(self, value):
-        return validate_not_negative(value, "Cost")
+    def validate(self, attrs):
+        name = attrs.get('program_name')
+        institution = attrs.get('institution')
+        
+        similar_programs = EducationProgram.objects.filter(
+            institution=institution
+        ).annotate(
+            similarity=TrigramSimilarity('program_name', name)
+        ).filter(similarity__gt=0.7).order_by('-similarity')
 
+        if similar_programs.exists():
+            match = similar_programs.first()
+            raise serializers.ValidationError({
+                "program_name": f"A very similar program ('{match.program_name}') already exists in this institution."
+            })
+
+        return attrs
 
 class ChildEducationWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChildEducation
         fields = [
-            "child",
-            "program",
-            "start_date",
-            "end_date",
-            "status",
-            "cost",
-            "notes",
+            "child", "institution", "program", "start_date", 
+            "end_date", "status", "cost", "level"
         ]
 
-    def validate_cost(self, value):
-        return validate_not_negative(value, "Cost")
-
     def validate(self, attrs):
-        start_date = attrs.get("start_date")
-        end_date = attrs.get("end_date")
-
-        if start_date and end_date:
-            if end_date < start_date:
-                raise serializers.ValidationError(
-                    {"end_date": "End-date cannot come before start date"}
-                )
-
+        institution = attrs.get("institution")
+        program = attrs.get("program")
+        if program and institution and program.institution != institution:
+            raise serializers.ValidationError(
+                {"program": f"This program does not belong to {institution.name}."}
+            )
+        if attrs.get("start_date") and attrs.get("end_date"):
+            if attrs["end_date"] < attrs["start_date"]:
+                raise serializers.ValidationError({"end_date": "End-date error."})
         return attrs
-
 
 class ChildEducationReadSerializer(serializers.ModelSerializer):
     program = EducationProgramReadSerializer(read_only=True)
@@ -243,18 +279,9 @@ class ChildEducationReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChildEducation
         fields = [
-            "id",
-            "child",
-            "program",
-            "start_date",
-            "end_date",
-            "status",
-            "cost",
-            "notes",
-            "created_on",
-            "updated_on",
+            "id", "child", "institution", "program", "start_date", 
+            "end_date", "status", "cost", "level", "created_on", "updated_on"
         ]
-        read_only_fields = ["id", "created_on", "updated_on"]
 
 
 class CaretakerReadSerializer(serializers.ModelSerializer):

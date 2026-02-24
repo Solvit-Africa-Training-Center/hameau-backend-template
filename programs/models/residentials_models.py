@@ -2,6 +2,8 @@ import uuid
 from decimal import Decimal
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models import UniqueConstraint
+from django.db.models.functions import Lower
 from django.utils import timezone
 
 from dateutil.relativedelta import relativedelta
@@ -200,18 +202,19 @@ class EducationProgram(TimeStampedModel):
     institution = models.ForeignKey(
         EducationInstitution, on_delete=models.CASCADE, related_name="programs"
     )
-    program_name = models.CharField(max_length=200)
-    program_level = models.CharField(
-        max_length=100, blank=True, help_text="Primary, Secondary, Vocational, etc."
-    )
-    cost = models.DecimalField(
-        max_digits=10, decimal_places=2, default=0, help_text="Free for Saint Kizito"
-    )
+    program_name = models.CharField(max_length=200)      
 
     class Meta:
         db_table = "education_programs"
         verbose_name = "Education Program"
         verbose_name_plural = "Education Programs"
+        constraints = [
+            UniqueConstraint(
+                Lower('program_name'), 
+                'institution', 
+                name='unique_program_name_per_institution'
+            )
+        ]
 
     def __str__(self):
         return f"{self.program_name} - {self.institution.name}"
@@ -232,14 +235,18 @@ class ChildEducation(TimeStampedModel):
     child = models.ForeignKey(
         Child, on_delete=models.CASCADE, related_name="education_records"
     )
+    institution = models.ForeignKey(
+        EducationInstitution, on_delete=models.CASCADE, related_name="enrolled_children", null=True
+    )
     program = models.ForeignKey(
         EducationProgram, on_delete=models.CASCADE, related_name="enrolled_children"
     )
+
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_EDUCATION_CHOICES, blank=True)
     cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    notes = models.TextField(blank=True)
+    level = models.CharField(max_length= 40,blank=True)
 
     class Meta:
         db_table = "child_education"
