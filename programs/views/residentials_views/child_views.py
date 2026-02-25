@@ -598,7 +598,7 @@ class EducationProgramViewSet(viewsets.ModelViewSet):
         filters.SearchFilter,
         filters.OrderingFilter,
     ]
-    filterset_class = EducationProgramFilter
+    #filterset_class = EducationProgramFilter
     search_fields = ["program_name"]
     ordering_fields = ["program_name", "created_on"]
     ordering = ["program_name"]
@@ -629,7 +629,7 @@ class ChildEducationViewSet(viewsets.ModelViewSet):
     )
     permission_classes = [IsAuthenticated, IsResidentialManager]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
-    filterset_class = ChildEducationFilter
+    #filterset_class = ChildEducationFilter
     ordering_fields = ["start_date", "end_date", "cost", "created_on","level"]
     ordering = ["-start_date"]
     pagination_class = StandardResultsSetPagination
