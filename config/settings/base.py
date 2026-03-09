@@ -38,7 +38,8 @@ INSTALLED_APPS = [
     'accounts',
     'public_modules',
     'programs',
-    'donations'
+    'donations',
+    'website_content',
 ]
 
 SITE_ID = 1
