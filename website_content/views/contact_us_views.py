@@ -11,6 +11,6 @@ class ContactMessageCreateView(viewsets.ModelViewSet):
     permission_classes = [BasePermission]
 
     def get_permissions(self):
-        if self.request.method == "GET":
+        if self.request.method == "POST":
             return [AllowAny()]
         return super().get_permissions()

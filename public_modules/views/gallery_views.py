@@ -25,69 +25,8 @@ from ..serializers.gallery_serializers import (
 )
 
 
-@extend_schema_view(
-    list=extend_schema(
-        summary="List all gallery categories",
-        description="Get a list of all gallery categories with media count",
-        tags=["Public Modules"],
-        responses={200: GalleryCategorySerializer(many=True)},
-    ),
-    retrieve=extend_schema(
-        summary="Get category details",
-        description="Retrieve a specific category with all its media items",
-        tags=["Public Modules"],
-        responses={200: GalleryCategoryDetailSerializer},
-    ),
-    create=extend_schema(
-        summary="Create new category",
-        description="Create a new gallery category (Authentication required)",
-        tags=["Public Modules"],
-        request=GalleryCategorySerializer,
-        responses={
-            201: GalleryCategorySerializer,
-            401: OpenApiResponse(description="Authentication required"),
-        },
-        examples=[
-            OpenApiExample(
-                "Create Events Category",
-                value={
-                    "name": "Events",
-                    "description": "Photos and videos from various events",
-                },
-                request_only=True,
-            ),
-        ],
-    ),
-    update=extend_schema(
-        summary="Update category (full)",
-        description="Update all fields of a category (Authentication required)",
-        tags=["Public Modules"],
-        request=GalleryCategorySerializer,
-        responses={200: GalleryCategorySerializer},
-    ),
-    partial_update=extend_schema(
-        summary="Update category (partial)",
-        description="Update specific fields of a category (Authentication required)",
-        tags=["Public Modules"],
-        request=GalleryCategorySerializer,
-        responses={200: GalleryCategorySerializer},
-        examples=[
-            OpenApiExample(
-                "Update Description",
-                value={"description": "Updated description"},
-                request_only=True,
-            ),
-        ],
-    ),
-    destroy=extend_schema(
-        summary="Delete category",
-        description="Delete a category and all its media items (Authentication required)",
-        tags=["Public Modules"],
-        responses={
-            204: OpenApiResponse(description="Category deleted successfully"),
-            403: OpenApiResponse(description="Permission denied"),
-        },
-    ),
+@extend_schema(
+    tags=["Gallery Categories"]
 )
 class GalleryCategoryViewSet(viewsets.ModelViewSet):
     queryset = GalleryCategory.objects.all()
@@ -176,88 +115,16 @@ class GalleryCategoryViewSet(viewsets.ModelViewSet):
 
         return Response(stats)
 
+    def create(self, request, *args, **kwargs):
+        """Create a new category"""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-@extend_schema_view(
-    list=extend_schema(
-        summary="List all media items",
-        description="Get a paginated list of all media items with filtering and search",
-        tags=["Public Modules"],
-        parameters=[
-            OpenApiParameter(
-                name="category",
-                type=OpenApiTypes.UUID,
-                location=OpenApiParameter.QUERY,
-                description="Filter by category UUID",
-            ),
-            OpenApiParameter(
-                name="is_public",
-                type=OpenApiTypes.BOOL,
-                location=OpenApiParameter.QUERY,
-                description="Filter by public/private status",
-            ),
-            OpenApiParameter(
-                name="search",
-                type=OpenApiTypes.STR,
-                location=OpenApiParameter.QUERY,
-                description="Search in title and description",
-            ),
-            OpenApiParameter(
-                name="ordering",
-                type=OpenApiTypes.STR,
-                location=OpenApiParameter.QUERY,
-                description="Order by field (e.g., -created_on, title)",
-            ),
-        ],
-        responses={200: GalleryMediaListSerializer(many=True)},
-    ),
-    retrieve=extend_schema(
-        summary="Get media details",
-        description="Retrieve detailed information about a specific media item",
-        tags=["Public Modules"],
-        responses={200: GalleryMediaSerializer},
-    ),
-    create=extend_schema(
-        summary="Upload single image",
-        description="Upload a single image to a category (Authentication required)",
-        tags=["Public Modules"],
-        request={
-            "multipart/form-data": {
-                "type": "object",
-                "properties": {
-                    "category": {"type": "string", "format": "uuid"},
-                    "title": {"type": "string"},
-                    "description": {"type": "string"},
-                    "media_url": {"type": "string", "format": "binary"},
-                    "is_public": {"type": "boolean"},
-                },
-            }
-        },
-        responses={
-            201: GalleryMediaSerializer,
-            401: OpenApiResponse(description="Authentication required"),
-        },
-    ),
-    update=extend_schema(
-        summary="Update media (full)",
-        description="Update all fields of a media item (Authentication required)",
-        tags=["Public Modules"],
-        responses={200: GalleryMediaSerializer},
-    ),
-    partial_update=extend_schema(
-        summary="Update media (partial)",
-        description="Update specific fields of a media item (Authentication required)",
-        tags=["Public Modules"],
-        responses={200: GalleryMediaSerializer},
-    ),
-    destroy=extend_schema(
-        summary="Delete media",
-        description="Delete a media item (Only owner or staff)",
-        tags=["Public Modules"],
-        responses={
-            204: OpenApiResponse(description="Media deleted successfully"),
-            403: OpenApiResponse(description="Permission denied"),
-        },
-    ),
+
+@extend_schema(
+    tags=["Gallery Media"]
 )
 class GalleryMediaViewSet(viewsets.ModelViewSet):
     queryset = GalleryMedia.objects.select_related("category", "uploaded_by").all()
