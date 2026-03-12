@@ -4,6 +4,7 @@ from drf_spectacular.utils import extend_schema
 
 from website_content.serializers.team_serializers import TeamSerializer
 from website_content.models.team_models import Team
+from rest_framework.response import Response
 
 @extend_schema(tags=["Teams"])
 class TeamCreateView(viewsets.ModelViewSet):
