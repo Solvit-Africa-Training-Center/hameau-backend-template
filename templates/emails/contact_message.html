@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Contact Message</title>
+</head>
+
+<body>
+    <h1>New Contact Message</h1>
+    <p>A new contact message has been received.</p>
+    <p><strong>Name:</strong> {{ message.first_name }} {{ message.last_name }}</p>
+    <p><strong>Email:</strong> {{ message.email }}</p>
+    <p><strong>Phone Number:</strong> {{ message.phone_number }}</p>
+    <p><strong>Message:</strong> {{ message.message }}</p>
+</body>
+
+</html>
