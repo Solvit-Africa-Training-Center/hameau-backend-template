@@ -8,10 +8,10 @@ from django.conf import settings
 @receiver(post_save, sender=ContactMessage)
 def create_contact_message(sender, instance, created, **kwargs):
     if created:
-        send_contact_message_email(instance.id, settings.EMAIL_CONTACT)
+        send_contact_message_email.delay(instance.id, settings.EMAIL_CONTACT)
 
 
 @receiver(post_save, sender=ReplyToContactMessage)
 def create_reply_to_contact_message(sender, instance, created, **kwargs):
     if created:
-        send_contact_message_email(instance.id, instance.contact_message.email)
+        send_contact_message_email.delay(instance.id, instance.contact_message.email)
